@@ -10,6 +10,7 @@ import '../../../../../core/utils/custom_toast.dart';
 import '../../../../../core/utils/text_manager.dart';
 import '../../../../../core/widgets/custom_elevated_button.dart';
 import '../../../../../core/widgets/custom_text_form_field.dart';
+import '../../../../../config/routes/screens_name.dart';
 import '../profile_custom_widgets/document_upload_flow.dart';
 import '../profile_custom_widgets/licence_image_widget.dart';
 import 'id_image_upload_widget.dart';
@@ -128,6 +129,7 @@ class SignupForm extends StatelessWidget {
             hintText: TextManager.passwordHint,
             obscureText: true,
             validator: _validatePassword,
+            enablePasswordToggle: true,
           ),
 
           SizedBox(height: 0.02.sh),
@@ -161,12 +163,8 @@ class SignupForm extends StatelessWidget {
             listener: (context, state) {
               if (state is SignUpSuccess) {
                 showCustomToast(state.message, false);
-                // Navigate to DocumentUploadFlow after successful signup
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => const DocumentUploadFlow(signupMode: true),
-                  ),
-                );
+                // Navigate to rental search screen after successful signup
+                Navigator.pushReplacementNamed(context, ScreensName.rentalSearchScreen);
               } else if (state is SignUpFailure) {
                 showCustomToast(state.error, true);
               }

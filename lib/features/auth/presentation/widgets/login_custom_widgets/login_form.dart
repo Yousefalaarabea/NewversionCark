@@ -48,6 +48,8 @@ class LoginForm extends StatelessWidget {
               controller: passwordController,
               prefixIcon: Icons.lock,
               hintText: TextManager.passwordHint.tr(),
+              obscureText: true,
+              enablePasswordToggle: true,
             ),
 
             SizedBox(height: 0.05.sh),
@@ -57,7 +59,7 @@ class LoginForm extends StatelessWidget {
               listener: (context, state) {
                 if(state is LoginSuccess) {
                   showCustomToast(state.message, false);
-                  Navigator.pushReplacementNamed(context, ScreensName.homeScreen);
+                  Navigator.pushReplacementNamed(context, ScreensName.rentalSearchScreen);
                 } else if (state is LoginFailure) {
                   showCustomToast(state.error, true);
                 }
