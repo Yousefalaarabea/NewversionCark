@@ -1,0 +1,2 @@
+D:/Yousef/Fourth level/GP/Final phase/AllProjectTest/CarkApplication/android/app/.cxx/Debug/q3h632eo/x86/CMakeFiles/edit_cache.dir
+D:/Yousef/Fourth level/GP/Final phase/AllProjectTest/CarkApplication/android/app/.cxx/Debug/q3h632eo/x86/CMakeFiles/rebuild_cache.dir
