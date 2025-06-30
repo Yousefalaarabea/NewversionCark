@@ -73,7 +73,39 @@ class ApiService {
     }
   }
 
+  Future<Response> patchWithToken(String endpoint, dynamic data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
 
+    try {
+      final response = await _dio.patch(
+        endpoint,
+        data: data,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> deleteWithToken(String endpoint, String token) async {
+    final dio = Dio();
+    final response = await dio.delete(
+      '${_dio.options.baseUrl}$endpoint',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+    return response;
+  }
 
   Future<Response> getWithToken(String endpoint, String token) async {
     final dio = Dio();

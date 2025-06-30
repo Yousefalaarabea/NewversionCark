@@ -90,71 +90,95 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return Stack(
-            children: [
-              SingleChildScrollView(
-                padding: EdgeInsets.all(16.w),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Set Usage Limits',
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
+          return TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 700),
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 40 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: EdgeInsets.all(16.w),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Set Usage Limits',
+                          style: TextStyle(
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1a237e),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 24.h),
-                      _buildInputField(
-                        controller: _dailyKmLimitController,
-                        label: 'Daily Kilometer Limit',
-                        hint: 'e.g., 200',
-                        suffix: 'KM',
-                        inputType: TextInputType.number,
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildInputField(
-                        controller: _extraKmCostController,
-                        label: 'Extra Kilometer Cost',
-                        hint: 'e.g., 2.5',
-                        suffix: 'EGP',
-                        inputType: const TextInputType.numberWithOptions(decimal: true),
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildInputField(
-                        controller: _dailyHourLimitController,
-                        label: 'Daily Hour Limit',
-                        hint: 'e.g., 8',
-                        suffix: 'Hours',
-                        inputType: TextInputType.number,
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildInputField(
-                        controller: _extraHourCostController,
-                        label: 'Extra Hour Cost',
-                        hint: 'e.g., 10',
-                        suffix: 'EGP',
-                        inputType: const TextInputType.numberWithOptions(decimal: true),
-                      ),
-                    ],
+                        SizedBox(height: 24.h),
+                        _buildInputField(
+                          controller: _dailyKmLimitController,
+                          label: 'Daily Kilometer Limit',
+                          hint: 'e.g., 200',
+                          suffix: 'KM',
+                          inputType: TextInputType.number,
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildInputField(
+                          controller: _extraKmCostController,
+                          label: 'Extra Kilometer Cost',
+                          hint: 'e.g., 2.5',
+                          suffix: 'EGP',
+                          inputType: const TextInputType.numberWithOptions(decimal: true),
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildInputField(
+                          controller: _dailyHourLimitController,
+                          label: 'Daily Hour Limit',
+                          hint: 'e.g., 8',
+                          suffix: 'Hours',
+                          inputType: TextInputType.number,
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildInputField(
+                          controller: _extraHourCostController,
+                          label: 'Extra Hour Cost',
+                          hint: 'e.g., 10',
+                          suffix: 'EGP',
+                          inputType: const TextInputType.numberWithOptions(decimal: true),
+                        ),
+                        SizedBox(height: 32.h),
+                        Center(
+                          child: ElevatedButton.icon(
+                            onPressed: _submitForm,
+                            icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                            label: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 24.w),
+                              child: Text(
+                                'Submit',
+                                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1a237e),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 4,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 80.h),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                right: 16.w,
-                bottom: 16.h,
-                child: FloatingActionButton(
-                  onPressed: _submitForm,
-                  backgroundColor: const Color(0xFF1a237e),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

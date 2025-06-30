@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,7 @@ import '../profile_custom_widgets/licence_image_widget.dart';
 import 'id_image_upload_widget.dart';
 
 
-class SignupForm extends StatelessWidget {
+class SignupForm extends StatefulWidget {
   const SignupForm({
     super.key,
     required this.formKey,
@@ -37,6 +38,13 @@ class SignupForm extends StatelessWidget {
   final TextEditingController phoneController;
   final TextEditingController passwordController;
   final TextEditingController nationalIdController;
+
+  @override
+  State<SignupForm> createState() => _SignupFormState();
+}
+
+class _SignupFormState extends State<SignupForm> {
+  Map<String, String?> fieldErrors = {};
 
   // Email Validator
   String? _validateEmail(String value) {
@@ -67,16 +75,29 @@ class SignupForm extends StatelessWidget {
     return null;
   }
 
+  void _handleBackendError(String error) {
+    try {
+      final Map<String, dynamic> errorMap = jsonDecode(error);
+      setState(() {
+        fieldErrors = errorMap.map((k, v) => MapEntry(k, (v is List && v.isNotEmpty) ? v[0].toString() : v.toString()));
+      });
+    } catch (_) {
+      // If the error is not a JSON, show it as a general toast
+      setState(() { fieldErrors.clear(); });
+      showCustomToast(error, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
-      key: formKey,
+      key: widget.formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Create Account Text
           Text(
-            headerText.tr(),
+            widget.headerText.tr(),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -87,72 +108,138 @@ class SignupForm extends StatelessWidget {
 
           // First Name Field
           CustomTextFormField(
-            controller: firstnameController,
+            controller: widget.firstnameController,
             prefixIcon: Icons.person,
             hintText: TextManager.firstNameHint,
+            validator: (value) {
+              if (value.trim().isEmpty) {
+                return 'Please enter your first name.';
+              }
+              final nameRegex = RegExp(r'^[A-Za-z\u0600-\u06FF\s]+$');
+              if (!nameRegex.hasMatch(value.trim())) {
+                return 'Name can only contain letters, Arabic characters, and spaces.';
+              }
+              return null;
+            },
           ),
+
+          if (fieldErrors['first_name'] != null) // Display backend error separately
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+              child: Text(
+                fieldErrors['first_name']!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
 
           SizedBox(height: 0.02.sh),
 
           // Last Name Field
           CustomTextFormField(
-            controller: lastnameController,
+            controller: widget.lastnameController,
             prefixIcon: Icons.person,
             hintText: TextManager.lastNameHint,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your last name.';
+              }
+              // Allow letters (English and Arabic) and spaces
+              final nameRegex = RegExp(r'^[A-Za-z\u0600-\u06FF\s]+$');
+              if (!nameRegex.hasMatch(value)) {
+                return 'Name can only contain letters, Arabic characters, and spaces.';
+              }
+              return null; // Return null if local validation passes
+            },
           ),
+          if (fieldErrors['last_name'] != null) // Display backend error separately
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+              child: Text(
+                fieldErrors['last_name']!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
 
           SizedBox(height: 0.02.sh),
 
           // Email Field
           CustomTextFormField(
-            controller: emailController,
+            controller: widget.emailController,
             prefixIcon: Icons.email,
             hintText: TextManager.emailHint,
-            validator: _validateEmail,
+            validator: (value) {
+              return _validateEmail(value ?? ''); // Only return local validation error
+            },
           ),
+          if (fieldErrors['email'] != null) // Display backend error separately
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+              child: Text(
+                fieldErrors['email']!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
 
           SizedBox(height: 0.02.sh),
 
           // Phone Number Field
           CustomTextFormField(
-            controller: phoneController,
+            controller: widget.phoneController,
             prefixIcon: Icons.phone,
             hintText: TextManager.phoneHint,
-            validator: _validatePhone,
+            validator: (value) {
+              return _validatePhone(value ?? ''); // Only return local validation error
+            },
           ),
+          if (fieldErrors['phone_number'] != null) // Display backend error separately
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+              child: Text(
+                fieldErrors['phone_number']!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
 
           SizedBox(height: 0.02.sh),
           // Password Field
           CustomTextFormField(
-            controller: passwordController,
+            controller: widget.passwordController,
             prefixIcon: Icons.lock,
             hintText: TextManager.passwordHint,
             obscureText: true,
-            validator: _validatePassword,
+            validator: _validatePassword, // Only return local validation error
             enablePasswordToggle: true,
           ),
+          // Note: Password field doesn't have a backend error display in the provided example JSON.
+          // If it did, you would add an if (fieldErrors['password'] != null) block here.
+
 
           SizedBox(height: 0.02.sh),
-          // Password Field
+          // National ID Field
           CustomTextFormField(
-            controller: nationalIdController,
+            controller: widget.nationalIdController,
             prefixIcon: Icons.perm_identity,
             hintText: TextManager.nationalIdHint,
-             validator: _validateNationalId,
+            validator: (value) {
+              return _validateNationalId(value ?? ''); // Only return local validation error
+            },
           ),
+          if (fieldErrors['national_id'] != null) // Display backend error separately
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+              child: Text(
+                fieldErrors['national_id']!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
 
           SizedBox(height: 0.03.sh),
 
+          // Removed the commented out custom image pickers for brevity if not actively used.
           // const CustomImagePicker(label: TextManager.upload_your_id,),
-
-          SizedBox(height: 0.03.sh),
-
-          // Upload ID Images
+          // SizedBox(height: 0.03.sh),
           // const IdImageUploadWidget(),
-
-          SizedBox(height: 0.03.sh),
-
-          // Upload Licence Image Button
+          // SizedBox(height: 0.03.sh),
           // const LicenceImageWidget(),
 
           SizedBox(
@@ -162,11 +249,11 @@ class SignupForm extends StatelessWidget {
           BlocConsumer<AuthCubit, AuthState>(
             listener: (context, state) {
               if (state is SignUpSuccess) {
+                setState(() { fieldErrors.clear(); }); // Clear backend errors on success
                 showCustomToast(state.message, false);
-                // Navigate to rental search screen after successful signup
                 Navigator.pushReplacementNamed(context, ScreensName.rentalSearchScreen);
               } else if (state is SignUpFailure) {
-                showCustomToast(state.error, true);
+                _handleBackendError(state.error); // Handle backend errors
               }
             },
             builder: (context, state) {
@@ -179,14 +266,19 @@ class SignupForm extends StatelessWidget {
               return CustomElevatedButton(
                 text: TextManager.signUpText,
                 onPressed: () {
-                  if (formKey.currentState!.validate()) {
+                  // Clear previous backend errors before validating to avoid stale messages
+                  setState(() {
+                    fieldErrors.clear();
+                  });
+
+                  if (widget.formKey.currentState!.validate()) {
                     authCubit.signup(
-                      firstnameController.text,
-                      lastnameController.text,
-                      emailController.text,
-                      phoneController.text,
-                      passwordController.text,
-                      nationalIdController.text,
+                      widget.firstnameController.text,
+                      widget.lastnameController.text,
+                      widget.emailController.text,
+                      widget.phoneController.text,
+                      widget.passwordController.text,
+                      widget.nationalIdController.text,
                     );
                   }
                 },

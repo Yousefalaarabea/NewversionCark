@@ -1,8 +1,6 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/utils/text_manager.dart';
 import '../../../../core/utils/assets_manager.dart';
 import '../../../../config/routes/screens_name.dart';
 import '../cubits/add_car_cubit.dart';
@@ -183,9 +181,9 @@ class _ViewCarsScreenState extends State<ViewCarsScreen> {
                           ),
                         ),
                       if (user != null)
-                        Text(
+                        const Text(
                           'Car Owner',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
                           ),
@@ -226,74 +224,73 @@ class _ViewCarsScreenState extends State<ViewCarsScreen> {
         },
       ),
 
-      body: BlocBuilder<AddCarCubit, AddCarState>(
+      body: BlocConsumer<AddCarCubit, AddCarState>(
+        listener: (context, state) {
+          if (state is AddCarSuccess) {
+            // Refresh the cars list after successful operation
+            context.read<AddCarCubit>().fetchCarsFromServer();
+            
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'Car updated successfully!'
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          } else if (state is AddCarError) {
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is AddCarLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // if (cars.isEmpty) {
-          //   return Center(
-          //     child: Column(
-          //       mainAxisAlignment: MainAxisAlignment.center,
-          //       children: [
-          //         Icon(
-          //           Icons.directions_car_outlined,
-          //           size: 64.sp,
-          //           color: Colors.grey,
-          //         ),
-          //         SizedBox(height: 16.h),
-                  // Text(
-                  //   TextManager.noCarsMessage.tr(),
-                  //   style: TextStyle(
-                  //     fontSize: 16.sp,
-                  //     color: Colors.grey,
-                  //   ),
-                  // ),
           if (state is AddCarError) {
-            return Center(
-              child: Text(state.message, style: const TextStyle(color: Colors.red)),
-            );
-          }
-
-          if (state is AddCarFetchedSuccessfully) {
-            final cars = state.cars;
-            final filteredCars = cars.where((car) => car.ownerId == currentUser?.id).toList();
-
-            if (widget.userRole == 1 || filteredCars.isEmpty) {
-            // رينتر أو ماعندوش عربيات، نعرض شاشة فاضية مع زر إضافة عربية
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.directions_car_outlined,
+                    Icons.error_outline,
                     size: 64.sp,
-                    color: Colors.grey,
+                    color: Colors.red,
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'No cars found. Add your first car!',
+                    'Error loading cars',
                     style: TextStyle(
-                      fontSize: 16.sp,
-                      color: Colors.grey,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
                     ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    state.message,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 24.h),
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(context, ScreensName.addCarScreen);
+                      context.read<AddCarCubit>().fetchCarsFromServer();
                     },
-                    icon: Icon(
-                      Icons.add,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    label: Text(
-                      'Add Car',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(
                           horizontal: 24.w, vertical: 12.h),
@@ -302,37 +299,91 @@ class _ViewCarsScreenState extends State<ViewCarsScreen> {
                 ],
               ),
             );
-            }
-
-          return Padding(
-            padding: EdgeInsets.all(16.w),
-            child: CarDataTable(
-              cars: cars,
-              onEdit: (CarModel car) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddCarScreen(carToEdit: car),
-                  ),
-                ).then((_) {
-                  // Rebuild the screen when returning from edit
-                  (context as Element).markNeedsBuild();
-                });
-              },
-              onDelete: (CarModel car) => _showDeleteConfirmation(context, car),
-              onViewDetails: (CarModel car) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ViewCarDetailsScreen(car: car),
-                  ),
-                );
-              },
-            ),
-          );
           }
 
-          return const SizedBox.shrink();
+          if (state is AddCarFetchedSuccessfully) {
+            final cars = state.cars;
+            final filteredCars = cars.where((car) => car.ownerId == currentUser?.id).toList();
+
+            if (filteredCars.isEmpty) {
+              // No cars found, show empty state
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.directions_car_outlined,
+                      size: 64.sp,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'No cars found. Add your first car!',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(context, ScreensName.addCarScreen);
+                      },
+                      icon: Icon(
+                        Icons.add,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                      label: Text(
+                        'Add Car',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 24.w, vertical: 12.h),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Padding(
+              padding: EdgeInsets.all(16.w),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await context.read<AddCarCubit>().fetchCarsFromServer();
+                },
+                child: CarDataTable(
+                  cars: filteredCars,
+                  onEdit: (CarModel car) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddCarScreen(carToEdit: car),
+                      ),
+                    ).then((_) {
+                      // Refresh cars list when returning from edit
+                      context.read<AddCarCubit>().fetchCarsFromServer();
+                    });
+                  },
+                  onDelete: (CarModel car) => _showDeleteConfirmation(context, car),
+                  onViewDetails: (CarModel car) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ViewCarDetailsScreen(car: car),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          }
+
+          // Default loading state
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );

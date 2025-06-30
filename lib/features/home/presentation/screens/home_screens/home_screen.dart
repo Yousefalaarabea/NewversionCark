@@ -168,12 +168,12 @@ class HomeScreen extends StatelessWidget {
                         Navigator.pushNamed(context, ScreensName.bookingRequestScreen);
                       },
                     ),
-                  ListTile(
-                    leading: const Icon(Icons.credit_card),
-                    title: const Text('Payment Methods'),
-                    onTap: () => _navigateAndCloseDrawer(
-                        context, PaymentMethodsScreen()),
-                  ),
+                  // ListTile(
+                  //   leading: const Icon(Icons.credit_card),
+                  //   title: const Text('Payment Methods'),
+                  //   onTap: () => _navigateAndCloseDrawer(
+                  //       context, PaymentMethodsScreen(car: , totalPrice: /* provide totalPrice */)),
+                  // ),
                   ListTile(
                     leading: const Icon(Icons.contact_support),
                     title: const Text('Contact & Help'),

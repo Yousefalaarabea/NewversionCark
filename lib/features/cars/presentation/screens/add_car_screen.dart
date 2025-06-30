@@ -1,7 +1,8 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../config/routes/screens_name.dart';
 import '../../../../core/utils/assets_manager.dart';
 import '../../../../core/utils/text_manager.dart';
 import '../../../../core/services/notification_service.dart';
@@ -11,6 +12,7 @@ import '../widgets/add_car_form.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/add_car_cubit.dart';
 import '../cubits/add_car_state.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddCarScreen extends StatefulWidget {
   final CarModel? carToEdit;
@@ -35,6 +37,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
   late final TextEditingController _fuelTypeController;
   late final TextEditingController _odometerController;
 
+  File? _carImage;
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -42,21 +47,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
     _modelController = TextEditingController(text: widget.carToEdit?.model);
     _brandController = TextEditingController(text: widget.carToEdit?.brand);
     _carTypeController = TextEditingController(text: widget.carToEdit?.carType);
-    _carCategoryController =
-        TextEditingController(text: widget.carToEdit?.carCategory);
-    _plateNumberController =
-        TextEditingController(text: widget.carToEdit?.plateNumber);
-    _yearController =
-        TextEditingController(text: widget.carToEdit?.year.toString());
+    _carCategoryController = TextEditingController(text: widget.carToEdit?.carCategory);
+    _plateNumberController = TextEditingController(text: widget.carToEdit?.plateNumber);
+    _yearController = TextEditingController(text: widget.carToEdit?.year?.toString() ?? '');
     _colorController = TextEditingController(text: widget.carToEdit?.color);
-    _seatingCapacityController = TextEditingController(
-        text: widget.carToEdit?.seatingCapacity.toString());
-    _transmissionTypeController =
-        TextEditingController(text: widget.carToEdit?.transmissionType);
-    _fuelTypeController =
-        TextEditingController(text: widget.carToEdit?.fuelType);
-    _odometerController = TextEditingController(
-        text: widget.carToEdit?.currentOdometerReading.toString());
+    _seatingCapacityController = TextEditingController(text: widget.carToEdit?.seatingCapacity?.toString() ?? '');
+    _transmissionTypeController = TextEditingController(text: widget.carToEdit?.transmissionType);
+    _fuelTypeController = TextEditingController(text: widget.carToEdit?.fuelType);
+    _odometerController = TextEditingController(text: widget.carToEdit?.currentOdometerReading?.toString() ?? '');
   }
 
   @override
@@ -80,31 +78,21 @@ class _AddCarScreenState extends State<AddCarScreen> {
     return BlocConsumer<AddCarCubit, AddCarState>(
       listener: (context, state) {
         if (state is AddCarSuccess) {
-          // Show success message
+          context.read<AddCarCubit>().fetchCarsFromServer();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                  'Car "${state.car.brand} ${state.car.model}" added successfully!'),
+              content: Text('Operation completed successfully!'),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-
-          // Navigate to OwnerHomeScreen
-          Navigator.pushNamedAndRemoveUntil(
-              context, ScreensName.ownerHomeScreen, (route) => false);
-
-          // Show additional feedback
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Your car is now available for rent!'),
-              backgroundColor: Colors.blue,
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         } else if (state is AddCarError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
           );
         }
       },
@@ -128,12 +116,68 @@ class _AddCarScreenState extends State<AddCarScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset(AssetsManager.carSignUp,
-                                height: 0.05.sh),
+                            Image.asset(AssetsManager.carSignUp, height: 0.05.sh),
                             SizedBox(width: 0.02.sw),
-                            Image.asset(AssetsManager.carkSignUp,
-                                height: 0.03.sh),
+                            Image.asset(AssetsManager.carkSignUp, height: 0.03.sh),
                           ],
+                        ),
+                        SizedBox(height: 24.h),
+
+                        // Car Photo Section
+                        GestureDetector(
+                          onTap: () async {
+                            final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+                            if (pickedFile != null) {
+                              setState(() {
+                                _carImage = File(pickedFile.path);
+                              });
+                            }
+                          },
+                          child: AnimatedContainer(
+                            duration: Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                            width: 150.w,
+                            height: 150.w,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(color: Colors.grey, width: 1.w),
+                              boxShadow: _carImage != null
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ]
+                                  : [],
+                            ),
+                            child: _carImage != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    child: Image.file(
+                                      _carImage!,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                    ),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.camera_alt,
+                                        size: 50.w,
+                                        color: Colors.grey[600],
+                                      ),
+                                      SizedBox(height: 8.h),
+                                      Text(
+                                        'Add Car Photo',
+                                        style: TextStyle(color: Colors.grey[700]),
+                                      ),
+                                    ],
+                                  ),
+                          ),
                         ),
                         SizedBox(height: 24.h),
 
@@ -148,12 +192,10 @@ class _AddCarScreenState extends State<AddCarScreen> {
                           yearController: _yearController,
                           colorController: _colorController,
                           seatingCapacityController: _seatingCapacityController,
-                          transmissionTypeController:
-                              _transmissionTypeController,
+                          transmissionTypeController: _transmissionTypeController,
                           fuelTypeController: _fuelTypeController,
                           odometerController: _odometerController,
                         ),
-                        // Add extra padding at bottom for FAB
                         SizedBox(height: 80.h),
                       ],
                     ),
@@ -164,21 +206,28 @@ class _AddCarScreenState extends State<AddCarScreen> {
                     child: FloatingActionButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
+                          if (_carImage == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please add a car photo!'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
                           final car = CarModel(
-                            id: DateTime.now().millisecondsSinceEpoch,
+                            id: widget.carToEdit?.id ?? DateTime.now().millisecondsSinceEpoch,
                             model: _modelController.text,
                             brand: _brandController.text,
                             carType: _carTypeController.text,
                             carCategory: _carCategoryController.text,
                             plateNumber: _plateNumberController.text,
-                            year: int.parse(_yearController.text),
+                            year: int.tryParse(_yearController.text) ?? 0,
                             color: _colorController.text,
-                            seatingCapacity:
-                                int.parse(_seatingCapacityController.text),
+                            seatingCapacity: int.tryParse(_seatingCapacityController.text) ?? 0,
                             transmissionType: _transmissionTypeController.text,
                             fuelType: _fuelTypeController.text,
-                            currentOdometerReading:
-                                int.parse(_odometerController.text),
+                            currentOdometerReading: int.tryParse(_odometerController.text) ?? 0,
                             availability: true,
                             currentStatus: 'Available',
                             approvalStatus: false,
@@ -187,25 +236,29 @@ class _AddCarScreenState extends State<AddCarScreen> {
                               availableWithDriver: false,
                               dailyRentalPrice: 0.0,
                             ),
-                            ownerId: authCubit.userModel!.id,
+                            ownerId: authCubit.userModel?.id ?? '2',
                           );
-                          
-                          // Add car using the cubit
-                          context.read<AddCarCubit>().addCar(car);
-                          
-                          // Send notification with owner name
-                          final ownerName =
-                              '${authCubit.userModel!.firstName} ${authCubit.userModel!.lastName}';
-                          await NotificationService().sendNewCarNotification(
-                            carBrand: car.brand,
-                            carModel: car.model,
-                            ownerName: ownerName,
-                          );
+
+                          if (widget.carToEdit != null) {
+                            context.read<AddCarCubit>().updateCar(car);
+                          } else {
+                            context.read<AddCarCubit>().addCar(car);
+                          }
+
+                          if (authCubit.userModel != null) {
+                            final ownerName =
+                                '${authCubit.userModel!.firstName} ${authCubit.userModel!.lastName}';
+                            await NotificationService().sendNewCarNotification(
+                              carBrand: car.brand,
+                              carModel: car.model,
+                              ownerName: ownerName,
+                            );
+                          }
                         }
                       },
                       backgroundColor: const Color(0xFF1a237e),
-                      child: const Icon(
-                        Icons.arrow_forward,
+                      child: Icon(
+                        widget.carToEdit != null ? Icons.save : Icons.arrow_forward,
                         color: Colors.white,
                       ),
                     ),
@@ -218,4 +271,4 @@ class _AddCarScreenState extends State<AddCarScreen> {
       },
     );
   }
-}
+} 

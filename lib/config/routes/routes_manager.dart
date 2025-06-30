@@ -21,16 +21,12 @@ import '../../features/home/presentation/screens/home_screens/home_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/rental_search_screen.dart';
 import '../../features/notifications/presentation/screens/owner_notification_screen.dart';
 import '../../features/notifications/presentation/screens/renter_notification_screen.dart';
-import '../../features/shared/presentation/screens/navigation_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/booking_summary_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/trip_management_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/payment_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/booking_request_screen.dart';
-import '../../features/home/presentation/screens/booking_screens/deposit_payment_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/booking_history_screen.dart';
-import '../../features/home/presentation/screens/booking_screens/payment_methods_screen.dart';
-import '../../features/home/presentation/screens/booking_screens/deposit_input_screen.dart';
 import '../../features/home/presentation/model/car_model.dart';
 import '../../features/home/presentation/model/location_model.dart';
 import '../../features/owner/presentation/screens/owner_home_screen.dart';
@@ -193,7 +189,8 @@ abstract class RoutesManager {
         return MaterialPageRoute(builder: (context) => const BookingHistoryScreen());
 
       case ScreensName.paymentMethodsScreen:
-        return MaterialPageRoute(builder: (context) => const PaymentMethodsScreen());
+        // This route requires car and totalPrice, so remove or update as needed.
+        return MaterialPageRoute(builder: (context) => Scaffold(body: Center(child: Text('Please navigate to Payment Methods from Booking Summary'))));
 
       case ScreensName.depositPaymentScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;
@@ -201,27 +198,27 @@ abstract class RoutesManager {
         final totalPrice = args['totalPrice'] as double;
         final requestId = args['requestId'] as String?;
         final bookingData = args['bookingData'] as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (context) => DepositPaymentScreen(
-            car: car,
-            totalPrice: totalPrice,
-            requestId: requestId,
-            bookingData: bookingData,
-          ),
-        );
+        // return MaterialPageRoute(
+        //   builder: (context) => DepositPaymentScreen(
+        //     car: car,
+        //     totalPrice: totalPrice,
+        //     requestId: requestId,
+        //     bookingData: bookingData,
+        //   ),
+        // );
 
-      case ScreensName.depositInputScreen:
-        final args = routeSettings.arguments as Map<String, dynamic>;
-        final car = args['car'] as CarModel;
-        final totalPrice = args['totalPrice'] as double;
-        final stops = args['stops'] as List<dynamic>;
-        return MaterialPageRoute(
-          builder: (context) => DepositInputScreen(
-            car: car,
-            totalPrice: totalPrice,
-            stops: stops.cast<LocationModel>(),
-          ),
-        );
+      // case ScreensName.depositInputScreen:
+      //   final args = routeSettings.arguments as Map<String, dynamic>;
+      //   final car = args['car'] as CarModel;
+      //   final totalPrice = args['totalPrice'] as double;
+      //   final stops = args['stops'] as List<dynamic>;
+      //   return MaterialPageRoute(
+      //     builder: (context) => DepositInputScreen(
+      //       car: car,
+      //       totalPrice: totalPrice,
+      //       stops: stops.cast<LocationModel>(),
+      //     ),
+      //   );
 
       default:
         return MaterialPageRoute(builder: (context) {

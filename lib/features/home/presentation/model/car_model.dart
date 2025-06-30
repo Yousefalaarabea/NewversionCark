@@ -61,7 +61,7 @@ class CarModel {
 
   factory CarModel.fromJson(Map<String, dynamic> json) {
     return CarModel(
-      ownerId: json['ownerId'],
+      ownerId: json['owner']?.toString() ?? '',
       id: json['id'],
       model: json['model'],
       brand: json['brand'],
@@ -80,7 +80,7 @@ class CarModel {
       approvalStatus: json['approval_status'],
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
       updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
-      rentalOptions: RentalOptions.fromJson(json['rental_widgets'] ?? {}),
+      rentalOptions: RentalOptions.fromJson(json['rental_options'] ?? {}),
       imageUrl: json['image_url'] ?? 'https://cdn-icons-png.flaticon.com/512/743/743007.png',
       driverName: json['driver_name'],
       driverRating: json['driver_rating']?.toDouble(),
@@ -89,6 +89,22 @@ class CarModel {
       waitingHourCost: json['waiting_hour_cost']?.toDouble(),
       extraKmRate: json['extra_km_rate']?.toDouble(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'model': model,
+      'brand': brand,
+      'car_type': carType,
+      'car_category': carCategory,
+      'plate_number': plateNumber,
+      'year': year,
+      'color': color,
+      'seating_capacity': seatingCapacity,
+      'transmission_type': transmissionType,
+      'fuel_type': fuelType,
+      'current_odometer_reading': currentOdometerReading,
+    };
   }
 
   CarModel copyWith({
@@ -202,8 +218,8 @@ class RentalOptions {
 
   factory RentalOptions.fromJson(Map<String, dynamic> json) {
     return RentalOptions(
-      availableWithoutDriver: json['available_without_driver'],
-      availableWithDriver: json['available_with_driver'],
+      availableWithoutDriver: json['available_without_driver'] ?? false,
+      availableWithDriver: json['available_with_driver'] ?? false,
       dailyRentalPrice: json['daily_rental_price']?.toDouble(),
       monthlyRentalPrice: json['monthly_rental_price']?.toDouble(),
       yearlyRentalPrice: json['yearly_rental_price']?.toDouble(),
@@ -211,6 +227,19 @@ class RentalOptions {
       monthlyPriceWithDriver: json['monthly_price_with_driver']?.toDouble(),
       yearlyPriceWithDriver: json['yearly_price_with_driver']?.toDouble(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'available_without_driver': availableWithoutDriver,
+      'available_with_driver': availableWithDriver,
+      'daily_rental_price': dailyRentalPrice,
+      'monthly_rental_price': monthlyRentalPrice,
+      'yearly_rental_price': yearlyRentalPrice,
+      'daily_rental_price_with_driver': dailyRentalPriceWithDriver,
+      'monthly_price_with_driver': monthlyPriceWithDriver,
+      'yearly_price_with_driver': yearlyPriceWithDriver,
+    };
   }
 
   factory RentalOptions.mock() {

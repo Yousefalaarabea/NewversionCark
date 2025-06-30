@@ -151,8 +151,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
     catch(error)
     {
-
-      emit(LoginFailure("Error"));
+      if (error is DioError && error.response != null && error.response?.data is Map<String, dynamic>) {
+        emit(LoginFailure(jsonEncode(error.response?.data)));
+      } else {
+        emit(LoginFailure(error.toString()));
+      }
     }
   }
 
@@ -223,8 +226,12 @@ class AuthCubit extends Cubit<AuthState> {
         await Future.delayed(const Duration(seconds: 2));
         emit(SignUpSuccess("Signup successful"));
       }
-    }catch(e){
-      emit(SignUpFailure("Something went wrong. Please try again."));
+    } catch (error) {
+      if (error is DioError && error.response != null && error.response?.data is Map<String, dynamic>) {
+        emit(SignUpFailure(jsonEncode(error.response?.data)));
+      } else {
+        emit(SignUpFailure(error.toString()));
+      }
     }
     log("firstname: $firstname, lastname: $lastname, email: $email, phone: $phone, password: $password , id : $national_id");
 

@@ -1,12 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../cubits/add_car_cubit.dart';
-import '../cubits/add_car_state.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:test_cark/features/home/presentation/model/car_model.dart';
 import '../../../../config/routes/screens_name.dart';
+import '../../../auth/presentation/widgets/image_upload_widget.dart';
+import '../cubits/add_car_cubit.dart';
+import '../cubits/add_car_state.dart';
 
 class CarRentalOptionsScreen extends StatefulWidget {
   final CarModel carData;
@@ -28,6 +31,7 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
 
   bool _availableWithoutDriver = false;
   bool _availableWithDriver = false;
+  File? _driverLicenseImage;
   final _dailyPriceController = TextEditingController();
   final _monthlyPriceController = TextEditingController();
   final _yearlyPriceController = TextEditingController();
@@ -220,11 +224,9 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
                                   (value) {
                                     setState(() {
                                       _availableWithoutDriver = value ?? false;
-                                      if (_availableWithoutDriver) {
-                                        _availableWithDriver = false;
-                                      }
                                     });
                                   },
+                                  icon: FontAwesomeIcons.idCard,
                                 ),
                               ),
                               SizedBox(width: 16.w),
@@ -235,15 +237,31 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
                                   (value) {
                                     setState(() {
                                       _availableWithDriver = value ?? false;
-                                      if (_availableWithDriver) {
-                                        _availableWithoutDriver = false;
-                                      }
                                     });
                                   },
+                                  icon: FontAwesomeIcons.userTie,
                                 ),
                               ),
                             ],
                           ),
+                          if (_availableWithDriver) ...[
+                            SizedBox(height: 24.h),
+                            FadeTransition(
+                              opacity: _fadeAnimation,
+                              child: SlideTransition(
+                                position: _slideAnimation,
+                                child: ImageUploadWidget(
+                                  label: 'Upload Driving License (Camera Only)',
+                                  icon: Icons.file_upload,
+                                  onImageSelected: (file) {
+                                    setState(() {
+                                      _driverLicenseImage = file;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                           SizedBox(height: 32.h),
 
                           // Pricing Fields
@@ -260,26 +278,18 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
                             // Daily Price
                             TextFormField(
                               controller: _dailyPriceController,
+                              keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                                labelText: 'Daily Rental Price',
-                                hintText: 'e.g., 500',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                suffixText: 'EGP',
+                                labelText: 'Daily Price',
+                                prefixIcon: Icon(Icons.attach_money),
                               ),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                              ],
                               onChanged: _updatePrices,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter the daily rental price';
                                 }
-                                final price = double.tryParse(value);
-                                if (price == null || price <= 0) {
-                                  return 'Please enter a valid price greater than 0';
+                                if (double.tryParse(value) == null) {
+                                  return 'Please enter a valid number';
                                 }
                                 return null;
                               },
@@ -289,81 +299,54 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
                             // Monthly Price (Read-only)
                             TextFormField(
                               controller: _monthlyPriceController,
+                              readOnly: true,
                               decoration: InputDecoration(
-                                labelText: 'Monthly Rental Price (10% discount)',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                suffixText: 'EGP',
-                                filled: true,
-                                fillColor: Colors.grey[100],
+                                labelText: 'Monthly Price (auto-calculated)',
+                                prefixIcon: Icon(Icons.calendar_month),
                               ),
-                              enabled: false,
                             ),
                             SizedBox(height: 16.h),
 
                             // Yearly Price (Read-only)
                             TextFormField(
                               controller: _yearlyPriceController,
+                              readOnly: true,
                               decoration: InputDecoration(
-                                labelText: 'Yearly Rental Price (20% discount)',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                suffixText: 'EGP',
-                                filled: true,
-                                fillColor: Colors.grey[100],
+                                labelText: 'Yearly Price (auto-calculated)',
+                                prefixIcon: Icon(Icons.calendar_today),
                               ),
-                              enabled: false,
                             ),
 
                             // Add extra padding at bottom for FAB
                             SizedBox(height: 80.h),
                           ],
+                          SizedBox(height: 32.h),
+                          Center(
+                            child: ElevatedButton.icon(
+                              onPressed: _navigateToUsagePolicy,
+                              icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                              label: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 24.w),
+                                child: Text(
+                                  'Continue',
+                                  style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1a237e),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 4,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
               ),
-              if (_availableWithDriver || _availableWithoutDriver)
-                Positioned(
-                  right: 16.w,
-                  bottom: 16.h,
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      if (!_availableWithDriver && !_availableWithoutDriver) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select a rental option'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
-                      if (_formKey.currentState!.validate()) {
-                        final options = RentalOptions(
-                          availableWithoutDriver: _availableWithoutDriver,
-                          availableWithDriver: _availableWithDriver,
-                          dailyRentalPrice: double.parse(_dailyPriceController.text),
-                        );
-                        Navigator.pushNamed(
-                          context,
-                          ScreensName.usagePolicyScreen,
-                          arguments: {
-                            'car': widget.carData,
-                            'rentalOptions': options,
-                          },
-                        );
-                      }
-                    },
-                    backgroundColor: const Color(0xFF1a237e),
-                    child: const Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
             ],
           ),
         );
@@ -371,7 +354,7 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
     );
   }
 
-  Widget _buildOptionTile(String title, bool value, Function(bool?) onChanged) {
+  Widget _buildOptionTile(String title, bool value, Function(bool?) onChanged, {IconData? icon}) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -383,6 +366,10 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
       ),
       child: Column(
         children: [
+          if (icon != null) ...[
+            FaIcon(icon, size: 28.sp, color: value ? const Color(0xFF1a237e) : Colors.black54),
+            SizedBox(height: 8.h),
+          ],
           Text(
             title,
             textAlign: TextAlign.center,

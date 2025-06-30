@@ -4,13 +4,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_cark/config/themes/app_colors.dart';
 import '../../../../../config/routes/screens_name.dart';
 import '../../../../../core/services/notification_service.dart';
-import '../../../../auth/presentation/widgets/profile_custom_widgets/document_upload_flow.dart';
 import '../../model/car_model.dart';
 import '../../cubit/car_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_cark/features/home/presentation/screens/booking_screens/deposit_input_screen.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:test_cark/features/home/presentation/screens/booking_screens/payment_methods_screen.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
   final CarModel car;
@@ -341,10 +340,9 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => DepositInputScreen(
+                          builder: (_) => PaymentMethodsScreen(
                             car: widget.car,
                             totalPrice: widget.totalPrice,
-                            stops: stops,
                           ),
                         ),
                       );
