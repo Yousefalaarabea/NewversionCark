@@ -9,7 +9,7 @@ import 'api_service.dart';
 class CarService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
+      baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/', // 🔁 url السيرفر بتاعنا من الباك
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       headers: {

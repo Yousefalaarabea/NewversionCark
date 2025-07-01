@@ -188,200 +188,300 @@ class RentalSearchScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(15.r),
                               ),
                             ),
+                            // onPressed: () {
+                            //       // Enable validation first
+                            //       context.read<CarCubit>().enableValidation();
+                            //
+                            //       // Validate required fields
+                            //       final pickupStation = state.pickupStation;
+                            //       final dateRange = state.dateRange;
+                            //       final withDriver = state.withDriver;
+                            //       final selectedPaymentMethod = state.selectedPaymentMethod;
+                            //
+                            //       // Check if pickup station is filled
+                            //       if (pickupStation == null) {
+                            //         ScaffoldMessenger.of(context).showSnackBar(
+                            //           SnackBar(
+                            //             content: Row(
+                            //               children: [
+                            //                 Icon(
+                            //                   Icons.warning,
+                            //                   color: Colors.white,
+                            //                   size: 20.sp,
+                            //                 ),
+                            //                 SizedBox(width: 10.w),
+                            //                 Expanded(
+                            //                   child: Text(
+                            //                     'Please select a pick-up station',
+                            //                     style: TextStyle(
+                            //                       fontSize: 14.sp,
+                            //                       fontWeight: FontWeight.w500,
+                            //                     ),
+                            //                   ),
+                            //                 ),
+                            //               ],
+                            //             ),
+                            //             backgroundColor: Colors.orange,
+                            //             duration: Duration(seconds: 3),
+                            //             behavior: SnackBarBehavior.floating,
+                            //             shape: RoundedRectangleBorder(
+                            //               borderRadius: BorderRadius.circular(10.r),
+                            //             ),
+                            //           ),
+                            //         );
+                            //         return;
+                            //       }
+                            //
+                            //       // Check if date range is selected
+                            //       if (dateRange == null) {
+                            //         ScaffoldMessenger.of(context).showSnackBar(
+                            //           SnackBar(
+                            //             content: Row(
+                            //               children: [
+                            //                 Icon(
+                            //                   Icons.warning,
+                            //                   color: Colors.white,
+                            //                   size: 20.sp,
+                            //                 ),
+                            //                 SizedBox(width: 10.w),
+                            //                 Expanded(
+                            //                   child: Text(
+                            //                     'Please select a date range',
+                            //                     style: TextStyle(
+                            //                       fontSize: 14.sp,
+                            //                       fontWeight: FontWeight.w500,
+                            //                     ),
+                            //                   ),
+                            //                 ),
+                            //               ],
+                            //             ),
+                            //             backgroundColor: Colors.orange,
+                            //             duration: Duration(seconds: 3),
+                            //             behavior: SnackBarBehavior.floating,
+                            //             shape: RoundedRectangleBorder(
+                            //               borderRadius: BorderRadius.circular(10.r),
+                            //             ),
+                            //           ),
+                            //         );
+                            //         return;
+                            //       }
+                            //
+                            //       // Different flow based on driver selection
+                            //       if (withDriver == true) {
+                            //         // Check if payment method is selected for with driver
+                            //         if (selectedPaymentMethod == null) {
+                            //           ScaffoldMessenger.of(context).showSnackBar(
+                            //             SnackBar(
+                            //               content: Row(
+                            //                 children: [
+                            //                   Icon(
+                            //                     Icons.warning,
+                            //                     color: Colors.white,
+                            //                     size: 20.sp,
+                            //                   ),
+                            //                   SizedBox(width: 10.w),
+                            //                   Expanded(
+                            //                     child: Text(
+                            //                       'Please select a payment method',
+                            //                       style: TextStyle(
+                            //                         fontSize: 14.sp,
+                            //                         fontWeight: FontWeight.w500,
+                            //                       ),
+                            //                     ),
+                            //                   ),
+                            //                 ],
+                            //               ),
+                            //               backgroundColor: Colors.orange,
+                            //               duration: Duration(seconds: 3),
+                            //               behavior: SnackBarBehavior.floating,
+                            //               shape: RoundedRectangleBorder(
+                            //                 borderRadius: BorderRadius.circular(10.r),
+                            //               ),
+                            //             ),
+                            //           );
+                            //           return;
+                            //         }
+                            //
+                            //         // With Driver flow - navigate to home screen
+                            //         Navigator.pushNamedAndRemoveUntil(
+                            //           context,
+                            //           ScreensName.homeScreen,
+                            //           (route) => false
+                            //         );
+                            //       } else if (withDriver == false) {
+                            //         // Check if payment method is selected for without driver
+                            //         if (selectedPaymentMethod == null) {
+                            //           ScaffoldMessenger.of(context).showSnackBar(
+                            //             SnackBar(
+                            //               content: Row(
+                            //                 children: [
+                            //                   Icon(
+                            //                     Icons.warning,
+                            //                     color: Colors.white,
+                            //                     size: 20.sp,
+                            //                   ),
+                            //                   SizedBox(width: 10.w),
+                            //                   Expanded(
+                            //                     child: Text(
+                            //                       'Please select a payment method',
+                            //                       style: TextStyle(
+                            //                         fontSize: 14.sp,
+                            //                         fontWeight: FontWeight.w500,
+                            //                       ),
+                            //                     ),
+                            //                   ),
+                            //                 ],
+                            //               ),
+                            //               backgroundColor: Colors.orange,
+                            //               duration: Duration(seconds: 3),
+                            //               behavior: SnackBarBehavior.floating,
+                            //               shape: RoundedRectangleBorder(
+                            //                 borderRadius: BorderRadius.circular(10.r),
+                            //               ),
+                            //             ),
+                            //           );
+                            //           return;
+                            //         }
+                            //
+                            //         // Without Driver flow - navigate to home screen
+                            //         Navigator.pushNamedAndRemoveUntil(
+                            //           context,
+                            //           ScreensName.homeScreen,
+                            //           (route) => false
+                            //         );
+                            //       } else {
+                            //         // No driver selection - show message
+                            //         ScaffoldMessenger.of(context).showSnackBar(
+                            //           SnackBar(
+                            //             content: Row(
+                            //               children: [
+                            //                 Icon(
+                            //                   Icons.warning,
+                            //                   color: Colors.white,
+                            //                   size: 20.sp,
+                            //                 ),
+                            //                 SizedBox(width: 10.w),
+                            //                 Expanded(
+                            //                   child: Text(
+                            //                     'Please select a driver option',
+                            //                     style: TextStyle(
+                            //                       fontSize: 14.sp,
+                            //                       fontWeight: FontWeight.w500,
+                            //                     ),
+                            //                   ),
+                            //                 ),
+                            //               ],
+                            //             ),
+                            //             backgroundColor: Colors.orange,
+                            //             duration: Duration(seconds: 3),
+                            //             behavior: SnackBarBehavior.floating,
+                            //             shape: RoundedRectangleBorder(
+                            //               borderRadius: BorderRadius.circular(10.r),
+                            //             ),
+                            //           ),
+                            //         );
+                            //       }
+                            // },
                             onPressed: () {
-                                  // Enable validation first
-                                  context.read<CarCubit>().enableValidation();
-                                  
-                                  // Validate required fields
-                                  final pickupStation = state.pickupStation;
-                                  final dateRange = state.dateRange;
-                                  final withDriver = state.withDriver;
-                                  final selectedPaymentMethod = state.selectedPaymentMethod;
-                                  
-                                  // Check if pickup station is filled
-                                  if (pickupStation == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.warning,
-                                              color: Colors.white,
-                                              size: 20.sp,
-                                            ),
-                                            SizedBox(width: 10.w),
-                                            Expanded(
-                                              child: Text(
-                                                'Please select a pick-up station',
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor: Colors.orange,
-                                        duration: Duration(seconds: 3),
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10.r),
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  
-                                  // Check if date range is selected
-                                  if (dateRange == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.warning,
-                                              color: Colors.white,
-                                              size: 20.sp,
-                                            ),
-                                            SizedBox(width: 10.w),
-                                            Expanded(
-                                              child: Text(
-                                                'Please select a date range',
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor: Colors.orange,
-                                        duration: Duration(seconds: 3),
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10.r),
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  
-                                  // Different flow based on driver selection
-                                  if (withDriver == true) {
-                                    // Check if payment method is selected for with driver
-                                    if (selectedPaymentMethod == null) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.warning,
-                                                color: Colors.white,
-                                                size: 20.sp,
-                                              ),
-                                              SizedBox(width: 10.w),
-                                              Expanded(
-                                                child: Text(
-                                                  'Please select a payment method',
-                                                  style: TextStyle(
-                                                    fontSize: 14.sp,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          backgroundColor: Colors.orange,
-                                          duration: Duration(seconds: 3),
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(10.r),
-                                          ),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                    
-                                    // With Driver flow - navigate to home screen
-                                    Navigator.pushNamedAndRemoveUntil(
-                                      context, 
-                                      ScreensName.homeScreen, 
-                                      (route) => false
-                                    );
-                                  } else if (withDriver == false) {
-                                    // Check if payment method is selected for without driver
-                                    if (selectedPaymentMethod == null) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.warning,
-                                                color: Colors.white,
-                                                size: 20.sp,
-                                              ),
-                                              SizedBox(width: 10.w),
-                                              Expanded(
-                                                child: Text(
-                                                  'Please select a payment method',
-                                                  style: TextStyle(
-                                                    fontSize: 14.sp,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          backgroundColor: Colors.orange,
-                                          duration: Duration(seconds: 3),
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(10.r),
-                                          ),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                    
-                                    // Without Driver flow - navigate to home screen
-                                    Navigator.pushNamedAndRemoveUntil(
-                                      context, 
-                                      ScreensName.homeScreen, 
-                                      (route) => false
-                                    );
-                                  } else {
-                                    // No driver selection - show message
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.warning,
-                                              color: Colors.white,
-                                              size: 20.sp,
-                                            ),
-                                            SizedBox(width: 10.w),
-                                            Expanded(
-                                              child: Text(
-                                                'Please select a driver option',
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor: Colors.orange,
-                                        duration: Duration(seconds: 3),
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10.r),
-                                        ),
-                                      ),
-                                    );
-                                  }
+                              // Enable validation first
+                              context.read<CarCubit>().enableValidation();
+
+                              final pickupStation = state.pickupStation;
+                              final dateRange = state.dateRange;
+                              final withDriver = state.withDriver;
+                              final selectedPaymentMethod = state.selectedPaymentMethod;
+
+                              // Check if pickup station is filled
+                              if (pickupStation == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Row(
+                                      children: [
+                                        Icon(Icons.warning, color: Colors.white),
+                                        SizedBox(width: 10),
+                                        Expanded(child: Text('Please select a pick-up station')),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.orange,
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              // Check if date range is selected
+                              if (dateRange == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Row(
+                                      children: [
+                                        Icon(Icons.warning, color: Colors.white),
+                                        SizedBox(width: 10),
+                                        Expanded(child: Text('Please select a date range')),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.orange,
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              if (state.returnStation == null) {
+                                context.read<CarCubit>().updateReturnStation();
+                              }
+
+                              // Payment method validation
+                              if (selectedPaymentMethod == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Row(
+                                      children: [
+                                        Icon(Icons.warning, color: Colors.white),
+                                        SizedBox(width: 10),
+                                        Expanded(child: Text('Please select a payment method')),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.orange,
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              // Navigate based on driver selection
+                              if (withDriver == true || withDriver == false) {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  ScreensName.homeScreen,
+                                      (route) => false,
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Row(
+                                      children: [
+                                        Icon(Icons.warning, color: Colors.white),
+                                        SizedBox(width: 10),
+                                        Expanded(child: Text('Please select a driver option')),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.orange,
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                );
+                              }
                             },
+
+
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

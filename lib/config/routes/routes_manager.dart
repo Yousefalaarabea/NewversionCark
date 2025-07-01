@@ -15,6 +15,7 @@ import '../../features/handover/handover/presentation/models/post_trip_handover_
 import '../../features/handover/handover/presentation/screens/handover_screen.dart';
 import '../../features/handover/handover/presentation/screens/owner_drop_off_screen.dart';
 import '../../features/handover/handover/presentation/screens/renter_handover_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/payment_methods_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/trip_details_screen.dart';
 import '../../features/home/presentation/screens/home_screens/filter_screen.dart';
 import '../../features/home/presentation/screens/home_screens/home_screen.dart';
@@ -190,7 +191,7 @@ abstract class RoutesManager {
 
       case ScreensName.paymentMethodsScreen:
         // This route requires car and totalPrice, so remove or update as needed.
-        return MaterialPageRoute(builder: (context) => Scaffold(body: Center(child: Text('Please navigate to Payment Methods from Booking Summary'))));
+        return MaterialPageRoute(builder: (context) => const PaymentMethodsScreen());
 
       case ScreensName.depositPaymentScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;

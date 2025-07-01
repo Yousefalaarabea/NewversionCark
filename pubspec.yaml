@@ -59,6 +59,7 @@ dependencies:
   flutter_map_marker_popup: ^8.0.1
   osm_nominatim: ^3.0.1
   geocoding: ^2.1.1
+  cached_network_image: ^3.4.1
 
 
 

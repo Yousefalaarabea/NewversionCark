@@ -337,15 +337,15 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                   // Branch by car rental option
                   if (widget.car.rentalOptions.availableWithDriver) {
                     if (mounted) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PaymentMethodsScreen(
-                            car: widget.car,
-                            totalPrice: widget.totalPrice,
-                          ),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   // MaterialPageRoute(
+                      //   //   builder: (_) => PaymentMethodsScreen(
+                      //   //     car: widget.car,
+                      //   //     totalPrice: widget.totalPrice,
+                      //   //   ),
+                      //   // ),
+                      // );
                     }
                   } else if (widget.car.rentalOptions.availableWithoutDriver) {
                     // For without driver, show a confirmation dialog and wait for owner acceptance
