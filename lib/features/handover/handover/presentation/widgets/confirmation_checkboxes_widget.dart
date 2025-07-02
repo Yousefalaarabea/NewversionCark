@@ -4,7 +4,9 @@ import '../../../../../config/themes/app_colors.dart';
 import '../cubits/handover_cubit.dart';
 
 class ConfirmationCheckboxesWidget extends StatelessWidget {
-  const ConfirmationCheckboxesWidget({Key? key}) : super(key: key);
+  final String paymentMethod;
+
+  const ConfirmationCheckboxesWidget({Key? key, required this.paymentMethod}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,17 +44,18 @@ class ConfirmationCheckboxesWidget extends StatelessWidget {
             ),
             
             const SizedBox(height: 12),
-            
-            // Remaining amount confirmation
-            _buildCheckbox(
-              context,
-              title: 'I confirm that I have received the remaining amount',
-              subtitle: 'If payment was cash, confirm you received the balance',
-              value: isRemainingAmountReceived,
-              onChanged: (value) {
-                context.read<HandoverCubit>().updateRemainingAmountReceived(value ?? false);
-              },
-            ),
+
+            // Show this only if payment is cash
+            if (paymentMethod.toLowerCase() == 'Cash')
+              _buildCheckbox(
+                context,
+                title: 'I confirm that I have received the remaining amount',
+                subtitle: 'If payment was cash, confirm you received the balance',
+                value: isRemainingAmountReceived,
+                onChanged: (value) {
+                  context.read<HandoverCubit>().updateRemainingAmountReceived(value ?? false);
+                },
+              ),
           ],
         );
       },

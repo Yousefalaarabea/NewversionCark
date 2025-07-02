@@ -11,7 +11,7 @@ import '../cubits/renter_handover_cubit.dart';
 import '../models/renter_handover_model.dart';
 
 class RenterHandoverScreen extends StatefulWidget {
-  const RenterHandoverScreen({Key? key}) : super(key: key);
+  const RenterHandoverScreen({super.key});
 
   @override
   State<RenterHandoverScreen> createState() => _RenterHandoverScreenState();
@@ -19,7 +19,7 @@ class RenterHandoverScreen extends StatefulWidget {
 
 class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
   final TextEditingController _odometerController = TextEditingController();
-  bool _contractConfirmed = false;
+  final bool _contractConfirmed = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -52,7 +52,11 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
             arguments: {
               'car': CarModel.mock(),
               'totalPrice': 1000.0,
-              'stops': [],
+              'stops': const [],
+              'tripId': 'trip_001',
+              'renterId': 'renter_001',
+              'ownerId': 'owner_001',
+              'paymentMethod': 'visa',
             },
           );
         }
@@ -170,8 +174,8 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
                             : const Text('Pay with Card (Paymob Test)'),
                       ),
                     ] else ...[
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Icon(Icons.check_circle, color: Colors.green),
                           SizedBox(width: 8),
                           Text('Payment Completed', style: TextStyle(color: Colors.green)),
@@ -279,7 +283,7 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
 }
 
 class RenterHandoverConfirmationScreen extends StatelessWidget {
-  const RenterHandoverConfirmationScreen({Key? key}) : super(key: key);
+  const RenterHandoverConfirmationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_cark/config/routes/screens_name.dart';
 import 'package:test_cark/core/utils/assets_manager.dart';
 import '../../cubit/car_cubit.dart';
+import '../../model/car_model.dart';
 import '../../widgets/rental_widgets/date_selector.dart';
 import '../../widgets/rental_widgets/driver_filter_selector.dart';
 import '../../widgets/rental_widgets/payment_method_selector.dart';
@@ -133,18 +135,44 @@ class RentalSearchScreen extends StatelessWidget {
                         SizedBox(height: 25.h),
 
                         // Pick-up
-                        const StationInput(isPickup: true),
-
-                        SizedBox(height: 20.h),
+                        // const StationInput(isPickup: true),
+                        //
+                        // SizedBox(height: 20.h),
 
                         // Return Station (Optional)
-                        const StationInput(isPickup: false),
+                        // const StationInput(isPickup: false),
+                        //
+                        // SizedBox(height: 16.h),
 
-                        SizedBox(height: 16.h),
+                        // // ✅ Manual Pickup TextField
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Enter Pickup Location',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          onChanged: (value) {
+                            context.read<CarCubit>().setPickupText(value);
+                          },
+                        ),
+                        SizedBox(height: 20.h),
+                        //
+                        // // ✅ Manual Dropoff TextField
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Enter Dropoff Location',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
+                          onChanged: (value) {
+                            context.read<CarCubit>().setDropoffText(value);
+                          },
+                        ),
+                        SizedBox(height: 20.h),
 
                         // Stops Section (only with driver)
                         if (withDriver == true) ...[
-                          const StopsStationInput(),
+                          // const StopsStationInput(),
                           SizedBox(height: 16.h),
                         ],
 
@@ -159,6 +187,37 @@ class RentalSearchScreen extends StatelessWidget {
                         ],
 
                         SizedBox(height: 40.h),
+
+                        // Debug button to test state (only in debug mode)
+                        if (kDebugMode) ...[
+                          Container(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final state = context.read<CarCubit>().state;
+                                print('DEBUG - Current State:');
+                                print('Pickup: ${state.pickupStation?.name}');
+                                print('Return: ${state.returnStation?.name}');
+                                print('Date Range: ${state.dateRange}');
+                                print('With Driver: ${state.withDriver}');
+                                print('Payment Method: ${state.selectedPaymentMethod}');
+                                
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Check console for debug info'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Debug State'),
+                            ),
+                          ),
+                          SizedBox(height: 20.h),
+                        ],
 
                         // Show offers button
                         Container(
@@ -194,9 +253,12 @@ class RentalSearchScreen extends StatelessWidget {
                                   
                                   // Validate required fields
                                   final pickupStation = state.pickupStation;
+                                  final returnStation = state.returnStation;
                                   final dateRange = state.dateRange;
                                   final withDriver = state.withDriver;
                                   final selectedPaymentMethod = state.selectedPaymentMethod;
+
+
                                   
                                   // Check if pickup station is filled
                                   if (pickupStation == null) {
@@ -222,7 +284,41 @@ class RentalSearchScreen extends StatelessWidget {
                                           ],
                                         ),
                                         backgroundColor: Colors.orange,
-                                        duration: Duration(seconds: 3),
+                                        duration: const Duration(seconds: 3),
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10.r),
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  
+                                  // Check if return station is filled
+                                  if (returnStation == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.warning,
+                                              color: Colors.white,
+                                              size: 20.sp,
+                                            ),
+                                            SizedBox(width: 10.w),
+                                            Expanded(
+                                              child: Text(
+                                                'Please select a return station',
+                                                style: TextStyle(
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        backgroundColor: Colors.orange,
+                                        duration: const Duration(seconds: 3),
                                         behavior: SnackBarBehavior.floating,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(10.r),
@@ -256,7 +352,7 @@ class RentalSearchScreen extends StatelessWidget {
                                           ],
                                         ),
                                         backgroundColor: Colors.orange,
-                                        duration: Duration(seconds: 3),
+                                        duration: const Duration(seconds: 3),
                                         behavior: SnackBarBehavior.floating,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(10.r),
@@ -292,7 +388,7 @@ class RentalSearchScreen extends StatelessWidget {
                                             ],
                                           ),
                                           backgroundColor: Colors.orange,
-                                          duration: Duration(seconds: 3),
+                                          duration: const Duration(seconds: 3),
                                           behavior: SnackBarBehavior.floating,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(10.r),
@@ -333,7 +429,7 @@ class RentalSearchScreen extends StatelessWidget {
                                             ],
                                           ),
                                           backgroundColor: Colors.orange,
-                                          duration: Duration(seconds: 3),
+                                          duration: const Duration(seconds: 3),
                                           behavior: SnackBarBehavior.floating,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(10.r),
@@ -342,13 +438,22 @@ class RentalSearchScreen extends StatelessWidget {
                                       );
                                       return;
                                     }
-                                    
-                                    // Without Driver flow - navigate to home screen
+
                                     Navigator.pushNamedAndRemoveUntil(
-                                      context, 
-                                      ScreensName.homeScreen, 
-                                      (route) => false
+                                        context,
+                                        ScreensName.homeScreen,
+                                            (route) => false
                                     );
+                                    // Without Driver flow - navigate to booking summary screen
+                                    // final mockCar = CarModel.mock();
+                                    // Navigator.pushNamed(
+                                    //   context,
+                                    //   ScreensName.bookingSummaryScreen,
+                                    //   arguments: {
+                                    //     'car': mockCar,
+                                    //     'totalPrice': 500.0, // This should be calculated based on the date range
+                                    //   },
+                                    // );
                                   } else {
                                     // No driver selection - show message
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -373,7 +478,7 @@ class RentalSearchScreen extends StatelessWidget {
                                           ],
                                         ),
                                         backgroundColor: Colors.orange,
-                                        duration: Duration(seconds: 3),
+                                        duration: const Duration(seconds: 3),
                                         behavior: SnackBarBehavior.floating,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(10.r),

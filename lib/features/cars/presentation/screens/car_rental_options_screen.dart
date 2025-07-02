@@ -59,6 +59,16 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
     ));
 
     _animationController.forward();
+
+    // Initialize form fields with existing rental options if available
+    if (widget.carData.rentalOptions != null) {
+      _availableWithoutDriver = widget.carData.rentalOptions!.availableWithoutDriver;
+      _availableWithDriver = widget.carData.rentalOptions!.availableWithDriver;
+      if (widget.carData.rentalOptions!.dailyRentalPrice != null) {
+        _dailyPriceController.text = widget.carData.rentalOptions!.dailyRentalPrice!.toString();
+        _updatePrices(_dailyPriceController.text);
+      }
+    }
   }
 
   @override
@@ -111,28 +121,7 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
     });
   }
 
-  void _savePricing() {
-    if (_dailyPriceController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter the daily rental price'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final options = RentalOptions(
-      availableWithoutDriver: _availableWithoutDriver,
-      availableWithDriver: _availableWithDriver,
-      dailyRentalPrice: double.parse(_dailyPriceController.text),
-    );
-
-    final car = widget.carData.copyWith(rentalOptions: options);
-    context.read<AddCarCubit>().addCar(car);
-  }
-
-  void _navigateToUsagePolicy() {
+  void _navigateToUsagePolicy() async {
     if (!_availableWithDriver && !_availableWithoutDriver) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -159,14 +148,31 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
       dailyRentalPrice: double.parse(_dailyPriceController.text),
     );
 
-    Navigator.pushNamed(
+    final carWithOptions = widget.carData.copyWith(rentalOptions: options);
+
+    final result = await Navigator.pushNamed(
       context,
       ScreensName.usagePolicyScreen,
       arguments: {
-        'car': widget.carData,
+        'car': carWithOptions,
         'rentalOptions': options,
       },
     );
+
+    // Handle result if car data is returned (from Previous button)
+    if (result is CarModel) {
+      setState(() {
+        // Update rental options from returned data
+        if (result.rentalOptions != null) {
+          _availableWithoutDriver = result.rentalOptions!.availableWithoutDriver;
+          _availableWithDriver = result.rentalOptions!.availableWithDriver;
+          if (result.rentalOptions!.dailyRentalPrice != null) {
+            _dailyPriceController.text = result.rentalOptions!.dailyRentalPrice!.toString();
+            _updatePrices(_dailyPriceController.text);
+          }
+        }
+      });
+    }
   }
 
   @override
@@ -317,7 +323,7 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
                               enabled: false,
                             ),
 
-                            // Add extra padding at bottom for FAB
+                            // Add extra padding at bottom for buttons
                             SizedBox(height: 80.h),
                           ],
                         ],
@@ -326,45 +332,67 @@ class _CarRentalOptionsScreenState extends State<CarRentalOptionsScreen>
                   ),
                 ),
               ),
-              if (_availableWithDriver || _availableWithoutDriver)
-                Positioned(
-                  right: 16.w,
-                  bottom: 16.h,
-                  child: FloatingActionButton(
+            ],
+          ),
+          // Replace FloatingActionButton with bottom buttons
+          bottomNavigationBar: Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
                     onPressed: () {
-                      if (!_availableWithDriver && !_availableWithoutDriver) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select a rental option'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
-                      if (_formKey.currentState!.validate()) {
-                        final options = RentalOptions(
+                      // Navigate back to AddCarScreen with current car data
+                      final currentCar = widget.carData.copyWith(
+                        rentalOptions: RentalOptions(
                           availableWithoutDriver: _availableWithoutDriver,
                           availableWithDriver: _availableWithDriver,
-                          dailyRentalPrice: double.parse(_dailyPriceController.text),
-                        );
-                        Navigator.pushNamed(
-                          context,
-                          ScreensName.usagePolicyScreen,
-                          arguments: {
-                            'car': widget.carData,
-                            'rentalOptions': options,
-                          },
-                        );
-                      }
+                          dailyRentalPrice: _dailyPriceController.text.isNotEmpty 
+                              ? double.parse(_dailyPriceController.text) 
+                              : 0.0,
+                        ),
+                      );
+                      Navigator.pop(context, currentCar);
                     },
-                    backgroundColor: const Color(0xFF1a237e),
-                    child: const Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[300],
+                      foregroundColor: Colors.black87,
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
+                    child: const Text('Previous'),
                   ),
                 ),
-            ],
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _navigateToUsagePolicy,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1a237e),
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Next'),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -47,18 +47,18 @@ class HandoverCubit extends Cubit<HandoverState> {
     ));
   }
 
-  // Check if handover can be sent
-  bool get canSendHandover {
+  // Check if handover can be sent (based on payment method)
+  bool canSendHandover(String paymentMethod) {
     if (_contract == null) return false;
     if (!_contract!.isDepositPaid) return false;
     if (!_isContractSigned) return false;
-    if (!_isRemainingAmountReceived) return false;
+    if (paymentMethod.toLowerCase() == 'Cash' && !_isRemainingAmountReceived) return false;
     return true;
   }
 
   // Send handover request
-  Future<void> sendHandover({required String contractImagePath}) async {
-    if (!canSendHandover) {
+  Future<void> sendHandover({required String contractImagePath, required String paymentMethod}) async {
+    if (!canSendHandover(paymentMethod)) {
       emit(HandoverFailure('Please complete all requirements before sending handover'));
       return;
     }

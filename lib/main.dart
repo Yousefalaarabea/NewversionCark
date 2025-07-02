@@ -12,10 +12,19 @@ Future<void> main() async {
   Bloc.observer = MyBlocObserver();
   await NotificationService().init();
   
-  // Initialize FCM token saving for current user
+  // Initialize AuthCubit and load user data
   final authCubit = AuthCubit();
-  await authCubit.saveFcmToken();
+  await authCubit.loadUserData();
   
-  runApp(const Cark());
+  // Check if user is logged in
+  if (authCubit.userModel != null) {
+    print('User is logged in: ${authCubit.userModel!.firstName} ${authCubit.userModel!.lastName}');
+    print('User ID: ${authCubit.userModel!.id}');
+    await authCubit.saveFcmToken();
+  } else {
+    print('No user logged in. User needs to login first.');
+  }
+
+  runApp(Cark(authCubit: authCubit));
 }
 

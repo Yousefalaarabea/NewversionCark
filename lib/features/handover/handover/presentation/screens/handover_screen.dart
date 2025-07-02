@@ -13,7 +13,8 @@ import '../widgets/deposit_status_widget.dart';
 import '../widgets/confirmation_checkboxes_widget.dart';
 
 class HandoverScreen extends StatelessWidget {
-  const HandoverScreen({Key? key}) : super(key: key);
+  final String paymentMethod;
+  const HandoverScreen({Key? key, required this.paymentMethod}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +23,14 @@ class HandoverScreen extends StatelessWidget {
         BlocProvider(create: (context) => ContractUploadCubit()),
         BlocProvider(create: (context) => HandoverCubit()),
       ],
-      child: const HandoverScreenContent(),
+      child: HandoverScreenContent(paymentMethod: paymentMethod),
     );
   }
 }
 
 class HandoverScreenContent extends StatefulWidget {
-  const HandoverScreenContent({Key? key}) : super(key: key);
+  final String paymentMethod;
+  const HandoverScreenContent({Key? key, required this.paymentMethod}) : super(key: key);
 
   @override
   State<HandoverScreenContent> createState() => _HandoverScreenContentState();
@@ -60,7 +62,7 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
           if (state is HandoverSuccess) {
             // Send notification to renter that owner has submitted handover
             _notifyRenterHandoverSubmitted();
-            
+
             Navigator.pushReplacementNamed(
               context,
               ScreensName.renterHandoverScreen,
@@ -93,24 +95,24 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
                   // Header
                   _buildHeader(context),
                   const SizedBox(height: 24),
-                  
+
                   // Deposit Status
                   const DepositStatusWidget(),
                   const SizedBox(height: 24),
-                  
+
                   // Check if deposit is paid
-                  if (handoverState is HandoverDataLoaded && 
+                  if (handoverState is HandoverDataLoaded &&
                       !handoverState.contract.isDepositPaid)
                     _buildDepositWarning(context, handoverState.contract)
                   else ...[
                     // Contract Upload
                     const ContractUploadWidget(),
                     const SizedBox(height: 24),
-                    
+
                     // Confirmations
-                    const ConfirmationCheckboxesWidget(),
+                    ConfirmationCheckboxesWidget(paymentMethod: widget.paymentMethod),
                     const SizedBox(height: 32),
-                    
+
                     // Action Buttons
                     _buildActionButtons(context),
                   ],
@@ -212,11 +214,17 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
       builder: (context, handoverState) {
         return BlocBuilder<ContractUploadCubit, ContractUploadState>(
           builder: (context, contractState) {
-            final canSendHandover = handoverState is HandoverConfirmationsUpdated &&
+            var canSendHandover;
+            if (widget.paymentMethod == 'Cash') {
+              canSendHandover = handoverState is HandoverConfirmationsUpdated &&
                 handoverState.isContractSigned &&
                 handoverState.isRemainingAmountReceived &&
                 contractState is ContractUploadSuccess;
-
+            } else {
+              canSendHandover = handoverState is HandoverConfirmationsUpdated &&
+                handoverState.isContractSigned &&
+                contractState is ContractUploadSuccess;
+            }
             return Column(
               children: [
                 // Send Handover Button
@@ -254,40 +262,41 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
-                // Cancel Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton(
-                    onPressed: handoverState is HandoverCancelling
-                        ? null
-                        : () => _showCancelDialog(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.red,
-                      side: const BorderSide(color: AppColors.red),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: handoverState is HandoverCancelling
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.red),
-                            ),
-                          )
-                        : const Text(
-                            'Cancel Handover',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                  ),
-                ),
+
+                // // Cancel Button
+                // SizedBox(
+                //   width: double.infinity,
+                //   height: 50,
+                //   child: OutlinedButton(
+                //     onPressed: handoverState is HandoverCancelling
+                //         ? null
+                //         : () => _showCancelDialog(context),
+                //     style: OutlinedButton.styleFrom(
+                //       foregroundColor: AppColors.red,
+                //       side: const BorderSide(color: AppColors.red),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(8),
+                //       ),
+                //     ),
+                //     child: handoverState is HandoverCancelling
+                //         ? const SizedBox(
+                //             height: 20,
+                //             width: 20,
+                //             child: CircularProgressIndicator(
+                //               strokeWidth: 2,
+                //               valueColor: AlwaysStoppedAnimation<Color>(AppColors.red),
+                //             ),
+                //           )
+                //         : const Text(
+                //             'Cancel Handover',
+                //             style: TextStyle(
+                //               fontWeight: FontWeight.bold,
+                //               fontSize: 16,
+                //             ),
+                //
+                //           ),
+                //   ),
+                // ),
               ],
             );
           },
@@ -299,39 +308,50 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
   void _sendHandover(BuildContext context) {
     final contractUploadCubit = context.read<ContractUploadCubit>();
     final handoverCubit = context.read<HandoverCubit>();
-    
-    if (contractUploadCubit.hasContractImage) {
+
+    final handoverState = context.read<HandoverCubit>().state;
+    final paymentMethod = widget.paymentMethod.toLowerCase();
+    bool canSend = false;
+    if (handoverState is HandoverConfirmationsUpdated) {
+      if (paymentMethod == 'cash') {
+        canSend = handoverState.isContractSigned && handoverState.isRemainingAmountReceived;
+      } else {
+        canSend = handoverState.isContractSigned;
+      }
+    }
+    if (contractUploadCubit.hasContractImage && canSend) {
       handoverCubit.sendHandover(
         contractImagePath: contractUploadCubit.contractImagePath!,
+        paymentMethod: paymentMethod,
       );
     }
   }
 
-  void _showCancelDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Handover'),
-        content: const Text(
-          'Are you sure you want to cancel the handover? This will refund the deposit to your wallet.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<HandoverCubit>().cancelHandover();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.red),
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showCancelDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Cancel Handover'),
+  //       content: const Text(
+  //         'Are you sure you want to cancel the handover? This will refund the deposit to your wallet.',
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text('No'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.pushNamed(context, '/cancel-rental');
+  //             context.read<HandoverCubit>().cancelHandover();
+  //           },
+  //           style: TextButton.styleFrom(foregroundColor: AppColors.red),
+  //           child: const Text('Yes, Cancel'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _showHelpDialog(BuildContext context) {
     showDialog(
@@ -388,7 +408,7 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
       // Get current user (owner)
       final authCubit = context.read<AuthCubit>();
       final currentUser = authCubit.userModel;
-      
+
       if (currentUser == null) {
         throw Exception('User not found');
       }
@@ -426,7 +446,7 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
             'status': 'owner_handover_completed',
             'ownerHandoverCompletedAt': DateTime.now().toIso8601String(),
           });
-          
+
           print('Owner handover notification sent to renter: $renterId');
         }
       } else {
@@ -437,4 +457,4 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
       // Don't throw the error to avoid crashing the app
     }
   }
-} 
+}

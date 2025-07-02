@@ -5,6 +5,10 @@ import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 import '../../model/car_model.dart';
 import '../../model/location_model.dart';
+import 'package:test_cark/features/home/presentation/model/trip_details_model.dart';
+import 'package:test_cark/features/home/presentation/model/trip_with_driver_details_model.dart';
+import 'package:test_cark/config/routes/screens_name.dart';
+import '../../cubit/car_cubit.dart';
 
 class DepositInputScreen extends StatefulWidget {
   final CarModel car;
@@ -46,7 +50,16 @@ class _DepositInputScreenState extends State<DepositInputScreen> {
       
       if (currentUser == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not found.')),
+          const SnackBar(
+            content: Text('User not found. Please login again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // Navigate to login screen
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (route) => false,
         );
         return;
       }
@@ -64,13 +77,76 @@ class _DepositInputScreenState extends State<DepositInputScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Deposit of \$${deposit} submitted! Booking notifications sent.'),
+          content: Text('Deposit of \$$deposit submitted! Booking notifications sent.'),
           backgroundColor: Colors.green,
         ),
       );
 
-      // Navigate back or to next screen
-      Navigator.pop(context);
+      // Get the current state from CarCubit to check driver selection
+      final carCubit = context.read<CarCubit>();
+      final withDriver = carCubit.state.withDriver;
+      final selectedPaymentMethod = carCubit.state.selectedPaymentMethod ?? 'Unknown';
+      final dateRange = carCubit.state.dateRange;
+      final pickupStation = carCubit.state.pickupStation;
+      final returnStation = carCubit.state.returnStation;
+      final stops = carCubit.state.stops;
+
+      // Debug: Print the values to see what's being passed
+      print('DEBUG - Deposit Input Screen:');
+      print('withDriver: $withDriver');
+      print('pickupStation: ${pickupStation?.name}');
+      print('returnStation: ${returnStation?.name}');
+      print('dateRange: $dateRange');
+      print('selectedPaymentMethod: $selectedPaymentMethod');
+
+      // Navigate based on driver selection
+      if (withDriver == true) {
+        // With Driver - navigate to trip with driver confirmation screen
+        final tripWithDriverDetails = TripWithDriverDetailsModel(
+          car: widget.car,
+          pickupLocation: pickupStation?.name ?? 'Unknown',
+          dropoffLocation: returnStation?.name ?? 'Unknown',
+          stops: stops,
+          startDate: dateRange?.start ?? DateTime.now(),
+          endDate: dateRange?.end ?? DateTime.now().add(const Duration(days: 3)),
+          totalPrice: widget.totalPrice,
+          paymentMethod: selectedPaymentMethod,
+          renterName: '${currentUser.firstName} ${currentUser.lastName}' ?? 'Unknown',
+          withDriver: true,
+        );
+
+        Navigator.pushReplacementNamed(
+          context,
+          ScreensName.tripWithDriverConfirmationScreen,
+          arguments: tripWithDriverDetails,
+        );
+      } else if (withDriver == false) {
+        // Without Driver - navigate to trip details confirmation screen
+        final tripDetails = TripDetailsModel(
+          car: widget.car,
+          pickupLocation: pickupStation?.name ?? 'Unknown',
+          dropoffLocation: returnStation?.name ?? 'Unknown',
+          startDate: dateRange?.start ?? DateTime.now(),
+          endDate: dateRange?.end ?? DateTime.now().add(const Duration(days: 3)),
+          totalPrice: widget.totalPrice,
+          paymentMethod: selectedPaymentMethod,
+          renterName: '${currentUser.firstName} ${currentUser.lastName}' ?? 'Unknown',
+        );
+
+        Navigator.pushReplacementNamed(
+          context,
+          ScreensName.tripDetailsConfirmationScreen,
+          arguments: tripDetails,
+        );
+      } else {
+        // No driver selection - show error
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a driver option before proceeding.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -19,7 +19,8 @@ import 'features/home/presentation/cubit/car_cubit.dart';
 import 'features/notifications/presentation/cubits/notification_cubit.dart';
 
 class Cark extends StatelessWidget {
-  const Cark({super.key});
+  final AuthCubit authCubit;
+  const Cark({super.key, required this.authCubit});
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +35,10 @@ class Cark extends StatelessWidget {
         builder: (context, child) {
           return MultiBlocProvider(
             providers: [
-              BlocProvider(
-                create: (context) => AuthCubit(),
-              ),
+              BlocProvider<AuthCubit>.value(value: authCubit),
+              // BlocProvider(
+              //   create: (context) => AuthCubit(),
+              // ),
               BlocProvider(
                 create: (context) => NavigationCubit(),
               ),
@@ -83,7 +85,7 @@ class Cark extends StatelessWidget {
               theme: lightTheme,
               // darkTheme: ThemeData.dark(),
               themeMode: ThemeMode.light,
-              initialRoute: ScreensName.signup // Initial screen
+              initialRoute: ScreensName.splash// Initial screen
             ),
           );
         },

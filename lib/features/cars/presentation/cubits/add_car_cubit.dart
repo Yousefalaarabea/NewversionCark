@@ -134,9 +134,11 @@ class AddCarCubit extends Cubit<AddCarState> {
       });
 
     final responseData = response.data;
+    print("RESPONSE DATA: $responseData");
     final newCar = CarModel.fromJson(responseData);
 
     final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
+    await authCubit.loadUserData();
     final userId = authCubit.userModel!.id;
 
       // Simulate an API call or database operation

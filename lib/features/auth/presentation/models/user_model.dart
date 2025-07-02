@@ -20,16 +20,24 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      firstName: json['first_name'] ?? '',
-      lastName: json['last_name'] ?? '',
-      email: json['email'] ?? '',
-      phoneNumber: json['phone_number'] ?? '',
-      national_id: json['national_id'] ?? '',
-      role: json['role'] ?? 'renter',
-      fcmToken: json['fcm_token'],
-    );
+    try {
+      final user = UserModel(
+        id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        firstName: json['first_name'] ?? '',
+        lastName: json['last_name'] ?? '',
+        email: json['email'] ?? '',
+        phoneNumber: json['phone_number'] ?? '',
+        national_id: json['national_id'] ?? '',
+        role: json['role'] ?? 'renter',
+        fcmToken: json['fcm_token'],
+      );
+      print('UserModel created from JSON: ${user.firstName} ${user.lastName} (ID: ${user.id})');
+      return user;
+    } catch (e) {
+      print('Error creating UserModel from JSON: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 
   UserModel copyWith({

@@ -233,6 +233,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   }
 
   Widget _buildContinueButton() {
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -269,7 +270,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                   // Send notification to owner after agreeing to terms
                   final authCubit = context.read<AuthCubit>();
                   final currentUser = authCubit.userModel;
-                  
+
                   if (currentUser == null) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -277,6 +278,12 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                           content: Text('User not found. Please login again.'),
                           backgroundColor: Colors.red,
                         ),
+                      );
+                      // Navigate to login screen
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/login',
+                        (route) => false,
                       );
                     }
                     return;
@@ -337,6 +344,9 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
 
                   // Branch by car rental option
                   if (widget.car.rentalOptions.availableWithDriver) {
+                    // ✅ With Driver Flow: Navigate directly to deposit input screen
+                    // This is for cars that come with a driver, so no owner approval needed
+                    /*
                     if (mounted) {
                       Navigator.push(
                         context,
@@ -350,10 +360,45 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                       );
                     }
                   } else if (widget.car.rentalOptions.availableWithoutDriver) {
-                    // For without driver, show a confirmation dialog and wait for owner acceptance
+                    // ✅ Without Driver Flow: Show confirmation dialog and wait for owner acceptance
+                    // This is for cars without driver, so owner needs to approve the request
                     if (mounted) {
                       _showBookingRequestDialog(context, renterName);
                     }
+                    */
+                    // 🆕 NEW: Navigate to Owner Trip Request Screen for immediate review
+                    // This allows the owner to see and respond to the booking request immediately
+                    // Comment out if you want to keep the original flow only
+
+                    if (mounted) {
+                      // Create booking request data for the owner trip request screen
+                      final tripRequestData = {
+                        'renterId': renterId.toString(),
+                        'renterName': renterName,
+                        'carId': widget.car.id.toString(),
+                        'carBrand': widget.car.brand,
+                        'carModel': widget.car.model,
+                        'totalPrice': widget.totalPrice,
+                        'pickupStation': context.read<CarCubit>().state.pickupStation?.name ?? 'Unknown',
+                        'returnStation': context.read<CarCubit>().state.returnStation?.name ?? 'Unknown',
+                        'dateRange': context.read<CarCubit>().state.dateRange?.toString() ?? 'Unknown',
+                        'paymentMethod': context.read<CarCubit>().state.selectedPaymentMethod ?? 'Unknown',
+                        'status': 'pending',
+                        'createdAt': DateTime.now().toIso8601String(),
+                        'ownerId': ownerId,
+                      };
+                      
+                      // Navigate to owner trip request screen
+                      Navigator.pushNamed(
+                        context,
+                        ScreensName.ownerTripRequestScreen,
+                        arguments: {
+                          'bookingRequestId': 'temp_${DateTime.now().millisecondsSinceEpoch}', // Temporary ID for demo
+                          'bookingData': tripRequestData,
+                        },
+                      );
+                    }
+
                   }
                 } catch (e) {
                   print('Error in booking request: $e');
@@ -396,7 +441,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 24.sp),
             SizedBox(width: 8.w),
-            Text('Booking Request Sent'),
+            const Text('Booking Request Sent'),
           ],
         ),
         content: Column(
@@ -427,7 +472,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                 );
               }
             },
-            child: Text('OK'),
+            child: const Text('OK'),
           ),
         ],
       ),

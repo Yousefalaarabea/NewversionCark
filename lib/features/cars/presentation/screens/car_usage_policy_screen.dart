@@ -31,6 +31,19 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
   final _extraHourCostController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    
+    // Initialize form fields with existing usage policy if available
+    if (widget.carData.usagePolicy != null) {
+      _dailyKmLimitController.text = widget.carData.usagePolicy!.dailyKmLimit.toString();
+      _extraKmCostController.text = widget.carData.usagePolicy!.extraKmCost.toString();
+      _dailyHourLimitController.text = widget.carData.usagePolicy!.dailyHourLimit.toString();
+      _extraHourCostController.text = widget.carData.usagePolicy!.extraHourCost.toString();
+    }
+  }
+
+  @override
   void dispose() {
     _dailyKmLimitController.dispose();
     _extraKmCostController.dispose();
@@ -58,10 +71,13 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
         extraHourCost: double.parse(_extraHourCostController.text),
       );
 
+      // Create complete car with all data from three steps
       final car = widget.carData.copyWith(
         rentalOptions: widget.rentalOptions,
+        usagePolicy: policy,
       );
 
+      // Finally call addCar with complete data
       context.read<AddCarCubit>().addCar(car);
     }
   }
@@ -142,21 +158,73 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                right: 16.w,
-                bottom: 16.h,
-                child: FloatingActionButton(
-                  onPressed: _submitForm,
-                  backgroundColor: const Color(0xFF1a237e),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              // Add extra padding at bottom for buttons
+              SizedBox(height: 80.h),
             ],
           );
         },
+      ),
+      // Replace FloatingActionButton with bottom buttons
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  // Navigate back to CarRentalOptionsScreen with current data
+                  final currentCar = widget.carData.copyWith(
+                    rentalOptions: widget.rentalOptions,
+                    usagePolicy: _formKey.currentState!.validate() 
+                        ? CarUsagePolicy(
+                            dailyKmLimit: int.parse(_dailyKmLimitController.text),
+                            extraKmCost: double.parse(_extraKmCostController.text),
+                            dailyHourLimit: int.parse(_dailyHourLimitController.text),
+                            extraHourCost: double.parse(_extraHourCostController.text),
+                          )
+                        : null,
+                  );
+                  Navigator.pop(context, currentCar);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[300],
+                  foregroundColor: Colors.black87,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Previous'),
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _submitForm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1a237e),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Submit'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

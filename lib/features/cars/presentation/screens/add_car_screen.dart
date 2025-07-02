@@ -78,7 +78,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AddCarCubit, AddCarState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AddCarSuccess) {
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
@@ -90,6 +90,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
             ),
           );
 
+          await context.read<AuthCubit>().loadUserData();  // ✅ تحميل بيانات المستخدم مجددًا من SharedPreferences
           // Navigate to OwnerHomeScreen
           Navigator.pushNamedAndRemoveUntil(
               context, ScreensName.ownerHomeScreen, (route) => false);
@@ -189,18 +190,31 @@ class _AddCarScreenState extends State<AddCarScreen> {
                             ),
                             ownerId: authCubit.userModel!.id,
                           );
-                          
-                          // Add car using the cubit
-                          context.read<AddCarCubit>().addCar(car);
-                          
-                          // Send notification with owner name
-                          final ownerName =
-                              '${authCubit.userModel!.firstName} ${authCubit.userModel!.lastName}';
-                          await NotificationService().sendNewCarNotification(
-                            carBrand: car.brand,
-                            carModel: car.model,
-                            ownerName: ownerName,
+
+                          // Navigate to rental options screen with car data
+                          final result = await Navigator.pushNamed(
+                            context,
+                            ScreensName.rentalOptionScreen,
+                            arguments: car,
                           );
+
+                          // Handle result if car data is returned (from Previous button)
+                          if (result is CarModel) {
+                            // Update form fields with returned data
+                            setState(() {
+                              _modelController.text = result.model;
+                              _brandController.text = result.brand;
+                              _carTypeController.text = result.carType;
+                              _carCategoryController.text = result.carCategory;
+                              _plateNumberController.text = result.plateNumber;
+                              _yearController.text = result.year.toString();
+                              _colorController.text = result.color;
+                              _seatingCapacityController.text = result.seatingCapacity.toString();
+                              _transmissionTypeController.text = result.transmissionType;
+                              _fuelTypeController.text = result.fuelType;
+                              _odometerController.text = result.currentOdometerReading.toString();
+                            });
+                          }
                         }
                       },
                       backgroundColor: const Color(0xFF1a237e),

@@ -102,10 +102,13 @@ class CarCubit extends Cubit<ChooseCarState> {
     );
   }
 
-  void setPickupStation(LocationModel value) =>
-      emit(state.copyWith(pickupStation: value));
+  void setPickupStation(LocationModel value) {
+    print('DEBUG - CarCubit: Setting pickup station to: ${value.name}');
+    emit(state.copyWith(pickupStation: value));
+  }
 
   void setReturnStation(LocationModel station) {
+    print('DEBUG - CarCubit: Setting return station to: ${station.name}');
     emit(state.copyWith(returnStation: station));
   }
 
@@ -156,6 +159,16 @@ class CarCubit extends Cubit<ChooseCarState> {
       withoutDriver: withoutDriver ?? state.withoutDriver,
     ));
   }
+
+  void setPickupText(String value) =>
+      emit(state.copyWith(
+        pickupStation: LocationModel(name: value, address: value),
+      ));
+
+  void setDropoffText(String value) =>
+      emit(state.copyWith(
+        returnStation: LocationModel(name: value, address: value),
+      ));
 
 
 }

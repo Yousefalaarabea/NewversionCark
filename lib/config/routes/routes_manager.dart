@@ -21,7 +21,6 @@ import '../../features/home/presentation/screens/home_screens/home_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/rental_search_screen.dart';
 import '../../features/notifications/presentation/screens/owner_notification_screen.dart';
 import '../../features/notifications/presentation/screens/renter_notification_screen.dart';
-import '../../features/shared/presentation/screens/navigation_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/booking_summary_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/trip_management_screen.dart';
@@ -34,6 +33,12 @@ import '../../features/home/presentation/screens/booking_screens/deposit_input_s
 import '../../features/home/presentation/model/car_model.dart';
 import '../../features/home/presentation/model/location_model.dart';
 import '../../features/owner/presentation/screens/owner_home_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/trip_details_confirmation_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/trip_with_driver_confirmation_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/cancel_rental_screen.dart';
+import '../../features/home/presentation/screens/owner/owner_trip_request_screen.dart';
+import '../../features/home/presentation/model/trip_details_model.dart';
+import '../../features/home/presentation/model/trip_with_driver_details_model.dart';
 
 abstract class RoutesManager {
   static Route<dynamic>? onGenerateRoute(RouteSettings routeSettings) {
@@ -80,11 +85,19 @@ abstract class RoutesManager {
         final car = args['car'] as CarModel;
         final totalPrice = args['totalPrice'] as double;
         final stops = args['stops'] as List<dynamic>;
+        final tripId = args['tripId'] as String;
+        final renterId = args['renterId'] as String;
+        final ownerId = args['ownerId'] as String;
+        final paymentMethod = args['paymentMethod'] as String;
         return MaterialPageRoute(
             builder: (context) => TripManagementScreen(
                   car: car,
                   totalPrice: totalPrice,
                   stops: stops.cast<LocationModel>(),
+                  tripId: tripId,
+                  renterId: renterId,
+                  ownerId: ownerId,
+                  paymentMethod: paymentMethod,
                 ));
       case ScreensName.paymentScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;
@@ -163,8 +176,24 @@ abstract class RoutesManager {
       case ScreensName.renterHandoverScreen:
         return MaterialPageRoute(builder: (context) => const RenterHandoverScreen());
 
+      // case ScreensName.handoverScreen:
+      //   return MaterialPageRoute(builder: (context) => const HandoverScreen());
+
       case ScreensName.handoverScreen:
-        return MaterialPageRoute(builder: (context) => const HandoverScreen());
+        if (routeSettings.arguments is Map<String, dynamic>) {
+          final args = routeSettings.arguments as Map<String, dynamic>;
+          final paymentMethod = args['paymentMethod'] as String? ?? 'unknown';
+          return MaterialPageRoute(
+            builder: (context) => HandoverScreen(paymentMethod: paymentMethod),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (context) => const Scaffold(
+            body: Center(
+              child: Text('Error: Missing payment method'),
+            ),
+          ),
+        );
 
       case ScreensName.ownerDropOffScreen:
         if (routeSettings.arguments is Map<String, dynamic>) {
@@ -222,6 +251,33 @@ abstract class RoutesManager {
             stops: stops.cast<LocationModel>(),
           ),
         );
+
+      case ScreensName.tripDetailsConfirmationScreen:
+        final args = routeSettings.arguments as TripDetailsModel;
+        return MaterialPageRoute(
+          builder: (context) => TripDetailsConfirmationScreen(tripDetails: args),
+        );
+      case ScreensName.tripWithDriverConfirmationScreen:
+        final args = routeSettings.arguments as TripWithDriverDetailsModel;
+        return MaterialPageRoute(
+          builder: (context) => TripWithDriverConfirmationScreen(tripDetails: args),
+        );
+      case ScreensName.ownerTripRequestScreen:
+        final args = routeSettings.arguments as Map<String, dynamic>;
+        final bookingRequestId = args['bookingRequestId'] as String;
+        final bookingData = args['bookingData'] as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (context) => OwnerTripRequestScreen(
+            bookingRequestId: bookingRequestId,
+            bookingData: bookingData,
+          ),
+        );
+      case '/cancel-rental':
+        return MaterialPageRoute(
+          builder: (context) => const CancelRentalScreen(),
+        );
+
+
 
       default:
         return MaterialPageRoute(builder: (context) {

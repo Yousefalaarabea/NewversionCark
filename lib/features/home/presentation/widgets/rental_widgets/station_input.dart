@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../core/utils/place_suggestions_service.dart'; // غير مستخدم في هذا المقتطف
+// غير مستخدم في هذا المقتطف
 import '../../cubit/car_cubit.dart';
 import '../../cubit/choose_car_state.dart';
 import '../../model/location_model.dart';
 import '../../screens/booking_screens/location_search_page.dart'; // الشاشة التي تم إصلاحها
-import 'package:flutter_map/flutter_map.dart'; // يستخدم لـ LatLng
+// يستخدم لـ LatLng
 import 'package:latlong2/latlong.dart'; // يستخدم لـ LatLng
 
 class StationInput extends StatefulWidget {
@@ -62,14 +62,20 @@ class _StationInputState extends State<StationInput> {
           name: address,
           address: address,
           description: '',
+          coordinates: {
+            'latitude': latLng.latitude,
+            'longitude': latLng.longitude,
+          },
           lat: latLng.latitude,
           lng: latLng.longitude,
         );
 
         if (widget.isPickup) {
           context.read<CarCubit>().setPickupStation(location);
+          print('DEBUG - Set pickup station: ${location.name}');
         } else {
           context.read<CarCubit>().setReturnStation(location);
+          print('DEBUG - Set return station: ${location.name}');
         }
 
         // Show success feedback
@@ -127,8 +133,10 @@ class _StationInputState extends State<StationInput> {
       },
       listener: (context, state) {
         final stationValue = widget.isPickup ? state.pickupStation : state.returnStation;
+        print('DEBUG - BlocListener triggered for ${widget.isPickup ? "pickup" : "return"}: ${stationValue?.name}');
         if (stationValue != null && _controller.text != stationValue.name) {
           _controller.text = stationValue.name;
+          print('DEBUG - Updated controller text to: ${stationValue.name}');
         }
       },
       child: Column(

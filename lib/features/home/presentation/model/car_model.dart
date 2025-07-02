@@ -1,3 +1,5 @@
+import '../../../cars/presentation/models/car_usage_policy.dart';
+
 class CarModel {
   final String ownerId; // ForeignKey to User
   final int id;
@@ -20,6 +22,7 @@ class CarModel {
   final DateTime? updatedAt;
   final RentalOptions rentalOptions;
   final String imageUrl;
+  final CarUsagePolicy? usagePolicy;
   
   // Driver information fields
   final String? driverName;
@@ -51,6 +54,7 @@ class CarModel {
     this.updatedAt,
     required this.rentalOptions,
     this.imageUrl = 'https://cdn-icons-png.flaticon.com/512/743/743007.png',
+    this.usagePolicy,
     this.driverName,
     this.driverRating,
     this.driverTrips,
@@ -82,6 +86,7 @@ class CarModel {
       updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
       rentalOptions: RentalOptions.fromJson(json['rental_widgets'] ?? {}),
       imageUrl: json['image_url'] ?? 'https://cdn-icons-png.flaticon.com/512/743/743007.png',
+      usagePolicy: json['usage_policy'] != null ? CarUsagePolicy.fromJson(json['usage_policy']) : null,
       driverName: json['driver_name'],
       driverRating: json['driver_rating']?.toDouble(),
       driverTrips: json['driver_trips'],
@@ -113,6 +118,7 @@ class CarModel {
     DateTime? updatedAt,
     RentalOptions? rentalOptions,
     String? imageUrl,
+    CarUsagePolicy? usagePolicy,
     String? driverName,
     double? driverRating,
     int? driverTrips,
@@ -142,6 +148,7 @@ class CarModel {
       updatedAt: updatedAt ?? this.updatedAt,
       rentalOptions: rentalOptions ?? this.rentalOptions,
       imageUrl: imageUrl ?? this.imageUrl,
+      usagePolicy: usagePolicy ?? this.usagePolicy,
       driverName: driverName ?? this.driverName,
       driverRating: driverRating ?? this.driverRating,
       driverTrips: driverTrips ?? this.driverTrips,
@@ -173,6 +180,12 @@ class CarModel {
       updatedAt: DateTime.now(),
       rentalOptions: RentalOptions.mock(),
       imageUrl: 'https://imgd.aeplcdn.com/1280x720/n/cw/ec/140945/camry-exterior-right-front-three-quarter-2.jpeg?is-cms=true&q=80',
+      usagePolicy: CarUsagePolicy(
+        dailyKmLimit: 200,
+        extraKmCost: 0.5,
+        dailyHourLimit: 8,
+        extraHourCost: 10.0,
+      ),
       kmLimitPerDay: 450,
       extraKmRate: 0.60,
     );

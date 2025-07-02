@@ -174,6 +174,15 @@ class OwnerNotificationScreen extends StatelessWidget {
                             .collection('notifications')
                             .doc(docs[index].id)
                             .update({'read': true});
+                        
+                        // Navigate to trip request screen for booking requests
+                        if (notificationType == 'owner' && 
+                            notificationTypeSpecific == 'car_booked') {
+                          final bookingData = data['booking_data'] as Map<String, dynamic>?;
+                          if (bookingData != null) {
+                            _navigateToTripRequest(context, docs[index].id, bookingData);
+                          }
+                        }
                       },
                     ),
                     // Show action buttons for booking requests
@@ -191,7 +200,7 @@ class OwnerNotificationScreen extends StatelessWidget {
                                   backgroundColor: Colors.green,
                                   foregroundColor: Colors.white,
                                 ),
-                                child: Text('Accept'),
+                                child: const Text('Accept'),
                               ),
                             ),
                             SizedBox(width: 12.w),
@@ -202,7 +211,7 @@ class OwnerNotificationScreen extends StatelessWidget {
                                   backgroundColor: Colors.red,
                                   foregroundColor: Colors.white,
                                 ),
-                                child: Text('Decline'),
+                                child: const Text('Decline'),
                               ),
                             ),
                           ],
@@ -222,7 +231,7 @@ class OwnerNotificationScreen extends StatelessWidget {
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
                             ),
-                            child: Text('Proceed to Handover'),
+                            child: const Text('Proceed to Handover'),
                           ),
                         ),
                       ),
@@ -411,6 +420,49 @@ class OwnerNotificationScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error navigating to handover: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _navigateToTripRequest(BuildContext context, String notificationId, Map<String, dynamic> bookingData) async {
+    try {
+      // Find the booking request ID
+      final renterId = bookingData['renterId'] as String?;
+      final carId = bookingData['carId'] as String?;
+      
+      if (renterId != null && carId != null) {
+        final bookingRequestsQuery = await FirebaseFirestore.instance
+            .collection('booking_requests')
+            .where('renterId', isEqualTo: renterId)
+            .where('carId', isEqualTo: carId)
+            .where('status', isEqualTo: 'pending')
+            .get();
+
+        if (bookingRequestsQuery.docs.isNotEmpty) {
+          final bookingRequestId = bookingRequestsQuery.docs.first.id;
+          
+          // Navigate to trip request screen
+          if (context.mounted) {
+            Navigator.pushNamed(
+              context,
+              ScreensName.ownerTripRequestScreen,
+              arguments: {
+                'bookingRequestId': bookingRequestId,
+                'bookingData': bookingData,
+              },
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Error navigating to trip request: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error navigating to trip request: $e'),
             backgroundColor: Colors.red,
           ),
         );

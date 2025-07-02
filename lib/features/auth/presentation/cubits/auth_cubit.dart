@@ -17,6 +17,7 @@ part 'auth_state.dart';
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit() : super(AuthInitial()) {
     // Load user data when cubit is created
+    print('AuthCubit initialized, loading user data...');
     loadUserData();
   }
 
@@ -30,29 +31,53 @@ class AuthCubit extends Cubit<AuthState> {
   File? frontIdImage;
   File? backIdImage;
 
+  // Getter for userModel with null check
+  UserModel? get currentUser => userModel;
+
   // Save user data to SharedPreferences
   Future<void> _saveUserData(UserModel user) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userData = {
-      'id': user.id,
-      'first_name': user.firstName,
-      'last_name': user.lastName,
-      'email': user.email,
-      'phone_number': user.phoneNumber,
-      'national_id': user.national_id,
-      'role': user.role,
-      'fcm_token': user.fcmToken,
-    };
-    await prefs.setString('user_data', jsonEncode(userData));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = {
+        'id': user.id,
+        'first_name': user.firstName,
+        'last_name': user.lastName,
+        'email': user.email,
+        'phone_number': user.phoneNumber,
+        'national_id': user.national_id,
+        'role': user.role,
+        'fcm_token': user.fcmToken,
+      };
+      final userDataString = jsonEncode(userData);
+      await prefs.setString('user_data', userDataString);
+      print('User data saved to SharedPreferences: ${user.firstName} ${user.lastName}');
+      print('Saved user data string: $userDataString');
+    } catch (e) {
+      print('Error saving user data to SharedPreferences: $e');
+    }
   }
 
   // Load user data from SharedPreferences
   Future<void> loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userDataString = prefs.getString('user_data');
-    if (userDataString != null) {
-      final userData = jsonDecode(userDataString);
-      userModel = UserModel.fromJson(userData);
+    try {
+      print('Loading user data from SharedPreferences...');
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      if (userDataString != null) {
+        print('User data string found: $userDataString');
+        final userData = jsonDecode(userDataString);
+        print('Decoded user data: $userData');
+        userModel = UserModel.fromJson(userData);
+        print('User data loaded successfully: ${userModel?.firstName} ${userModel?.lastName}');
+        print('Loaded user ID: ${userModel?.id}');
+        print('User model is null: ${userModel == null}');
+      } else {
+        print('No user data found in SharedPreferences');
+        userModel = null;
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+      userModel = null;
     }
   }
 
@@ -80,7 +105,7 @@ class AuthCubit extends Cubit<AuthState> {
         // Don't throw the error to avoid crashing the app
       }
     } else {
-      print('User model is null, cannot save FCM token');
+      print('User model is null, cannot save FCM token. User needs to login first.');
     }
   }
 
@@ -130,9 +155,6 @@ class AuthCubit extends Cubit<AuthState> {
       });
       final data = response.data;
 
-      // final userData = data['user']; // أو response.data مباشرة
-      // final token = data['token'];
-
       final accessToken = data['access'];
       final refreshToken = data['refresh'];
 
@@ -140,9 +162,16 @@ class AuthCubit extends Cubit<AuthState> {
       await prefs.setString('access_token', accessToken);
       await prefs.setString('refresh_token', refreshToken);
 
-      // Map to UserModel (بعد ما تضيف fromJson تحت)
-      //userModel = UserModel.fromJson(userData);
-      //userModel = UserModel.fromJson(response["data"]);
+      // Create user model from response data
+      userModel = UserModel.fromJson(data);
+      
+      // Save user data to SharedPreferences
+      await _saveUserData(userModel!);
+      
+      print('User logged in successfully: ${userModel!.firstName} ${userModel!.lastName}');
+      print('User ID: ${userModel!.id}');
+      print('User email: ${userModel!.email}');
+      print('User model is null after login: ${userModel == null}');
 
       // Save FCM token after successful login
       await saveFcmToken();
@@ -151,7 +180,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
     catch(error)
     {
-
       emit(LoginFailure("Error"));
     }
   }
@@ -190,6 +218,10 @@ class AuthCubit extends Cubit<AuthState> {
         
         // Save user data to SharedPreferences
         await _saveUserData(userModel!);
+        
+        print('User signed up successfully: ${userModel!.firstName} ${userModel!.lastName}');
+        print('User ID: ${userModel!.id}');
+        print('User email: ${userModel!.email}');
 
         try {
           await login(email: email, password: password);
@@ -337,12 +369,18 @@ class AuthCubit extends Cubit<AuthState> {
 
   // Logout user
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_data');
-    await prefs.remove('access_token');
-    await prefs.remove('refresh_token');
-    userModel = null;
-    emit(AuthInitial());
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_data');
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+      userModel = null;
+      print('User logged out successfully');
+      emit(AuthInitial());
+    } catch (e) {
+      print('Error during logout: $e');
+      emit(AuthInitial());
+    }
   }
 
 
