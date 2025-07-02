@@ -18,6 +18,24 @@ class OwnerNotificationScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              // Navigate to OwnerOngoingTripScreen for testing
+              Navigator.pushNamed(
+                context,
+                ScreensName.ownerOngoingTripScreen,
+                arguments: {
+                  'tripId': 'trip_123',
+                  'carId': '1',
+                  'renterId': 'renter_456',
+                },
+              );
+            },
+            icon: const Icon(Icons.directions_car),
+            tooltip: 'View Ongoing Trip',
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

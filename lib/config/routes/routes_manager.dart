@@ -41,6 +41,8 @@ import '../../features/home/presentation/screens/owner/owner_trip_request_screen
 import '../../features/home/presentation/screens/booking_screens/renter_ongoing_trip_screen.dart';
 import '../../features/home/presentation/model/trip_details_model.dart';
 import '../../features/home/presentation/model/trip_with_driver_details_model.dart';
+import '../../features/owner/presentation/screens/owner_ongoing_trip_screen.dart';
+import '../../features/owner/presentation/screens/live_location_map_screen.dart';
 
 abstract class RoutesManager {
   static Route<dynamic>? onGenerateRoute(RouteSettings routeSettings) {
@@ -298,6 +300,38 @@ abstract class RoutesManager {
         return MaterialPageRoute(
           builder: (context) => RenterOngoingTripScreen(
             tripDetails: args,
+          ),
+        );
+      case ScreensName.ownerOngoingTripScreen:
+        if (routeSettings.arguments is Map<String, dynamic>) {
+          final args = routeSettings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => OwnerOngoingTripScreen(
+              tripId: args['tripId'] as String,
+              carId: args['carId'] as String,
+              renterId: args['renterId'] as String,
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (context) => const Scaffold(
+            body: Center(child: Text('Error: Missing required arguments for owner ongoing trip')),
+          ),
+        );
+      case ScreensName.liveLocationMapScreen:
+        if (routeSettings.arguments is Map<String, dynamic>) {
+          final args = routeSettings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => LiveLocationMapScreen(
+              tripId: args['tripId'] as String,
+              carId: args['carId'] as String,
+              renterId: args['renterId'] as String,
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (context) => const Scaffold(
+            body: Center(child: Text('Error: Missing required arguments for live location map')),
           ),
         );
       case '/cancel-rental':

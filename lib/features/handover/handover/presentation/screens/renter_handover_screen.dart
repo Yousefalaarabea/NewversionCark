@@ -48,20 +48,32 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
           
           // 🆕 NEW: Navigate to Renter Ongoing Trip Screen
           // This shows the ongoing trip information for the renter
+          // Original navigation to renter ongoing trip screen
+          // Navigator.pushReplacementNamed(
+          //   context,
+          //   ScreensName.renterOngoingTripScreen,
+          //   arguments: TripDetailsModel(
+          //     car: CarModel.mock(),
+          //     pickupLocation: 'Downtown Station',
+          //     dropoffLocation: 'Airport Terminal',
+          //     startDate: DateTime.now(),
+          //     endDate: DateTime.now().add(const Duration(days: 2)),
+          //     totalPrice: 1000.0,
+          //     paymentMethod: 'visa',
+          //     renterName: 'John Doe',
+          //     ownerName: 'Jane Smith',
+          //   ),
+          // );
+
+          // New navigation to owner ongoing trip screen for testing
           Navigator.pushReplacementNamed(
             context,
-            ScreensName.renterOngoingTripScreen,
-            arguments: TripDetailsModel(
-              car: CarModel.mock(),
-              pickupLocation: 'Downtown Station',
-              dropoffLocation: 'Airport Terminal',
-              startDate: DateTime.now(),
-              endDate: DateTime.now().add(const Duration(days: 2)),
-              totalPrice: 1000.0,
-              paymentMethod: 'visa',
-              renterName: 'John Doe',
-              ownerName: 'Jane Smith',
-            ),
+            ScreensName.ownerOngoingTripScreen,
+            arguments: {
+              'tripId': 'trip_handover_${DateTime.now().millisecondsSinceEpoch}',
+              'carId': '1',
+              'renterId': 'renter_handover_${DateTime.now().millisecondsSinceEpoch}',
+            },
           );
           
           // 🗂️ ORIGINAL: Navigate to Trip Management Screen (commented for testing)
