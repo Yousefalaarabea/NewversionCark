@@ -15,6 +15,7 @@ import '../../features/handover/handover/presentation/models/post_trip_handover_
 import '../../features/handover/handover/presentation/screens/handover_screen.dart';
 import '../../features/handover/handover/presentation/screens/owner_drop_off_screen.dart';
 import '../../features/handover/handover/presentation/screens/renter_handover_screen.dart';
+import '../../features/handover/handover/presentation/screens/renter_drop_off_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/trip_details_screen.dart';
 import '../../features/home/presentation/screens/home_screens/filter_screen.dart';
 import '../../features/home/presentation/screens/home_screens/home_screen.dart';
@@ -176,6 +177,25 @@ abstract class RoutesManager {
 
       case ScreensName.renterHandoverScreen:
         return MaterialPageRoute(builder: (context) => const RenterHandoverScreen());
+
+      case ScreensName.renterDropOffScreen:
+        if (routeSettings.arguments is Map<String, dynamic>) {
+          final args = routeSettings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => RenterDropOffScreen(
+              tripId: args['tripId'] as String,
+              carId: args['carId'] as String,
+              renterId: args['renterId'] as String,
+              ownerId: args['ownerId'] as String,
+              paymentMethod: args['paymentMethod'] as String,
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (context) => const Scaffold(
+            body: Center(child: Text('Error: Missing required arguments for renter drop-off')),
+          ),
+        );
 
       // case ScreensName.handoverScreen:
       //   return MaterialPageRoute(builder: (context) => const HandoverScreen());

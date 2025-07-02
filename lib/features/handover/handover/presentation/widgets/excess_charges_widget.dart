@@ -8,25 +8,26 @@ class ExcessChargesWidget extends StatelessWidget {
   final String? paymentStatus;
 
   const ExcessChargesWidget({
-    Key? key,
+    super.key,
     required this.excessCharges,
     required this.paymentMethod,
     this.paymentStatus,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.onPrimaryFixed),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -36,122 +37,139 @@ class ExcessChargesWidget extends StatelessWidget {
           // Header
           Row(
             children: [
-              Icon(
-                Icons.receipt_long,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.receipt_long,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
-                'رسوم الزيادة',
+                'Excess Charges',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary
+                  color: AppColors.primary
                 ),
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Kilometers section
           _buildSection(
-            title: 'الكيلومترات',
+            title: 'Kilometers',
             icon: Icons.speed,
             items: [
-              _buildItem('المتفق عليه', '${excessCharges.agreedKilometers} كم'),
-              _buildItem('الفعلي', '${excessCharges.actualKilometers} كم'),
+              _buildItem('Agreed', '${excessCharges.agreedKilometers} km'),
+              _buildItem('Actual', '${excessCharges.actualKilometers} km'),
               if (excessCharges.extraKilometers > 0)
                 _buildItem(
-                  'الزيادة',
-                  '${excessCharges.extraKilometers} كم',
+                  'Extra',
+                  '${excessCharges.extraKilometers} km',
                   isExtra: true,
                 ),
               if (excessCharges.extraKilometers > 0)
                 _buildItem(
-                  'سعر الكم الزائد',
-                  '${excessCharges.extraKmRate} ريال',
+                  'Extra km rate',
+                  '\$${excessCharges.extraKmRate}',
                 ),
               if (excessCharges.extraKilometers > 0)
                 _buildItem(
-                  'تكلفة الكم الزائد',
-                  '${excessCharges.extraKmCost.toStringAsFixed(2)} ريال',
+                  'Extra km cost',
+                  '\$${excessCharges.extraKmCost.toStringAsFixed(2)}',
                   isTotal: true,
                 ),
             ],
           ),
 
-          SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Hours section
           _buildSection(
-            title: 'الوقت',
+            title: 'Time',
             icon: Icons.access_time,
             items: [
-              _buildItem('المتفق عليه', '${excessCharges.agreedHours} ساعة'),
-              _buildItem('الفعلي', '${excessCharges.actualHours} ساعة'),
+              _buildItem('Agreed', '${excessCharges.agreedHours} hours'),
+              _buildItem('Actual', '${excessCharges.actualHours} hours'),
               if (excessCharges.extraHours > 0)
                 _buildItem(
-                  'الزيادة',
-                  '${excessCharges.extraHours} ساعة',
+                  'Extra',
+                  '${excessCharges.extraHours} hours',
                   isExtra: true,
                 ),
               if (excessCharges.extraHours > 0)
                 _buildItem(
-                  'سعر الساعة الزائدة',
-                  '${excessCharges.extraHourRate} ريال',
+                  'Extra hour rate',
+                  '\$${excessCharges.extraHourRate}',
                 ),
               if (excessCharges.extraHours > 0)
                 _buildItem(
-                  'تكلفة الساعات الزائدة',
-                  '${excessCharges.extraHourCost.toStringAsFixed(2)} ريال',
+                  'Extra hours cost',
+                  '\$${excessCharges.extraHourCost.toStringAsFixed(2)}',
                   isTotal: true,
                 ),
             ],
           ),
 
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Total section
           Container(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onPrimaryFixed,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Theme.of(context).colorScheme.onPrimaryFixed),
+              gradient: LinearGradient(
+                colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withOpacity(0.2)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'إجمالي الرسوم الزائدة',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryFixed,
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.calculate, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Total Excess Charges',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
-                  '${excessCharges.totalExcessCost.toStringAsFixed(2)} ريال',
+                  '\$${excessCharges.totalExcessCost.toStringAsFixed(2)}',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryFixed,
+                    color: AppColors.primary,
                   ),
                 ),
               ],
             ),
           ),
 
-          SizedBox(height: 12),
+          const SizedBox(height: 16),
 
           // Payment method and status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildPaymentInfo('طريقة الدفع', _getPaymentMethodText()),
+              _buildPaymentInfo('Payment Method', _getPaymentMethodText()),
               if (paymentStatus != null)
-                _buildPaymentInfo('حالة الدفع', _getPaymentStatusText()),
+                _buildPaymentInfo('Payment Status', _getPaymentStatusText()),
             ],
           ),
         ],
@@ -169,27 +187,44 @@ class ExcessChargesWidget extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 20),
-            SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 18),
+            ),
+            const SizedBox(width: 10),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 16,
+              style: const TextStyle(
+                fontSize: 17,
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,
               ),
             ),
           ],
         ),
-        SizedBox(height: 8),
-        ...items,
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: Column(
+            children: items,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildItem(String label, String value, {bool isExtra = false, bool isTotal = false}) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -197,7 +232,7 @@ class ExcessChargesWidget extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 14,
-              color: isExtra ? Colors.red : Colors.grey[700],
+              color: isExtra ? Colors.red[600] : Colors.grey[700],
               fontWeight: isExtra || isTotal ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
@@ -205,7 +240,7 @@ class ExcessChargesWidget extends StatelessWidget {
             value,
             style: TextStyle(
               fontSize: 14,
-              color: isExtra ? Colors.red : Colors.grey[700],
+              color: isExtra ? Colors.red[600] : Colors.grey[700],
               fontWeight: isExtra || isTotal ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
@@ -215,37 +250,46 @@ class ExcessChargesWidget extends StatelessWidget {
   }
 
   Widget _buildPaymentInfo(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   String _getPaymentMethodText() {
     switch (paymentMethod) {
       case 'visa':
-        return 'فيزا';
+        return 'Visa';
       case 'wallet':
-        return 'محفظة';
+        return 'Wallet';
       case 'cash':
-        return 'نقدي';
+        return 'Cash';
       default:
         return paymentMethod;
     }
@@ -254,11 +298,11 @@ class ExcessChargesWidget extends StatelessWidget {
   String _getPaymentStatusText() {
     switch (paymentStatus) {
       case 'pending':
-        return 'في الانتظار';
+        return 'Pending';
       case 'completed':
-        return 'مكتمل';
+        return 'Completed';
       case 'failed':
-        return 'فشل';
+        return 'Failed';
       default:
         return paymentStatus ?? '';
     }

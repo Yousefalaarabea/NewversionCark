@@ -627,12 +627,16 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
   }
 
   void _navigateToDropOffScreen() {
-    // TODO: Navigate to RenterDropOffScreen with trip details
+    // Navigate to RenterDropOffScreen with required arguments
     Navigator.pushNamed(
       context,
       ScreensName.renterDropOffScreen,
       arguments: {
-        'tripDetails': widget.tripDetails,
+        'tripId': 'trip_${DateTime.now().millisecondsSinceEpoch}', // Generate trip ID
+        'carId': widget.tripDetails.car.id.toString(),
+        'renterId': 'renter_001', // TODO: Get from auth
+        'ownerId': 'owner_001', // TODO: Get from car data
+        'paymentMethod': widget.tripDetails.paymentMethod,
       },
     );
   }

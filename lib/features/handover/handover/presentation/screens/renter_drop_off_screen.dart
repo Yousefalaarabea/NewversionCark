@@ -18,13 +18,13 @@ class RenterDropOffScreen extends StatefulWidget {
   final String paymentMethod;
 
   const RenterDropOffScreen({
-    Key? key,
+    super.key,
     required this.tripId,
     required this.carId,
     required this.renterId,
     required this.ownerId,
     required this.paymentMethod,
-  }) : super(key: key);
+  });
 
   @override
   State<RenterDropOffScreen> createState() => _RenterDropOffScreenState();
@@ -62,10 +62,10 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
     );
   }
 
-  Future<void> _pickImage(ImageSource source, bool isCarImage) async {
+  Future<void> _pickImage(bool isCarImage) async {
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: source);
+      final XFile? image = await picker.pickImage(source: ImageSource.camera);
       
       if (image != null) {
         if (isCarImage) {
@@ -76,7 +76,7 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في اختيار الصورة: $e')),
+        SnackBar(content: Text('Failed to capture image: $e')),
       );
     }
   }
@@ -84,7 +84,7 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
   void _calculateExcessCharges() {
     if (_finalOdometerReading == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('يرجى إدخال قراءة العداد أولاً')),
+        const SnackBar(content: Text('Please enter odometer reading first')),
       );
       return;
     }
@@ -110,10 +110,11 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('تسليم السيارة'),
+        title: const Text('Car Drop-Off'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         centerTitle: true,
+        elevation: 0,
       ),
       body: BlocConsumer<RenterDropOffCubit, RenterDropOffState>(
         listener: (context, state) {
@@ -135,11 +136,11 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
             });
           } else if (state is RenterDropOffExcessCalculated) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تم حساب الرسوم الزائدة بنجاح')),
+              const SnackBar(content: Text('Excess charges calculated successfully')),
             );
           } else if (state is RenterDropOffPaymentProcessed) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تم معالجة الدفع بنجاح')),
+              const SnackBar(content: Text('Payment processed successfully')),
             );
           } else if (state is RenterDropOffNotesAdded) {
             setState(() {
@@ -147,7 +148,7 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
             });
           } else if (state is RenterDropOffCompleted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تم تسليم السيارة بنجاح')),
+              const SnackBar(content: Text('Car drop-off completed successfully')),
             );
             // Navigate to owner drop-off screen
             Navigator.pushReplacementNamed(
@@ -162,44 +163,56 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
         },
         builder: (context, state) {
           if (state is RenterDropOffLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           return SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                    gradient: LinearGradient(
+                      colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.directions_car, color: AppColors.primary, size: 32),
-                      SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.directions_car, color: AppColors.primary, size: 28),
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'تسليم السيارة',
+                            const Text(
+                              'Car Drop-Off Process',
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.primary,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
-                              'قم بإكمال الخطوات التالية لتسليم السيارة',
+                              'Complete the following steps to return the car',
                               style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
+                                fontSize: 15,
+                                color: Colors.grey[700],
+                                height: 1.3,
                               ),
                             ),
                           ],
@@ -208,47 +221,48 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Step 1: Upload car image
                 _buildStepCard(
-                  title: '1. صورة السيارة بعد الرحلة',
-                  subtitle: 'قم برفع صورة للسيارة لتوثيق حالتها',
+                  title: '1. Car Image After Trip',
+                  subtitle: 'Take a photo of the car to document its condition',
                   icon: Icons.camera_alt,
                   isCompleted: _carImagePath != null,
                   child: ImageUploadWidget(
                     imagePath: _carImagePath,
-                    onImagePicked: (source) => _pickImage(source, true),
-                    title: 'صورة السيارة',
+                    onImagePicked: (source) => _pickImage(true),
+                    title: 'Car Image',
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Step 2: Upload odometer image
                 _buildStepCard(
-                  title: '2. صورة عداد المسافات',
-                  subtitle: 'قم برفع صورة لعداد المسافات',
+                  title: '2. Odometer Reading Photo',
+                  subtitle: 'Take a photo of the odometer reading',
                   icon: Icons.speed,
                   isCompleted: _odometerImagePath != null,
                   child: ImageUploadWidget(
                     imagePath: _odometerImagePath,
-                    onImagePicked: (source) => _pickImage(source, false),
-                    title: 'صورة العداد',
+                    onImagePicked: (source) => _pickImage(false),
+                    title: 'Odometer Image',
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Step 3: Enter odometer reading
                 _buildStepCard(
-                  title: '3. قراءة العداد النهائية',
-                  subtitle: 'أدخل قراءة عداد المسافات الحالية',
+                  title: '3. Final Odometer Reading',
+                  subtitle: 'Enter the current odometer reading',
                   icon: Icons.edit,
                   isCompleted: _finalOdometerReading != null,
                   child: TextFormField(
                     controller: _odometerController,
-                    decoration: InputDecoration(
-                      labelText: 'قراءة العداد (كم)',
+                    decoration: const InputDecoration(
+                      labelText: 'Odometer Reading (km)',
                       border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.speed),
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
@@ -259,13 +273,13 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                     },
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Step 4: Calculate excess charges
                 if (_finalOdometerReading != null)
                   _buildStepCard(
-                    title: '4. حساب الرسوم الزائدة',
-                    subtitle: 'احسب الرسوم الإضافية إن وجدت',
+                    title: '4. Calculate Excess Charges',
+                    subtitle: 'Calculate any additional charges if applicable',
                     icon: Icons.calculate,
                     isCompleted: state is RenterDropOffExcessCalculated || 
                                 state is RenterDropOffPaymentProcessed ||
@@ -274,59 +288,68 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                       children: [
                         CustomElevatedButton(
                           onPressed: _calculateExcessCharges,
-                          text: 'حساب الرسوم الزائدة',
+                          text: 'Calculate Excess Charges',
                         ),
                         if (state is RenterDropOffExcessCalculated) ...[
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           ExcessChargesWidget(
                             excessCharges: state.excessCharges,
                             paymentMethod: widget.paymentMethod,
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           CustomElevatedButton(
                             onPressed: _processPayment,
-                            text: 'معالجة الدفع',
+                            text: 'Process Payment',
                           ),
                         ],
                       ],
                     ),
                   ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Step 5: Add notes
                 _buildStepCard(
-                  title: '5. إضافة ملاحظات',
-                  subtitle: 'أضف أي ملاحظات إضافية',
+                  title: '5. Add Notes',
+                  subtitle: 'Add any additional notes or comments',
                   icon: Icons.note_add,
                   isCompleted: _renterNotes != null && _renterNotes!.isNotEmpty,
                   child: HandoverNotesWidget(
-                    title: 'ملاحظات المستأجر',
+                    title: 'Renter Notes',
                     initialValue: _renterNotes,
                     onNotesChanged: (notes) {
                       context.read<RenterDropOffCubit>().addRenterNotes(notes);
                     },
-                    hintText: 'أضف ملاحظاتك حول الرحلة أو حالة السيارة...',
+                    hintText: 'Add your notes about the trip or car condition...',
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Complete handover button
                 if (_canCompleteHandover(state))
                   Container(
                     width: double.infinity,
+                    margin: const EdgeInsets.only(top: 8),
                     child: ElevatedButton(
                       onPressed: _completeHandover,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.green,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 2,
                       ),
-                      child: Text(
-                        'إكمال التسليم',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle, size: 20),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Complete Drop-Off',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -346,19 +369,20 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
     required Widget child,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isCompleted ? AppColors.green : AppColors.primary.withOpacity(0.2),
+          color: isCompleted ? AppColors.green : AppColors.primary.withOpacity(0.15),
           width: isCompleted ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -368,18 +392,27 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isCompleted ? AppColors.green : AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: isCompleted 
+                      ? AppColors.green 
+                      : AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: isCompleted ? [
+                    BoxShadow(
+                      color: AppColors.green.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ] : null,
                 ),
                 child: Icon(
                   isCompleted ? Icons.check : icon,
                   color: isCompleted ? Colors.white : AppColors.primary,
-                  size: 20,
+                  size: 22,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,17 +420,18 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: isCompleted ? AppColors.green : AppColors.primary,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         color: Colors.grey[600],
+                        height: 1.3,
                       ),
                     ),
                   ],
@@ -405,7 +439,7 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 20),
           child,
         ],
       ),
