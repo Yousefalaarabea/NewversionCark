@@ -156,11 +156,6 @@ class CarCubit extends Cubit<ChooseCarState> {
       withoutDriver: withoutDriver ?? state.withoutDriver,
     ));
   }
-  void updateReturnStation() {
-    if (state.pickupStation != null) {
-      emit(state.copyWith(returnStation: state.pickupStation));
-    }
-  }
 
 
 }

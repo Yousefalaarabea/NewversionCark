@@ -47,7 +47,7 @@ class ImageUploadWidget extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () => _showImageSourceDialog(context, ImageSource.camera),
                 icon: Icon(Icons.camera_alt, color: Colors.white),
-                label: Text('الكاميرا'),
+                label: Text('Camera'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -59,21 +59,21 @@ class ImageUploadWidget extends StatelessWidget {
               ),
             ),
             SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _showImageSourceDialog(context, ImageSource.gallery),
-                icon: Icon(Icons.photo_library, color: Colors.white),
-                label: Text('المعرض'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
+            // Expanded(
+            //   child: ElevatedButton.icon(
+            //     onPressed: () => _showImageSourceDialog(context, ImageSource.gallery),
+            //     icon: Icon(Icons.photo_library, color: Colors.white),
+            //     label: Text('المعرض'),
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: AppColors.primary,
+            //       foregroundColor: Colors.white,
+            //       padding: EdgeInsets.symmetric(vertical: 12),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ],
@@ -85,19 +85,19 @@ class ImageUploadWidget extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('اختر مصدر الصورة'),
-          content: Text('هل تريد استخدام ${source == ImageSource.camera ? 'الكاميرا' : 'المعرض'}؟'),
+          title: Text('Camera'),
+          content: Text('Do you want to open ${source == ImageSource.camera ? 'Camera' : ''}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('إلغاء'),
+              child: Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 onImagePicked(source);
               },
-              child: Text('تأكيد'),
+              child: Text('Confirm'),
             ),
           ],
         );

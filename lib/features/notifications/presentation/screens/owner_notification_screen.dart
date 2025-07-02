@@ -18,6 +18,24 @@ class OwnerNotificationScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              // Navigate to OwnerOngoingTripScreen for testing
+              Navigator.pushNamed(
+                context,
+                ScreensName.ownerOngoingTripScreen,
+                arguments: {
+                  'tripId': 'trip_123',
+                  'carId': '1',
+                  'renterId': 'renter_456',
+                },
+              );
+            },
+            icon: const Icon(Icons.directions_car),
+            tooltip: 'View Ongoing Trip',
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -174,11 +192,20 @@ class OwnerNotificationScreen extends StatelessWidget {
                             .collection('notifications')
                             .doc(docs[index].id)
                             .update({'read': true});
+
+                        // Navigate to trip request screen for booking requests
+                        if (notificationType == 'owner' &&
+                            notificationTypeSpecific == 'car_booked') {
+                          final bookingData = data['booking_data'] as Map<String, dynamic>?;
+                          if (bookingData != null) {
+                            _navigateToTripRequest(context, docs[index].id, bookingData);
+                          }
+                        }
                       },
                     ),
                     // Show action buttons for booking requests
-                    if (notificationType == 'owner' && 
-                        notificationTypeSpecific == 'car_booked' && 
+                    if (notificationType == 'owner' &&
+                        notificationTypeSpecific == 'car_booked' &&
                         !isRead)
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -191,7 +218,7 @@ class OwnerNotificationScreen extends StatelessWidget {
                                   backgroundColor: Colors.green,
                                   foregroundColor: Colors.white,
                                 ),
-                                child: Text('Accept'),
+                                child: const Text('Accept'),
                               ),
                             ),
                             SizedBox(width: 12.w),
@@ -202,15 +229,15 @@ class OwnerNotificationScreen extends StatelessWidget {
                                   backgroundColor: Colors.red,
                                   foregroundColor: Colors.white,
                                 ),
-                                child: Text('Decline'),
+                                child: const Text('Decline'),
                               ),
                             ),
                           ],
                         ),
                       ),
                     // Show action button for handover notifications
-                    if (notificationType == 'owner' && 
-                        notificationTypeSpecific == 'handover_ready' && 
+                    if (notificationType == 'owner' &&
+                        notificationTypeSpecific == 'handover_ready' &&
                         !isRead)
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -222,7 +249,7 @@ class OwnerNotificationScreen extends StatelessWidget {
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
                             ),
-                            child: Text('Proceed to Handover'),
+                            child: const Text('Proceed to Handover'),
                           ),
                         ),
                       ),
@@ -250,11 +277,11 @@ class OwnerNotificationScreen extends StatelessWidget {
       final carModel = bookingData['carModel'] as String? ?? '';
       final carId = bookingData['carId'] as String?;
       final totalPrice = bookingData['totalPrice'] as double? ?? 0.0;
-      
+
       // Get current user (owner)
       final authCubit = context.read<AuthCubit>();
       final currentUser = authCubit.userModel;
-      
+
       if (currentUser == null) {
         throw Exception('User not found');
       }
@@ -329,7 +356,7 @@ class OwnerNotificationScreen extends StatelessWidget {
       if (bookingData != null) {
         final renterId = bookingData['renterId'] as String?;
         final carId = bookingData['carId'] as String?;
-        
+
         if (renterId != null && carId != null) {
           // Update booking request status in Firestore
           final bookingRequestsQuery = await FirebaseFirestore.instance
@@ -411,6 +438,49 @@ class OwnerNotificationScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error navigating to handover: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _navigateToTripRequest(BuildContext context, String notificationId, Map<String, dynamic> bookingData) async {
+    try {
+      // Find the booking request ID
+      final renterId = bookingData['renterId'] as String?;
+      final carId = bookingData['carId'] as String?;
+
+      if (renterId != null && carId != null) {
+        final bookingRequestsQuery = await FirebaseFirestore.instance
+            .collection('booking_requests')
+            .where('renterId', isEqualTo: renterId)
+            .where('carId', isEqualTo: carId)
+            .where('status', isEqualTo: 'pending')
+            .get();
+
+        if (bookingRequestsQuery.docs.isNotEmpty) {
+          final bookingRequestId = bookingRequestsQuery.docs.first.id;
+
+          // Navigate to trip request screen
+          if (context.mounted) {
+            Navigator.pushNamed(
+              context,
+              ScreensName.ownerTripRequestScreen,
+              arguments: {
+                'bookingRequestId': bookingRequestId,
+                'bookingData': bookingData,
+              },
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Error navigating to trip request: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error navigating to trip request: $e'),
             backgroundColor: Colors.red,
           ),
         );

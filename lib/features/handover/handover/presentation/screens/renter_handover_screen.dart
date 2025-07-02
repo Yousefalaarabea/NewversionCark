@@ -6,12 +6,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../config/routes/screens_name.dart';
 import '../../../../../core/services/notification_service.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
-import '../../../../home/presentation/model/car_model.dart';
 import '../cubits/renter_handover_cubit.dart';
-import '../models/renter_handover_model.dart';
 
 class RenterHandoverScreen extends StatefulWidget {
-  const RenterHandoverScreen({Key? key}) : super(key: key);
+  const RenterHandoverScreen({super.key});
 
   @override
   State<RenterHandoverScreen> createState() => _RenterHandoverScreenState();
@@ -19,7 +17,7 @@ class RenterHandoverScreen extends StatefulWidget {
 
 class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
   final TextEditingController _odometerController = TextEditingController();
-  bool _contractConfirmed = false;
+  final bool _contractConfirmed = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -46,15 +44,52 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
           // Send notification to owner that renter handover is completed
           _notifyOwnerRenterHandoverCompleted();
           
+          // 🆕 NEW: Navigate to Renter Ongoing Trip Screen
+          // This shows the ongoing trip information for the renter
+          // Original navigation to renter ongoing trip screen
+          // Navigator.pushReplacementNamed(
+          //   context,
+          //   ScreensName.renterOngoingTripScreen,
+          //   arguments: TripDetailsModel(
+          //     car: CarModel.mock(),
+          //     pickupLocation: 'Downtown Station',
+          //     dropoffLocation: 'Airport Terminal',
+          //     startDate: DateTime.now(),
+          //     endDate: DateTime.now().add(const Duration(days: 2)),
+          //     totalPrice: 1000.0,
+          //     paymentMethod: 'visa',
+          //     renterName: 'John Doe',
+          //     ownerName: 'Jane Smith',
+          //   ),
+          // );
+
+          // New navigation to owner ongoing trip screen for testing
+          Navigator.pushReplacementNamed(
+            context,
+            ScreensName.ownerOngoingTripScreen,
+            arguments: {
+              'tripId': 'trip_handover_${DateTime.now().millisecondsSinceEpoch}',
+              'carId': '1',
+              'renterId': 'renter_handover_${DateTime.now().millisecondsSinceEpoch}',
+            },
+          );
+          
+          // 🗂️ ORIGINAL: Navigate to Trip Management Screen (commented for testing)
+          /*
           Navigator.pushReplacementNamed(
             context,
             ScreensName.tripManagementScreen,
             arguments: {
               'car': CarModel.mock(),
               'totalPrice': 1000.0,
-              'stops': [],
+              'stops': const [],
+              'tripId': 'trip_001',
+              'renterId': 'renter_001',
+              'ownerId': 'owner_001',
+              'paymentMethod': 'visa',
             },
           );
+          */
         }
       },
       child: Scaffold(
@@ -170,8 +205,8 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
                             : const Text('Pay with Card (Paymob Test)'),
                       ),
                     ] else ...[
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Icon(Icons.check_circle, color: Colors.green),
                           SizedBox(width: 8),
                           Text('Payment Completed', style: TextStyle(color: Colors.green)),
@@ -279,7 +314,7 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
 }
 
 class RenterHandoverConfirmationScreen extends StatelessWidget {
-  const RenterHandoverConfirmationScreen({Key? key}) : super(key: key);
+  const RenterHandoverConfirmationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

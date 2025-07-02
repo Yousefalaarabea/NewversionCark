@@ -131,7 +131,8 @@ class RenterNotificationScreen extends StatelessWidget {
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
                             ),
-                            child: Text('Pay Deposit'),
+                            child: Text(''
+                                'Pay Deposit'),
                           ),
                         ),
                       ),

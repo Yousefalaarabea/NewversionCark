@@ -1,3 +1,5 @@
+import '../../../cars/presentation/models/car_usage_policy.dart';
+
 class CarModel {
   final String ownerId; // ForeignKey to User
   final int id;
@@ -20,7 +22,8 @@ class CarModel {
   final DateTime? updatedAt;
   final RentalOptions rentalOptions;
   final String imageUrl;
-  
+  final CarUsagePolicy? usagePolicy;
+
   // Driver information fields
   final String? driverName;
   final double? driverRating;
@@ -51,6 +54,7 @@ class CarModel {
     this.updatedAt,
     required this.rentalOptions,
     this.imageUrl = 'https://cdn-icons-png.flaticon.com/512/743/743007.png',
+    this.usagePolicy,
     this.driverName,
     this.driverRating,
     this.driverTrips,
@@ -61,7 +65,7 @@ class CarModel {
 
   factory CarModel.fromJson(Map<String, dynamic> json) {
     return CarModel(
-      ownerId: json['owner']?.toString() ?? '',
+      ownerId: json['ownerId'],
       id: json['id'],
       model: json['model'],
       brand: json['brand'],
@@ -80,8 +84,9 @@ class CarModel {
       approvalStatus: json['approval_status'],
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
       updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
-      rentalOptions: RentalOptions.fromJson(json['rental_options'] ?? {}),
+      rentalOptions: RentalOptions.fromJson(json['rental_widgets'] ?? {}),
       imageUrl: json['image_url'] ?? 'https://cdn-icons-png.flaticon.com/512/743/743007.png',
+      usagePolicy: json['usage_policy'] != null ? CarUsagePolicy.fromJson(json['usage_policy']) : null,
       driverName: json['driver_name'],
       driverRating: json['driver_rating']?.toDouble(),
       driverTrips: json['driver_trips'],
@@ -89,22 +94,6 @@ class CarModel {
       waitingHourCost: json['waiting_hour_cost']?.toDouble(),
       extraKmRate: json['extra_km_rate']?.toDouble(),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'model': model,
-      'brand': brand,
-      'car_type': carType,
-      'car_category': carCategory,
-      'plate_number': plateNumber,
-      'year': year,
-      'color': color,
-      'seating_capacity': seatingCapacity,
-      'transmission_type': transmissionType,
-      'fuel_type': fuelType,
-      'current_odometer_reading': currentOdometerReading,
-    };
   }
 
   CarModel copyWith({
@@ -129,6 +118,7 @@ class CarModel {
     DateTime? updatedAt,
     RentalOptions? rentalOptions,
     String? imageUrl,
+    CarUsagePolicy? usagePolicy,
     String? driverName,
     double? driverRating,
     int? driverTrips,
@@ -158,6 +148,7 @@ class CarModel {
       updatedAt: updatedAt ?? this.updatedAt,
       rentalOptions: rentalOptions ?? this.rentalOptions,
       imageUrl: imageUrl ?? this.imageUrl,
+      usagePolicy: usagePolicy ?? this.usagePolicy,
       driverName: driverName ?? this.driverName,
       driverRating: driverRating ?? this.driverRating,
       driverTrips: driverTrips ?? this.driverTrips,
@@ -189,10 +180,47 @@ class CarModel {
       updatedAt: DateTime.now(),
       rentalOptions: RentalOptions.mock(),
       imageUrl: 'https://imgd.aeplcdn.com/1280x720/n/cw/ec/140945/camry-exterior-right-front-three-quarter-2.jpeg?is-cms=true&q=80',
+      usagePolicy: CarUsagePolicy(
+        dailyKmLimit: 200,
+        extraKmCost: 0.5,
+        dailyHourLimit: 8,
+        extraHourCost: 10.0,
+      ),
       kmLimitPerDay: 450,
       extraKmRate: 0.60,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'ownerId': ownerId,
+    'id': id,
+    'model': model,
+    'brand': brand,
+    'car_type': carType,
+    'car_category': carCategory,
+    'plate_number': plateNumber,
+    'year': year,
+    'color': color,
+    'seating_capacity': seatingCapacity,
+    'luggage_capacity': luggageCapacity,
+    'transmission_type': transmissionType,
+    'fuel_type': fuelType,
+    'current_odometer_reading': currentOdometerReading,
+    'availability': availability,
+    'current_status': currentStatus,
+    'approval_status': approvalStatus,
+    'created_at': createdAt?.toIso8601String(),
+    'updated_at': updatedAt?.toIso8601String(),
+    'rental_widgets': rentalOptions.toJson(),
+    'image_url': imageUrl,
+    'usage_policy': usagePolicy?.toJson(),
+    'driver_name': driverName,
+    'driver_rating': driverRating,
+    'driver_trips': driverTrips,
+    'km_limit_per_day': kmLimitPerDay,
+    'waiting_hour_cost': waitingHourCost,
+    'extra_km_rate': extraKmRate,
+  };
 }
 
 class RentalOptions {
@@ -218,8 +246,8 @@ class RentalOptions {
 
   factory RentalOptions.fromJson(Map<String, dynamic> json) {
     return RentalOptions(
-      availableWithoutDriver: json['available_without_driver'] ?? false,
-      availableWithDriver: json['available_with_driver'] ?? false,
+      availableWithoutDriver: json['available_without_driver'],
+      availableWithDriver: json['available_with_driver'],
       dailyRentalPrice: json['daily_rental_price']?.toDouble(),
       monthlyRentalPrice: json['monthly_rental_price']?.toDouble(),
       yearlyRentalPrice: json['yearly_rental_price']?.toDouble(),
@@ -227,19 +255,6 @@ class RentalOptions {
       monthlyPriceWithDriver: json['monthly_price_with_driver']?.toDouble(),
       yearlyPriceWithDriver: json['yearly_price_with_driver']?.toDouble(),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'available_without_driver': availableWithoutDriver,
-      'available_with_driver': availableWithDriver,
-      'daily_rental_price': dailyRentalPrice,
-      'monthly_rental_price': monthlyRentalPrice,
-      'yearly_rental_price': yearlyRentalPrice,
-      'daily_rental_price_with_driver': dailyRentalPriceWithDriver,
-      'monthly_price_with_driver': monthlyPriceWithDriver,
-      'yearly_price_with_driver': yearlyPriceWithDriver,
-    };
   }
 
   factory RentalOptions.mock() {
@@ -250,4 +265,15 @@ class RentalOptions {
       dailyRentalPriceWithDriver: 250.0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'available_without_driver': availableWithoutDriver,
+    'available_with_driver': availableWithDriver,
+    'daily_rental_price': dailyRentalPrice,
+    'monthly_rental_price': monthlyRentalPrice,
+    'yearly_rental_price': yearlyRentalPrice,
+    'daily_rental_price_with_driver': dailyRentalPriceWithDriver,
+    'monthly_price_with_driver': monthlyPriceWithDriver,
+    'yearly_price_with_driver': yearlyPriceWithDriver,
+  };
 }

@@ -2,17 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../model/car_model.dart';
 import '../../model/location_model.dart';
+import '../../../../../config/routes/screens_name.dart';
 
 class TripManagementScreen extends StatefulWidget {
   final CarModel car;
   final double totalPrice;
   final List<LocationModel> stops;
+  final String tripId;
+  final String renterId;
+  final String ownerId;
+  final String paymentMethod;
 
   const TripManagementScreen({
     super.key,
     required this.car,
     required this.totalPrice,
     required this.stops,
+    required this.tripId,
+    required this.renterId,
+    required this.ownerId,
+    required this.paymentMethod,
   });
 
   @override
@@ -177,6 +186,32 @@ class _TripManagementScreenState extends State<TripManagementScreen>
           if (!isTripStarted) _buildStartTripButton(),
           if (showMap) _buildMapPlaceholder(),
           _buildStopsList(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _getCurrentLocation,
+                  icon: const Icon(Icons.gps_fixed),
+                  label: const Text('Get Current GPS'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _finishTrip,
+                  icon: const Icon(Icons.flag),
+                  label: const Text('Finish Trip'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -405,6 +440,32 @@ class _TripManagementScreenState extends State<TripManagementScreen>
           },
         ),
       ),
+    );
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم جلب الموقع الحالي (اختبار).')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل في جلب الموقع: $e')),
+      );
+    }
+  }
+
+  void _finishTrip() {
+    Navigator.pushNamed(
+      context,
+      ScreensName.renterDropOffScreen,
+      arguments: {
+        'tripId': widget.tripId,
+        'carId': widget.car.id.toString(),
+        'renterId': widget.renterId,
+        'ownerId': widget.ownerId,
+        'paymentMethod': widget.paymentMethod,
+      },
     );
   }
 }

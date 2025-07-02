@@ -20,9 +20,7 @@ abstract class ScreensName{
   static const String bookingRequestScreen = "/bookingRequestScreen";
   static const String depositPaymentScreen = "/depositPaymentScreen";
   static const String paymentMethodsScreen = "/paymentMethodsScreen";
-  static const String depositInputScreen = "/depositInputScreen";
 
-  //
   static const String addCarScreen = "/addCarScreen" ;
   static const String viewCarsScreen = "/viewCars";
   static const String rentalOptionScreen = "/rentalOptionScreen" ;
@@ -34,5 +32,21 @@ abstract class ScreensName{
   static const String handoverScreen = "/handoverScreen";
   static const String ownerDropOffScreen = "/ownerDropOffScreen";
   static const String tripDetailsScreen = "/tripDetailsScreen";
+
+  static const String tripDetailsConfirmationScreen = "/trip-details-confirmation";
+  static const String tripWithDriverConfirmationScreen = "/trip-with-driver-confirmation";
+  static const String ownerTripRequestScreen = "/owner-trip-request";
+  static const String renterOngoingTripScreen = "/renter-ongoing-trip";
+  static const String ownerOngoingTripScreen = "/owner-ongoing-trip";
+  static const String liveLocationMapScreen = "/liveLocationMap";
+  static const String renterDropOffScreen = "/renterDropOffScreen";
+  static const String depositInputScreen = "/depositInputScreen";
+  static const String sentRequestToOwnerScreen = "/sentRequestToOwnerScreen";
+  static const String savedTripsScreen = "/savedTripsScreen";
+  static const String tripDetailsReadOnlyScreen = "/tripDetailsReadOnlyScreen";
+
+
+
+
 }
 

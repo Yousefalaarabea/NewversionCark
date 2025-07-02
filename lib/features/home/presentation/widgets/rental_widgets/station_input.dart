@@ -68,8 +68,10 @@ class _StationInputState extends State<StationInput> {
 
         if (widget.isPickup) {
           context.read<CarCubit>().setPickupStation(location);
+          print('DEBUG - Set pickup station: ${location.name}');
         } else {
           context.read<CarCubit>().setReturnStation(location);
+          print('DEBUG - Set return station: ${location.name}');
         }
 
         // Show success feedback

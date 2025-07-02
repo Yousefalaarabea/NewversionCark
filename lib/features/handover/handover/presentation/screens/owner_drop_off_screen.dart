@@ -15,10 +15,10 @@ class OwnerDropOffScreen extends StatefulWidget {
   final List<HandoverLogModel> logs;
 
   const OwnerDropOffScreen({
-    Key? key,
+    super.key,
     required this.handoverData,
     required this.logs,
-  }) : super(key: key);
+  });
 
   @override
   State<OwnerDropOffScreen> createState() => _OwnerDropOffScreenState();
@@ -26,6 +26,7 @@ class OwnerDropOffScreen extends StatefulWidget {
 
 class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
   String? _ownerNotes;
+  bool _contractConfirmed = false;
 
   @override
   void initState() {
@@ -52,10 +53,11 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('استلام السيارة'),
+        title: const Text('Car Pickup'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         centerTitle: true,
+        elevation: 0,
       ),
       body: BlocConsumer<OwnerDropOffCubit, OwnerDropOffState>(
         listener: (context, state) {
@@ -65,7 +67,7 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
             );
           } else if (state is OwnerDropOffCashPaymentConfirmed) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تم تأكيد استلام الدفع النقدي')),
+              const SnackBar(content: Text('Cash payment received successfully')),
             );
           } else if (state is OwnerDropOffNotesAdded) {
             setState(() {
@@ -73,7 +75,7 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
             });
           } else if (state is OwnerDropOffCompleted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تم استلام السيارة بنجاح - انتهت الرحلة')),
+              const SnackBar(content: Text('Car pickup completed successfully - Trip ended')),
             );
             // Navigate back to home or show completion screen
             Navigator.of(context).popUntil((route) => route.isFirst);
@@ -81,7 +83,24 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
         },
         builder: (context, state) {
           if (state is OwnerDropOffLoading) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading data...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           if (state is OwnerDropOffDataLoaded || 
@@ -103,44 +122,56 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
               logs = widget.logs;
             } else {
               handoverData = (state as OwnerDropOffCompleted).handoverData;
-              logs = (state as OwnerDropOffCompleted).logs;
+              logs = (state).logs;
             }
 
             return SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle, color: AppColors.green, size: 32),
-                        SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.check_circle, color: AppColors.green, size: 28),
+                        ),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'استلام السيارة',
+                              const Text(
+                                'Car Pickup Process',
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.primary,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Text(
-                                'تم تسليم السيارة من المستأجر - يرجى مراجعة التفاصيل',
+                                'Car has been returned by renter - Please review all details',
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
+                                  fontSize: 15,
+                                  color: Colors.grey[700],
+                                  height: 1.3,
                                 ),
                               ),
                             ],
@@ -149,34 +180,38 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Handover Summary
                   _buildSummaryCard(handoverData),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // Car Images
                   if (handoverData.carImagePath != null || handoverData.odometerImagePath != null)
                     _buildImagesCard(handoverData),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // Excess Charges
                   if (handoverData.excessCharges != null)
                     _buildExcessChargesCard(handoverData),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // Payment Status
                   _buildPaymentStatusCard(handoverData),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // Renter Notes
                   if (handoverData.renterNotes != null && handoverData.renterNotes!.isNotEmpty)
                     _buildRenterNotesCard(handoverData),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // Owner Notes
                   _buildOwnerNotesCard(),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 20),
+
+                  // Contract Confirmation
+                  _buildContractConfirmationCard(),
+                  const SizedBox(height: 24),
 
                   // Action Buttons
                   _buildActionButtons(handoverData, state),
@@ -185,7 +220,7 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
             );
           }
 
-          return Center(child: Text('جاري تحميل البيانات...'));
+          return const Center(child: Text('Loading data...'));
         },
       ),
     );
@@ -193,16 +228,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
 
   Widget _buildSummaryCard(PostTripHandoverModel handoverData) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -211,10 +247,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, color: AppColors.primary, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'ملخص التسليم',
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Handover Summary',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -223,13 +266,13 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
-          _buildSummaryItem('معرف الرحلة', handoverData.tripId),
-          _buildSummaryItem('معرف السيارة', handoverData.carId),
-          _buildSummaryItem('تاريخ تسليم المستأجر', 
-            handoverData.renterHandoverDate?.toString().substring(0, 19) ?? 'غير محدد'),
-          _buildSummaryItem('قراءة العداد النهائية', 
-            handoverData.finalOdometerReading?.toString() ?? 'غير محدد'),
+          const SizedBox(height: 16),
+          _buildSummaryItem('Trip ID', handoverData.tripId),
+          _buildSummaryItem('Car ID', handoverData.carId),
+          _buildSummaryItem('Renter Handover Date', 
+            handoverData.renterHandoverDate?.toString().substring(0, 19) ?? 'Not specified'),
+          _buildSummaryItem('Final Odometer Reading', 
+            handoverData.finalOdometerReading?.toString() ?? 'Not specified'),
         ],
       ),
     );
@@ -237,16 +280,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
 
   Widget _buildImagesCard(PostTripHandoverModel handoverData) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -255,10 +299,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.photo_library, color: AppColors.primary, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'الصور المرفوعة',
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.photo_library, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Uploaded Images',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -267,39 +318,53 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           if (handoverData.carImagePath != null) ...[
-            Text('صورة السيارة:', style: TextStyle(fontWeight: FontWeight.w600)),
-            SizedBox(height: 8),
+            const Text('Car Image:', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
             Container(
               width: double.infinity,
-              height: 150,
+              height: 180,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 child: Image.file(
                   File(handoverData.carImagePath!),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
           ],
           if (handoverData.odometerImagePath != null) ...[
-            Text('صورة العداد:', style: TextStyle(fontWeight: FontWeight.w600)),
-            SizedBox(height: 8),
+            const Text('Odometer Image:', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
             Container(
               width: double.infinity,
-              height: 150,
+              height: 180,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 child: Image.file(
                   File(handoverData.odometerImagePath!),
                   fit: BoxFit.cover,
@@ -314,16 +379,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
 
   Widget _buildExcessChargesCard(PostTripHandoverModel handoverData) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -337,16 +403,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
 
   Widget _buildPaymentStatusCard(PostTripHandoverModel handoverData) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -355,10 +422,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.payment, color: AppColors.primary, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'حالة الدفع',
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.payment, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Payment Status',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -367,20 +441,32 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
-          _buildSummaryItem('طريقة الدفع', _getPaymentMethodText(handoverData.paymentMethod)),
-          _buildSummaryItem('حالة الدفع', _getPaymentStatusText(handoverData.paymentStatus)),
+          const SizedBox(height: 16),
+          _buildSummaryItem('Payment Method', _getPaymentMethodText(handoverData.paymentMethod)),
+          _buildSummaryItem('Payment Status', _getPaymentStatusText(handoverData.paymentStatus)),
           if (handoverData.paymentAmount != null)
-            _buildSummaryItem('المبلغ', '${handoverData.paymentAmount!.toStringAsFixed(2)} ريال'),
+            _buildSummaryItem('Amount', '\$${handoverData.paymentAmount!.toStringAsFixed(2)}'),
           
           // Cash payment confirmation button
           if (handoverData.paymentMethod == 'cash' && 
               handoverData.paymentStatus != 'completed')
-            Padding(
-              padding: EdgeInsets.only(top: 16),
-              child: CustomElevatedButton(
+            Container(
+              margin: const EdgeInsets.only(top: 16),
+              child: ElevatedButton.icon(
                 onPressed: _confirmCashPayment,
-                text: 'تأكيد استلام الدفع النقدي',
+                icon: const Icon(Icons.payment, size: 18),
+                label: const Text(
+                  'Confirm Cash Payment Received',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ),
         ],
@@ -390,16 +476,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
 
   Widget _buildRenterNotesCard(PostTripHandoverModel handoverData) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -408,10 +495,17 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.note, color: AppColors.primary, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'ملاحظات المستأجر',
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.note, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Renter Notes',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -420,17 +514,25 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Container(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                colors: [Colors.grey[50]!, Colors.grey[100]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey[300]!),
             ),
             child: Text(
               handoverData.renterNotes!,
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[800],
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -440,43 +542,137 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
 
   Widget _buildOwnerNotesCard() {
     return HandoverNotesWidget(
-      title: 'ملاحظات المالك',
+      title: 'Owner Notes',
       initialValue: _ownerNotes,
       onNotesChanged: (notes) {
         context.read<OwnerDropOffCubit>().addOwnerNotes(notes);
       },
-      hintText: 'أضف ملاحظاتك حول استلام السيارة...',
+      hintText: 'Add your notes about car pickup...',
+    );
+  }
+
+  Widget _buildContractConfirmationCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.verified_user,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Contract Confirmation',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: _contractConfirmed,
+                onChanged: (value) {
+                  setState(() {
+                    _contractConfirmed = value ?? false;
+                  });
+                },
+                activeColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'I confirm that I have reviewed all data, verified its accuracy, received the payment, and hereby declare the contract completed successfully.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildActionButtons(PostTripHandoverModel handoverData, OwnerDropOffState state) {
     final canComplete = handoverData.renterHandoverStatus == 'completed' &&
                        (handoverData.paymentMethod != 'cash' || 
-                        handoverData.paymentStatus == 'completed');
+                        handoverData.paymentStatus == 'completed') &&
+                       _contractConfirmed;
 
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
       child: ElevatedButton(
         onPressed: canComplete ? _completeHandover : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: canComplete ? AppColors.green : Colors.grey,
           foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
+          elevation: 2,
         ),
-        child: Text(
-          'إكمال الاستلام',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.check_circle, size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              'Complete Pickup',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildSummaryItem(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -485,11 +681,12 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
             ),
           ),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppColors.primary,
@@ -503,11 +700,11 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
   String _getPaymentMethodText(String method) {
     switch (method) {
       case 'visa':
-        return 'فيزا';
+        return 'Visa';
       case 'wallet':
-        return 'محفظة';
+        return 'Wallet';
       case 'cash':
-        return 'نقدي';
+        return 'Cash';
       default:
         return method;
     }
@@ -516,13 +713,13 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
   String _getPaymentStatusText(String? status) {
     switch (status) {
       case 'pending':
-        return 'في الانتظار';
+        return 'Pending';
       case 'completed':
-        return 'مكتمل';
+        return 'Completed';
       case 'failed':
-        return 'فشل';
+        return 'Failed';
       default:
-        return status ?? 'غير محدد';
+        return status ?? 'Not specified';
     }
   }
 } 
