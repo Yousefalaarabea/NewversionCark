@@ -130,7 +130,7 @@ class _DepositInputScreenState extends State<DepositInputScreen> {
           endDate: dateRange?.end ?? DateTime.now().add(const Duration(days: 3)),
           totalPrice: widget.totalPrice,
           paymentMethod: selectedPaymentMethod,
-          renterName: '${currentUser.firstName} ${currentUser.lastName}' ?? 'Unknown',
+          renterName: '${currentUser.firstName} ${currentUser.lastName}' ?? 'Unknown', ownerName: '',
         );
 
         Navigator.pushReplacementNamed(

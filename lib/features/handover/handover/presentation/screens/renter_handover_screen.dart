@@ -7,8 +7,8 @@ import '../../../../../config/routes/screens_name.dart';
 import '../../../../../core/services/notification_service.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../../home/presentation/model/car_model.dart';
+import '../../../../home/presentation/model/trip_details_model.dart';
 import '../cubits/renter_handover_cubit.dart';
-import '../models/renter_handover_model.dart';
 
 class RenterHandoverScreen extends StatefulWidget {
   const RenterHandoverScreen({super.key});
@@ -46,6 +46,26 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
           // Send notification to owner that renter handover is completed
           _notifyOwnerRenterHandoverCompleted();
           
+          // 🆕 NEW: Navigate to Renter Ongoing Trip Screen
+          // This shows the ongoing trip information for the renter
+          Navigator.pushReplacementNamed(
+            context,
+            ScreensName.renterOngoingTripScreen,
+            arguments: TripDetailsModel(
+              car: CarModel.mock(),
+              pickupLocation: 'Downtown Station',
+              dropoffLocation: 'Airport Terminal',
+              startDate: DateTime.now(),
+              endDate: DateTime.now().add(const Duration(days: 2)),
+              totalPrice: 1000.0,
+              paymentMethod: 'visa',
+              renterName: 'John Doe',
+              ownerName: 'Jane Smith',
+            ),
+          );
+          
+          // 🗂️ ORIGINAL: Navigate to Trip Management Screen (commented for testing)
+          /*
           Navigator.pushReplacementNamed(
             context,
             ScreensName.tripManagementScreen,
@@ -59,6 +79,7 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
               'paymentMethod': 'visa',
             },
           );
+          */
         }
       },
       child: Scaffold(

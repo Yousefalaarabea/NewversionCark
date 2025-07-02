@@ -38,5 +38,6 @@ abstract class ScreensName{
   static const String tripDetailsConfirmationScreen = "/trip-details-confirmation";
   static const String tripWithDriverConfirmationScreen = "/trip-with-driver-confirmation";
   static const String ownerTripRequestScreen = "/owner-trip-request";
+  static const String renterOngoingTripScreen = "/renter-ongoing-trip";
 }
 

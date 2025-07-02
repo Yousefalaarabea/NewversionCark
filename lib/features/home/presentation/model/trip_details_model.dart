@@ -9,6 +9,7 @@ class TripDetailsModel {
   final double totalPrice;
   final String paymentMethod;
   final String renterName;
+  final String ownerName;
 
   TripDetailsModel({
     required this.car,
@@ -19,5 +20,6 @@ class TripDetailsModel {
     required this.totalPrice,
     required this.paymentMethod,
     required this.renterName,
+    required this.ownerName,
   });
 } 

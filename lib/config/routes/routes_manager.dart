@@ -37,6 +37,7 @@ import '../../features/home/presentation/screens/booking_screens/trip_details_co
 import '../../features/home/presentation/screens/booking_screens/trip_with_driver_confirmation_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/cancel_rental_screen.dart';
 import '../../features/home/presentation/screens/owner/owner_trip_request_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/renter_ongoing_trip_screen.dart';
 import '../../features/home/presentation/model/trip_details_model.dart';
 import '../../features/home/presentation/model/trip_with_driver_details_model.dart';
 
@@ -270,6 +271,13 @@ abstract class RoutesManager {
           builder: (context) => OwnerTripRequestScreen(
             bookingRequestId: bookingRequestId,
             bookingData: bookingData,
+          ),
+        );
+      case ScreensName.renterOngoingTripScreen:
+        final args = routeSettings.arguments as TripDetailsModel;
+        return MaterialPageRoute(
+          builder: (context) => RenterOngoingTripScreen(
+            tripDetails: args,
           ),
         );
       case '/cancel-rental':
