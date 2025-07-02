@@ -1,63 +1,149 @@
+import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../features/notifications/presentation/models/notification_model.dart';
+import '../../main.dart'; // For navigatorKey
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  late FirebaseMessaging _messaging;
-  late FlutterLocalNotificationsPlugin _localNotifications;
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
+  // Call this from main() or app init
   Future<void> init() async {
-    await Firebase.initializeApp();
-    _messaging = FirebaseMessaging.instance;
-    _localNotifications = FlutterLocalNotificationsPlugin();
-    await _initLocalNotifications();
-    await _initFCM();
+    await _requestPermissions();
+    await _setupFCMToken();
+    _setupFCMListeners();
   }
+
+  // Request notification permissions for Android and iOS
+  Future<void> _requestPermissions() async {
+    await _messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+  }
+
+  // Get FCM token and send to backend
+  Future<void> _setupFCMToken() async {
+    final token = await _messaging.getToken();
+    if (token != null) {
+      await _sendTokenToBackend(token);
+    }
+    // Optionally listen for token refresh
+    _messaging.onTokenRefresh.listen((newToken) async {
+      await _sendTokenToBackend(newToken);
+    });
+  }
+
+  // Send token to backend
+  Future<void> _sendTokenToBackend(String token) async {
+    final url = Uri.parse('https://example.com/api/save-token/');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'token': token}),
+      );
+      if (response.statusCode == 200) {
+        debugPrint('FCM token sent to backend successfully');
+      } else {
+        debugPrint('Failed to send FCM token to backend: \\${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error sending FCM token to backend: $e');
+    }
+  }
+
+  // Set up FCM listeners for foreground, background, and terminated
+  void _setupFCMListeners() {
+    // Foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('FCM onMessage: \\${message.data}');
+      // Optionally show a dialog/snackbar/local notification here
+    });
+
+    // Background (when app is opened from notification)
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('FCM onMessageOpenedApp: \\${message.data}');
+      // Handle navigation or logic here
+    });
+  }
+
+  // Call this in main() after init to handle notification tap when app is terminated
+  Future<void> handleInitialMessage() async {
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      debugPrint('FCM getInitialMessage: \\${initialMessage.data}');
+      // Handle navigation or logic here
+    }
+  }
+
+  late FlutterLocalNotificationsPlugin _localNotifications;
 
   Future<void> _initLocalNotifications() async {
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initSettings = InitializationSettings(android: androidSettings);
+    _localNotifications = FlutterLocalNotificationsPlugin();
     await _localNotifications.initialize(initSettings);
-  }
-
-  Future<void> _initFCM() async {
-    NotificationSettings settings = await _messaging.requestPermission();
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      FirebaseMessaging.onMessage.listen(_onMessage);
-      FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
-    }
   }
 
   void _onMessage(RemoteMessage message) {
     if (message.notification != null) {
-      _showLocalNotification(message.notification!);
+      _showLocalNotification(message.notification!, message.data);
     }
+    // Optionally, save to Firestore here if not already done by backend
   }
 
   void _onMessageOpenedApp(RemoteMessage message) {
-    // Handle notification tap
+    _handleNotificationNavigation(message.data);
+  }
+  //
+  // void handleInitialMessage(RemoteMessage message) {
+  //   _handleNotificationNavigation(message.data);
+  // }
+
+  void _handleNotificationNavigation(Map<String, dynamic> data) {
+    final notificationType = data['notification_type'];
+    final bookingData = data['booking_data'];
+    // TODO: Parse bookingData if needed, and get current userId from AuthCubit
+
+    switch (notificationType) {
+      case 'booking_accepted':
+        navigatorKey.currentState?.pushNamed('depositPaymentScreen', arguments: bookingData);
+        break;
+      case 'handover':
+        navigatorKey.currentState?.pushNamed('handoverScreen', arguments: bookingData);
+        break;
+      // Add more cases as needed
+      default:
+        navigatorKey.currentState?.pushNamed('homeScreen');
+    }
   }
 
-  Future<void> _showLocalNotification(RemoteNotification notification) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'default_channel',
-      'Default',
-      importance: Importance.max,
-      priority: Priority.high,
+  Future<void> _showLocalNotification(RemoteNotification notification, Map<String, dynamic> data) async {
+    const androidDetails = AndroidNotificationDetails(
+      'default_channel', 'Default',
+      importance: Importance.max, priority: Priority.high,
     );
-    const NotificationDetails details = NotificationDetails(android: androidDetails);
+    const details = NotificationDetails(android: androidDetails);
     await _localNotifications.show(
       notification.hashCode,
       notification.title,
       notification.body,
       details,
+      payload: data.toString(),
     );
   }
 
@@ -65,20 +151,13 @@ class NotificationService {
     return await _messaging.getToken();
   }
 
-  // Save FCM token to user's profile in Firestore
   Future<void> saveFcmTokenToUser(String userId, String fcmToken) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .update({
-            'fcm_token': fcmToken,
-            'fcm_token_updated_at': FieldValue.serverTimestamp(),
-          });
-      print('FCM token saved for user: $userId');
-    } catch (e) {
-      print('Error saving FCM token: $e');
-      // Don't throw the error, just log it to avoid crashing the app
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'fcm_token': fcmToken,
+        'fcm_token_updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     }
   }
 
@@ -210,7 +289,7 @@ class NotificationService {
       await _showLocalNotification(RemoteNotification(
         title: data['title'],
         body: data['body'],
-      ));
+      ), data);
       
       print('FCM notification would be sent to token: $token');
       print('Notification data: $data');
@@ -584,5 +663,10 @@ class NotificationService {
     } catch (e) {
       print('Error sending renter handover completed notification: $e');
     }
+  }
+
+  // Save notification to Firestore (if needed for local simulation)
+  Future<void> saveNotificationToFirestore(Map<String, dynamic> notification) async {
+    await FirebaseFirestore.instance.collection('notifications').add(notification);
   }
 } 

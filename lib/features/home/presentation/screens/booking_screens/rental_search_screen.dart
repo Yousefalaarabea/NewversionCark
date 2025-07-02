@@ -13,6 +13,7 @@ import '../../widgets/rental_widgets/station_input.dart';
 import '../../widgets/rental_widgets/stops_station_input.dart';
 import 'package:test_cark/features/home/presentation/widgets/rental_widgets/rental_search_form.dart';
 import 'package:test_cark/features/home/presentation/widgets/rental_widgets/rental_summary_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RentalSearchScreen extends StatelessWidget {
   const RentalSearchScreen({super.key});
@@ -221,7 +222,7 @@ class RentalSearchScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(15.r),
                               ),
                             ),
-                            onPressed: () {
+                            onPressed: () async {
                                   // Enable validation first
                                   context.read<CarCubit>().enableValidation();
 
@@ -335,8 +336,8 @@ class RentalSearchScreen extends StatelessWidget {
                                   }
                                   
                                   // Different flow based on driver selection
-                                  if (withDriver == true) {
-                                    // Check if payment method is selected for with driver
+                                  if (withDriver == true || withDriver == false) {
+                                    // Check if payment method is selected
                                     if (selectedPaymentMethod == null) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
@@ -369,49 +370,34 @@ class RentalSearchScreen extends StatelessWidget {
                                       );
                                       return;
                                     }
-                                    
-                                    // With Driver flow - navigate to home screen
-                                    Navigator.pushNamedAndRemoveUntil(
-                                      context, 
-                                      ScreensName.homeScreen, 
-                                      (route) => false
-                                    );
-                                  } else if (withDriver == false) {
-                                    // Check if payment method is selected for without driver
-                                    if (selectedPaymentMethod == null) {
+
+                                    // --- SAVE SEARCH DATA TO FIRESTORE ---
+                                    try {
+                                      await FirebaseFirestore.instance.collection('rental_searches').add({
+                                        'pickupStation': pickupStation.name,
+                                        'returnStation': returnStation.name,
+                                        'fromDate': dateRange.start.toIso8601String(),
+                                        'toDate': dateRange.end.toIso8601String(),
+                                        'withDriver': withDriver,
+                                        'paymentMethod': selectedPaymentMethod,
+                                        'createdAt': DateTime.now().toIso8601String(),
+                                      });
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.warning,
-                                                color: Colors.white,
-                                                size: 20.sp,
-                                              ),
-                                              SizedBox(width: 10.w),
-                                              Expanded(
-                                                child: Text(
-                                                  'Please select a payment method',
-                                                  style: TextStyle(
-                                                    fontSize: 14.sp,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          backgroundColor: Colors.orange,
-                                          duration: Duration(seconds: 3),
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(10.r),
-                                          ),
+                                          content: Text('Search saved successfully!'),
+                                          backgroundColor: Colors.green,
                                         ),
                                       );
-                                      return;
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Failed to save search: ' + e.toString()),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
                                     }
-                                    
-                                    // Without Driver flow - navigate to home screen
+
+                                    // Navigate to offers/home screen
                                     Navigator.pushNamedAndRemoveUntil(
                                       context, 
                                       ScreensName.homeScreen, 

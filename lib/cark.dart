@@ -16,6 +16,7 @@ import 'features/handover/handover/presentation/cubits/renter_drop_off_cubit.dar
 import 'features/handover/handover/presentation/cubits/renter_handover_cubit.dart';
 import 'features/home/presentation/cubit/booking_cubit.dart';
 import 'features/home/presentation/cubit/car_cubit.dart';
+import 'features/home/presentation/cubit/trip_cubit.dart';
 import 'features/notifications/presentation/cubits/notification_cubit.dart';
 
 class Cark extends StatelessWidget {
@@ -69,6 +70,9 @@ class Cark extends StatelessWidget {
               ),
               BlocProvider(
                 create: (context) => RenterHandoverCubit(),
+              ),
+              BlocProvider(
+                create: (context) => TripCubit(),
               ),
 
             ],
