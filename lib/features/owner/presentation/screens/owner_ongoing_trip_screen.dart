@@ -7,6 +7,8 @@ import '../../../../core/widgets/custom_elevated_button.dart';
 import '../../../home/presentation/model/car_model.dart';
 import '../../../home/presentation/model/booking_model.dart';
 import '../../../auth/presentation/models/user_model.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
 
 class OwnerOngoingTripScreen extends StatefulWidget {
   final String tripId;
@@ -63,12 +65,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
         availability: false,
         currentStatus: 'Rented',
         approvalStatus: true,
-        imageUrl: 'assets/images/home/toyota_logo.jpeg',
-        rentalOptions: RentalOptions(
-          availableWithoutDriver: true,
-          availableWithDriver: false,
-          dailyRentalPrice: 150.0,
-        ),
+        avgRating: 0.0,
+        totalReviews: 0,
       );
 
       // Create a temporary car model for the booking
@@ -89,12 +87,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
         availability: false,
         currentStatus: 'Rented',
         approvalStatus: true,
-        imageUrl: 'assets/images/home/toyota_logo.jpeg',
-        rentalOptions: RentalOptions(
-          availableWithoutDriver: true,
-          availableWithDriver: false,
-          dailyRentalPrice: 150.0,
-        ),
+        avgRating: 0.0,
+        totalReviews: 0,
       );
 
       bookingData = BookingModel(
@@ -315,7 +309,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
-                    carData!.imageUrl,
+                    'assets/images/placeholder_car.png',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -716,7 +710,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
               child: Stack(
                 children: [
                   Image.asset(
-                    carData!.imageUrl,
+                    'assets/images/placeholder_car.png',
                     width: double.infinity,
                     height: 200,
                     fit: BoxFit.cover,

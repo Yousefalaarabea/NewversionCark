@@ -94,12 +94,7 @@ class TripWithDriverConfirmationScreen extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: tripDetails.car.imageUrl.isNotEmpty
-                      ? Image.network(
-                    tripDetails.car.imageUrl,
-                    fit: BoxFit.cover,
-                  )
-                      : Container(
+                  child: Container(
                     color: Colors.grey[200],
                     child: const Icon(Icons.directions_car, size: 40, color: Colors.grey),
                   ),

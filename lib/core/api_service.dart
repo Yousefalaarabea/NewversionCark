@@ -8,10 +8,12 @@ class ApiService {
 
   late Dio _dio;
 
+
   ApiService._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/', // 🔁 url السيرفر بتاعنا من الباك
+   ///     baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
+        baseUrl: 'https://start-heading-ships-translations.trycloudflare.com/api/',
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         headers: {

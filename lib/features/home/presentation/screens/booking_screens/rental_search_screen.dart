@@ -133,17 +133,42 @@ class RentalSearchScreen extends StatelessWidget {
 
                         const DriverFilterSelector(),
 
-                        SizedBox(height: 25.h),
-
                         // Pick-up
-                        const StationInput(isPickup: true),
-
-                        SizedBox(height: 20.h),
+                        // const StationInput(isPickup: true),
+                        //
+                        // SizedBox(height: 20.h),
 
                         // Return Station (Optional)
-                        const StationInput(isPickup: false),
+                        // const StationInput(isPickup: false),
+                        //
+                        // SizedBox(height: 16.h),
 
-                        SizedBox(height: 16.h),
+                        // // ✅ Manual Pickup TextField
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Enter Pickup Location',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          onChanged: (value) {
+                            context.read<CarCubit>().setPickupText(value);
+                          },
+                        ),
+
+                        SizedBox(height: 20.h),
+                        //
+                        // // ✅ Manual Dropoff TextField
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Enter Dropoff Location',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
+                          onChanged: (value) {
+                            context.read<CarCubit>().setDropoffText(value);
+                          },
+                        ),
+                        SizedBox(height: 20.h),
 
                         // Stops Section (only with driver)
                         if (withDriver == true) ...[

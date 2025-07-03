@@ -9,15 +9,17 @@ import '../../cubit/car_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
 
 import 'deposit_input_screen.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
   final CarModel car;
   final double totalPrice;
+  final CarRentalOptions rentalOptions;
 
   const BookingSummaryScreen(
-      {super.key, required this.car, required this.totalPrice});
+      {super.key, required this.car, required this.totalPrice, required this.rentalOptions});
 
   @override
   State<BookingSummaryScreen> createState() => _BookingSummaryScreenState();
@@ -724,7 +726,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                   await _saveBookingRequest(bookingRequestData);
 
                   // Branch by car rental option
-                  if (widget.car.rentalOptions.availableWithDriver) {
+                  if (widget.rentalOptions.availableWithDriver) {
                     // ✅ With Driver Flow: Navigate directly to deposit input screen
                     // This is for cars that come with a driver, so no owner approval needed
 
@@ -739,7 +741,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                         ),
                       );
                     }
-                  } else if (widget.car.rentalOptions.availableWithoutDriver) {
+                  } else if (widget.rentalOptions.availableWithoutDriver) {
                     // ✅ Without Driver Flow: Show confirmation dialog and wait for owner acceptance
                     // This is for cars without driver, so owner needs to approve the request
                     if (mounted) {

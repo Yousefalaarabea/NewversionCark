@@ -1,211 +1,3 @@
-// import 'package:flutter/cupertino.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:test_cark/features/home/presentation/model/car_model.dart';
-// import 'package:test_cark/features/home/presentation/cubit/car_cubit.dart';
-// import '../../../../core/api_service.dart';
-// import '../../../../core/car_service.dart';
-// import '../../../auth/presentation/cubits/auth_cubit.dart';
-// import 'add_car_state.dart';
-//
-// final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-//
-// class AddCarCubit extends Cubit<AddCarState> {
-//   // In-memory storage for cars (replace with actual database in production)
-//   // final List<CarModel> _cars = [
-//   //   // Sample test data
-//   //   CarModel(
-//   //     id: 1,
-//   //     model: 'Model S',
-//   //     brand: 'Tesla',
-//   //     carType: 'Sedan',
-//   //     carCategory: 'Luxury',
-//   //     plateNumber: 'ABC123',
-//   //     year: 2020,
-//   //     color: 'Red',
-//   //     seatingCapacity: 5,
-//   //     transmissionType: 'Automatic',
-//   //     fuelType: 'Electric',
-//   //     currentOdometerReading: 15000,
-//   //     availability: true,
-//   //     currentStatus: 'Available',
-//   //     approvalStatus: true,
-//   //     rentalOptions: RentalOptions(
-//   //       availableWithoutDriver: true,
-//   //       availableWithDriver: false,
-//   //       dailyRentalPrice: 500.0,
-//   //
-//   //     ), ownerId: '1',
-//   //   ),
-//   //
-//   //   CarModel(
-//   //     id: 2,
-//   //     model: 'Civic',
-//   //     brand: 'Honda',
-//   //     carType: 'Sedan',
-//   //     carCategory: 'Standard',
-//   //     plateNumber: 'XYZ789',
-//   //     year: 2019,
-//   //     color: 'Blue',
-//   //     seatingCapacity: 5,
-//   //     transmissionType: 'Manual',
-//   //     fuelType: 'Gasoline',
-//   //     currentOdometerReading: 30000,
-//   //     availability: true,
-//   //     currentStatus: 'Available',
-//   //     approvalStatus: true,
-//   //     rentalOptions: RentalOptions(
-//   //       availableWithoutDriver: true,
-//   //       availableWithDriver: true,
-//   //       dailyRentalPrice: 300.0,
-//   //     ), ownerId: '2',
-//   //   ),
-//   // ];
-//
-//   final CarService _carService = CarService();
-//   List<CarModel> _cars = [];
-//
-//   // Constructor with optional dependency injection
-//   AddCarCubit() : super(AddCarInitial());
-//
-//   // Get all cars
-//   List<CarModel> getCars() => _cars;
-//
-//   // Fetch all cars from server
-//   Future<void> fetchAllCars() async {
-//     emit(AddCarLoading());
-//     try {
-//       final cars = await _carService.fetchAllCars();
-//       _cars.clear();
-//       _cars.addAll(cars);
-//       emit(AddCarFetchedSuccessfully(cars: cars));
-//     } catch (e) {
-//       emit(AddCarError(message: e.toString()));
-//     }
-//   }
-//
-//   // Fetch user's cars from server
-//   Future<void> fetchCarsFromServer() async {
-//     emit(AddCarLoading());
-//     try {
-//       final cars = await _carService.fetchUserCars();
-//       _cars.clear();
-//       _cars.addAll(cars);
-//       emit(AddCarFetchedSuccessfully(cars: cars));
-//     } catch (e) {
-//       emit(AddCarError(message: e.toString()));
-//     }
-//   }
-//
-//   // Fetch specific car by ID
-//   Future<CarModel?> fetchCarById(int carId) async {
-//     try {
-//       final car = await _carService.fetchCarById(carId);
-//       return car;
-//     } catch (e) {
-//       emit(AddCarError(message: e.toString()));
-//       return null;
-//     }
-//   }
-//
-//   /// Adds a new car
-//   Future<void> addCar(CarModel car) async {
-//     emit(AddCarLoading());
-//     try {
-//       // Create car using the API
-//       final newCar = await _carService.createCar(car);
-//
-//       // Add car to local list
-//       _cars.add(newCar);
-//
-//       emit(AddCarSuccess(car: newCar));
-//
-//       // Update user role if needed
-//       final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
-//       final userId = authCubit.userModel!.id;
-//
-//       if (userId == 1) {
-//         try {
-//           final roleResponse = await ApiService().postWithToken(
-//             'users/user-role/',
-//             {
-//               "user": userId,
-//               "role": 2, // Owner
-//             },
-//           );
-//           print('Role updated: ${roleResponse.data}');
-//         } catch (e) {
-//           print('Failed to update role: $e');
-//         }
-//       }
-//     } catch (e) {
-//       emit(AddCarError(message: _handleError(e)));
-//     }
-//   }
-//
-//   /// Updates an existing car
-//   Future<void> updateCar(CarModel updatedCar) async {
-//     emit(AddCarLoading());
-//
-//     try {
-//       // Update car using the API
-//       final updatedCarFromApi = await _carService.updateCar(updatedCar.id, updatedCar);
-//
-//       // Update car in local list
-//       final index = _cars.indexWhere((car) => car.id == updatedCar.id);
-//       if (index != -1) {
-//         _cars[index] = updatedCarFromApi;
-//         emit(AddCarSuccess(car: updatedCarFromApi));
-//       } else {
-//         emit(const AddCarError(message: 'Car not found'));
-//       }
-//     } catch (e) {
-//       emit(AddCarError(message: _handleError(e)));
-//     }
-//   }
-//
-//   /// Deletes a car
-//   Future<void> deleteCar(CarModel car) async {
-//     emit(AddCarLoading());
-//
-//     try {
-//       // Delete car using the API
-//       final success = await _carService.deleteCar(car.id);
-//
-//       if (success) {
-//         // Remove car from local list
-//         _cars.removeWhere((c) => c.id == car.id);
-//         emit(AddCarSuccess(car: car));
-//       } else {
-//         emit(const AddCarError(message: 'Failed to delete car'));
-//       }
-//     } catch (e) {
-//       emit(AddCarError(message: _handleError(e)));
-//     }
-//   }
-//
-//   /// Resets the form state to initial
-//   void reset() {
-//     emit(AddCarInitial());
-//   }
-//
-//   /// Refreshes the cars list and emits a state change for UI updates
-//   void refreshCars() {
-//     emit(AddCarInitial());
-//   }
-//
-//   /// Error handling helper
-//   String _handleError(dynamic error) {
-//     if (error is String) {
-//       return error;
-//     } else if (error is Exception) {
-//       return error.toString();
-//     } else {
-//       return 'An unexpected error occurred';
-//     }
-//   }
-// }
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -215,214 +7,140 @@ import '../../../../core/api_service.dart';
 import '../../../../core/car_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import 'add_car_state.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class AddCarCubit extends Cubit<AddCarState> {
-
   final CarService _carService = CarService();
-  List<CarModel> _cars = [];
+  List<CarBundle> _cars = [];
 
-  // Constructor with optional dependency injection
   AddCarCubit() : super(AddCarInitial());
 
-  // Get all cars
-  List<CarModel> getCars() => _cars;
+  List<CarBundle> getCars() => _cars;
 
-  // ✅ تعديل الدالة لجلب العربيات الحقيقية من الـ backend
-  // Future<void> fetchCarsFromServer() async {
-  //   emit(AddCarLoading());
-  //   try {
-  //     _cars = await _carService.fetchUserCars(); // ✅ هنا تم الاستبدال
-  //     emit(AddCarInitial());
-  //   } catch (e) {
-  //     emit(AddCarError(message: _handleError(e)));
-  //   }
-  // }
+  // Fetch all available cars for home screen
+  Future<List<CarBundle>> fetchAllAvailableCars() async {
+    try {
+      final carBundlesRaw = await _carService.fetchAllCars();
+      final carBundles = carBundlesRaw.map((e) => CarBundle(
+        car: e['car'],
+        rentalOptions: e['rentalOptions'],
+        usagePolicy: e['usagePolicy'],
+      )).toList();
+      return carBundles;
+    } catch (e) {
+      print('❌ Error fetching all available cars: $e');
+      return [];
+    }
+  }
 
   Future<void> fetchCarsFromServer() async {
     emit(AddCarLoading());
     try {
-      final carService = CarService();
-      final cars = await carService.fetchUserCars();
-
-      // Replace current list with fetched cars
-      _cars.clear();
-      _cars.addAll(cars);
-
-      emit(AddCarFetchedSuccessfully(cars: cars));
+      final carBundlesRaw = await _carService.fetchUserCars();
+      final carBundles = carBundlesRaw.map((e) => CarBundle(
+        car: e['car'],
+        rentalOptions: e['rentalOptions'],
+        usagePolicy: e['usagePolicy'],
+      )).toList();
+      _cars = carBundles;
+      emit(AddCarFetchedSuccessfully(cars: carBundles));
     } catch (e) {
       emit(AddCarError(message: e.toString()));
     }
   }
-  // Future<void> fetchCarsFromServer() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final token = prefs.getString('access_token');
-  //   final userId = prefs.getString('user_id');
-  //
-  //   final response = await ApiService().getWithToken('cars/', token!);
-  //   final List<dynamic> data = response.data;
-  //
-  //   final cars = data
-  //       .map((json) => CarModel.fromJson(json))
-  //       .where((car) => car.ownerId == userId)
-  //       .toList();
-  //
-  //   setState(() {
-  //     _cars = cars;
-  //   });
-  // }
 
-
-  /// Adds a new car
-  Future<void> addCar(CarModel car) async {
+  Future<void> addCar({
+    required CarModel car,
+    required CarRentalOptions rentalOptions,
+    required CarUsagePolicy usagePolicy,
+  }) async {
     emit(AddCarLoading());
     try {
-      // Use car service with admin token
-      final carData = {
-        "model": car.model,
-        "brand": car.brand,
-        "car_type": car.carType,
-        "car_category": car.carCategory,
-        "plate_number": car.plateNumber,
-        "year": car.year,
-        "color": car.color,
-        "seating_capacity": car.seatingCapacity,
-        "transmission_type": car.transmissionType,
-        "fuel_type": car.fuelType,
-        "current_odometer_reading": car.currentOdometerReading,
-      };
-
-      final success = await _carService.addCar(carData);
-      
+      final success = await _carService.addCar(
+        carData: car.toJson(),
+        rentalOptionsData: rentalOptions.toJson(),
+        usagePolicyData: usagePolicy.toJson(),
+      );
       if (success) {
-        // Refresh cars list to get the updated data
         await fetchCarsFromServer();
-        
-        emit(AddCarSuccess(car: car));
-        
-        // Update user role if needed
-        final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
-        await authCubit.loadUserData();
-        final userId = authCubit.userModel!.id;
-
-        if (userId == 1) {
-          try {
-            final roleResponse = await ApiService().postWithAdminToken(
-              'users/user-role/',
-              {
-                "user": userId,
-                "role": 2, // Owner
-              },
-            );
-
-            print('Role updated using admin token: ${roleResponse.data}');
-          } catch (e) {
-            print('Failed to update role with admin token: $e');
-            // Fallback to user token
-            try {
-              final roleResponse = await ApiService().postWithToken(
-                'users/user-role/',
-                {
-                  "user": userId,
-                  "role": 2, // Owner
-                },
-              );
-              print('Role updated using user token: ${roleResponse.data}');
-            } catch (e2) {
-              print('Failed to update role with user token: $e2');
-            }
-          }
+        if (_cars.isNotEmpty) {
+          emit(AddCarSuccess(carBundle: _cars.last));
         }
       } else {
         emit(const AddCarError(message: 'Failed to add car'));
       }
     } catch (e) {
-      emit(AddCarError(message: _handleError(e)));
+      emit(AddCarError(message: e.toString()));
     }
   }
 
-  /// Updates an existing car
-  Future<void> updateCar(CarModel updatedCar) async {
+  Future<void> updateCar({
+    required String carId,
+    required CarModel car,
+    required CarRentalOptions rentalOptions,
+    required CarUsagePolicy usagePolicy,
+  }) async {
     emit(AddCarLoading());
-
     try {
-      final carData = {
-        "model": updatedCar.model,
-        "brand": updatedCar.brand,
-        "car_type": updatedCar.carType,
-        "car_category": updatedCar.carCategory,
-        "plate_number": updatedCar.plateNumber,
-        "year": updatedCar.year,
-        "color": updatedCar.color,
-        "seating_capacity": updatedCar.seatingCapacity,
-        "transmission_type": updatedCar.transmissionType,
-        "fuel_type": updatedCar.fuelType,
-        "current_odometer_reading": updatedCar.currentOdometerReading,
-      };
-
-      final success = await _carService.updateCar(updatedCar.id.toString(), carData);
-      
+      final success = await _carService.updateCar(
+        carId: carId,
+        carData: car.toJson(),
+        rentalOptionsData: rentalOptions.toJson(),
+        usagePolicyData: usagePolicy.toJson(),
+      );
       if (success) {
-        // Refresh cars list to get the updated data
         await fetchCarsFromServer();
-        emit(AddCarSuccess(car: updatedCar));
+        final updated = _cars.firstWhere((b) => b.car.id.toString() == carId, orElse: () => CarBundle(car: car));
+        emit(AddCarSuccess(carBundle: updated));
       } else {
         emit(const AddCarError(message: 'Failed to update car'));
       }
     } catch (e) {
-      emit(AddCarError(message: _handleError(e)));
+      emit(AddCarError(message: e.toString()));
     }
   }
 
-  /// Deletes a car
-  Future<void> deleteCar(CarModel car) async {
+  Future<void> deleteCar(String carId) async {
     emit(AddCarLoading());
-
     try {
-      final success = await _carService.deleteCar(car.id.toString());
-      
+      final success = await _carService.deleteCar(carId);
       if (success) {
-        // Refresh cars list to get the updated data
-        await fetchCarsFromServer();
-        emit(AddCarSuccess(car: car));
+        _cars.removeWhere((b) => b.car.id.toString() == carId);
+        emit(AddCarFetchedSuccessfully(cars: _cars));
       } else {
         emit(const AddCarError(message: 'Failed to delete car'));
       }
     } catch (e) {
-      emit(AddCarError(message: _handleError(e)));
+      emit(AddCarError(message: e.toString()));
     }
   }
 
-  /// Get car details by ID
-  Future<CarModel?> getCarDetails(String carId) async {
+  Future<CarBundle?> fetchCarById(String carId) async {
     try {
-      final car = await _carService.getCarDetails(carId);
-      return car;
+      final data = await _carService.getCarDetails(carId);
+      if (data != null) {
+        final bundle = CarBundle(
+          car: data['car'],
+          rentalOptions: data['rentalOptions'],
+          usagePolicy: data['usagePolicy'],
+        );
+        return bundle;
+      }
+      return null;
     } catch (e) {
-      print('Error getting car details: $e');
+      emit(AddCarError(message: e.toString()));
       return null;
     }
   }
 
-  /// Resets the form state to initial
   void reset() {
     emit(AddCarInitial());
   }
 
-  /// Refreshes the cars list and emits a state change for UI updates
   void refreshCars() {
     emit(AddCarInitial());
-  }
-
-  /// Error handling helper
-  String _handleError(dynamic error) {
-    if (error is String) {
-      return error;
-    } else if (error is Exception) {
-      return error.toString();
-    } else {
-      return 'An unexpected error occurred';
-    }
   }
 }

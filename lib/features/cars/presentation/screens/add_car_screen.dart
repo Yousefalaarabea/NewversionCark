@@ -16,11 +16,15 @@ import '../widgets/add_car_form.dart';
 import '../cubits/add_car_cubit.dart';
 import '../cubits/add_car_state.dart';
 import '../../../../config/routes/screens_name.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
 
 class AddCarScreen extends StatefulWidget {
   final CarModel? carToEdit;
+  final CarRentalOptions? rentalOptionsToEdit;
+  final CarUsagePolicy? usagePolicyToEdit;
 
-  const AddCarScreen({super.key, this.carToEdit});
+  const AddCarScreen({super.key, this.carToEdit, this.rentalOptionsToEdit, this.usagePolicyToEdit});
 
   @override
   State<AddCarScreen> createState() => _AddCarScreenState();
@@ -36,7 +40,6 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
   late final TextEditingController _yearController;
   late final TextEditingController _colorController;
   late final TextEditingController _seatingCapacityController;
-  late final TextEditingController _luggageCapacityController;
   late final TextEditingController _transmissionTypeController;
   late final TextEditingController _fuelTypeController;
   late final TextEditingController _odometerController;
@@ -64,7 +67,6 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
     _yearController = TextEditingController(text: widget.carToEdit?.year?.toString() ?? '');
     _colorController = TextEditingController(text: widget.carToEdit?.color);
     _seatingCapacityController = TextEditingController(text: widget.carToEdit?.seatingCapacity?.toString() ?? '');
-    _luggageCapacityController = TextEditingController(text: widget.carToEdit?.luggageCapacity?.toString() ?? '2');
     _transmissionTypeController = TextEditingController(text: widget.carToEdit?.transmissionType);
     _fuelTypeController = TextEditingController(text: widget.carToEdit?.fuelType);
     _odometerController = TextEditingController(text: widget.carToEdit?.currentOdometerReading?.toString() ?? '');
@@ -104,7 +106,6 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
     _yearController.dispose();
     _colorController.dispose();
     _seatingCapacityController.dispose();
-    _luggageCapacityController.dispose();
     _transmissionTypeController.dispose();
     _fuelTypeController.dispose();
     _odometerController.dispose();
@@ -149,6 +150,7 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    String? imagePath = widget.carToEdit?.imageUrl;
     return BlocConsumer<AddCarCubit, AddCarState>(
       listener: (context, state) async {
         if (state is AddCarSuccess) {
@@ -156,7 +158,7 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
           await context.read<AuthCubit>().loadUserData();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Car "${state.car.brand} ${state.car.model}" ${widget.carToEdit != null ? 'updated' : 'added'} successfully!'),
+              content: Text('Car "${state.carBundle.car.brand} ${state.carBundle.car.model}" ${widget.carToEdit != null ? 'updated' : 'added'} successfully!'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
             ),
@@ -258,7 +260,7 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(15.r),
                                   border: Border.all(
-                                    color: _carImage != null || (widget.carToEdit?.imageUrl != null && widget.carToEdit!.imageUrl!.isNotEmpty)
+                                    color: _carImage != null || (imagePath?.isNotEmpty == true)
                                         ? AppColors.primary
                                         : Colors.grey[300]!,
                                     width: 2.w,
@@ -276,27 +278,20 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(14.r),
-                                      child: _carImage != null
-                                          ? Image.file(
-                                        _carImage!,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                      )
-                                          : (widget.carToEdit?.imageUrl != null && widget.carToEdit!.imageUrl!.isNotEmpty)
-                                          ? CachedNetworkImage(
-                                        imageUrl: widget.carToEdit!.imageUrl!,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                        placeholder: (context, url) => const Center(
-                                          child: CircularProgressIndicator(color: AppColors.primary),
-                                        ),
-                                        errorWidget: (context, url, error) => _buildUploadBox(),
-                                      )
-                                          : _buildUploadBox(),
+                                      child: (
+                                        _carImage != null
+                                          ? Image.file(_carImage!, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+                                          : (() {
+                                              final path = imagePath;
+                                              if (path != null && path.isNotEmpty) {
+                                                return Image.file(File(path), fit: BoxFit.cover, width: double.infinity, height: double.infinity);
+                                              } else {
+                                                return _buildUploadBox();
+                                              }
+                                            })()
+                                      ),
                                     ),
-                                    if (_carImage != null || (widget.carToEdit?.imageUrl != null && widget.carToEdit!.imageUrl!.isNotEmpty))
+                                    if (_carImage != null || (imagePath?.isNotEmpty == true))
                                       Positioned(
                                         top: 8.h,
                                         right: 8.w,
@@ -376,21 +371,16 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
                               year: int.tryParse(_yearController.text) ?? 0,
                               color: _colorController.text,
                               seatingCapacity: int.tryParse(_seatingCapacityController.text) ?? 0,
-                              luggageCapacity: int.tryParse(_luggageCapacityController.text) ?? 2,
                               transmissionType: _transmissionTypeController.text,
                               fuelType: _fuelTypeController.text,
                               currentOdometerReading: int.tryParse(_odometerController.text) ?? 0,
                               availability: true,
                               currentStatus: _currentStatusController.text,
                               approvalStatus: false,
-                              rentalOptions: RentalOptions(
-                                availableWithoutDriver: false,
-                                availableWithDriver: false,
-                                dailyRentalPrice: 0.0,
-                              ),
+                              avgRating: 0.0,
+                              totalReviews: 0,
                               ownerId: authCubit.userModel?.id ?? '2',
-                              imageUrl: _carImage?.path ?? widget.carToEdit?.imageUrl ?? 'https://cdn-icons-png.flaticon.com/512/743/743007.png',
-                              usagePolicy: null,
+                              imageUrl: _carImage?.path,
                             );
 
                             final result = await Navigator.pushNamed(
@@ -409,20 +399,19 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
                                 _yearController.text = result.year.toString();
                                 _colorController.text = result.color;
                                 _seatingCapacityController.text = result.seatingCapacity.toString();
-                                _luggageCapacityController.text = result.luggageCapacity.toString();
                                 _transmissionTypeController.text = result.transmissionType;
                                 _fuelTypeController.text = result.fuelType;
                                 _odometerController.text = result.currentOdometerReading.toString();
                                 _currentStatusController.text = result.currentStatus;
-                                _carImage = result.imageUrl.isNotEmpty && result.imageUrl != 'https://cdn-icons-png.flaticon.com/512/743/743007.png'
-                                    ? File(result.imageUrl)
+                                _carImage = (result.imageUrl?.isNotEmpty == true && result.imageUrl != 'https://cdn-icons-png.flaticon.com/512/743/743007.png')
+                                    ? File(result.imageUrl!)
                                     : null;
                               });
                             } else {
                               if (widget.carToEdit != null) {
-                                context.read<AddCarCubit>().updateCar(car);
+                                //context.read<AddCarCubit>().updateCar(car);
                               } else {
-                                context.read<AddCarCubit>().addCar(car);
+                                //context.read<AddCarCubit>().addCar(car);
                               }
 
                               if (authCubit.userModel != null) {

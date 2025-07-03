@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../model/trip_details_model.dart';
+import 'dart:io';
 
 class TripDetailsReadOnlyScreen extends StatefulWidget {
   final TripDetailsModel trip;
@@ -41,19 +42,14 @@ class _TripDetailsReadOnlyScreenState extends State<TripDetailsReadOnlyScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
-                      child: trip.car.imageUrl.isNotEmpty
-                          ? Image.network(
-                              trip.car.imageUrl,
-                              width: 90,
-                              height: 70,
-                              fit: BoxFit.cover,
-                            )
-                          : Container(
-                              width: 90,
-                              height: 70,
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.directions_car, size: 40, color: Colors.grey),
-                            ),
+                      child: Image(
+                        image: (trip.car.imageUrl != null && trip.car.imageUrl!.isNotEmpty)
+                            ? (trip.car.imageUrl!.startsWith('http')
+                                ? NetworkImage(trip.car.imageUrl!)
+                                : FileImage(File(trip.car.imageUrl!)))
+                            : AssetImage('assets/images/placeholder_car.png'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -149,7 +145,11 @@ class _TripDetailsReadOnlyScreenState extends State<TripDetailsReadOnlyScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundImage: NetworkImage(trip.car.imageUrl),
+                  backgroundImage: (trip.car.imageUrl != null && trip.car.imageUrl!.isNotEmpty)
+                      ? (trip.car.imageUrl!.startsWith('http')
+                          ? NetworkImage(trip.car.imageUrl!)
+                          : FileImage(File(trip.car.imageUrl!)))
+                      : AssetImage('assets/images/placeholder_car.png'),
                   radius: 24,
                 ),
                 title: const Text('Trip With'),
@@ -157,10 +157,10 @@ class _TripDetailsReadOnlyScreenState extends State<TripDetailsReadOnlyScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 4),
-                    Text('Driver: ${trip.car.driverName ?? 'N/A'}'),
+                    Text('Driver: N/A'),
                     Text('Car: ${trip.car.brand} ${trip.car.model}'),
                     Text('Plate: ${trip.car.plateNumber}'),
-                    Text('Rating: ${trip.car.driverRating?.toStringAsFixed(1) ?? 'N/A'}'),
+                    Text('Rating: N/A'),
                   ],
                 ),
               ),

@@ -7,6 +7,7 @@ import 'package:test_cark/config/routes/screens_name.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../cars/presentation/models/car_rental_options.dart';
 import '../../../home/presentation/model/car_model.dart';
+import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
 
 
 class RenterNotificationScreen extends StatelessWidget {
@@ -231,11 +232,8 @@ class RenterNotificationScreen extends StatelessWidget {
         availability: true,
         currentStatus: 'Available',
         approvalStatus: true,
-        rentalOptions: RentalOptions(
-          availableWithDriver: false,
-          availableWithoutDriver: true,
-          dailyRentalPrice: null,
-        ),
+        avgRating: 0.0,
+        totalReviews: 0,
       );
 
       // Navigate to deposit payment screen

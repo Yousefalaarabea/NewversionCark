@@ -276,15 +276,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
                     borderRadius: BorderRadius.circular(8.r),
                     color: Colors.grey[200],
                   ),
-                  child: widget.car.imageUrl.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8.r),
-                          child: Image.network(
-                            widget.car.imageUrl,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Icon(Icons.directions_car, size: 30.sp, color: Colors.grey[600]),
+                  child: Icon(Icons.directions_car, size: 30.sp, color: Colors.grey[600]),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(

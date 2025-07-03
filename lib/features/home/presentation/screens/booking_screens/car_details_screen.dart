@@ -3,29 +3,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_cark/config/themes/app_colors.dart';
+import 'dart:io';
 
 import '../../../../../config/routes/screens_name.dart';
 import '../../cubit/car_cubit.dart';
 import '../../cubit/choose_car_state.dart';
 import '../../model/car_model.dart';
+import 'package:test_cark/features/cars/presentation/cubits/add_car_state.dart';
+import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
 
 class CarDetailsScreen extends StatelessWidget {
-  final CarModel car;
+  final CarBundle carBundle;
 
-  const CarDetailsScreen({super.key, required this.car});
+  const CarDetailsScreen({super.key, required this.carBundle});
 
   @override
   Widget build(BuildContext context) {
+    final car = carBundle.car;
+    final rentalOptions = carBundle.rentalOptions;
+    final usagePolicy = carBundle.usagePolicy;
     return BlocBuilder<CarCubit, ChooseCarState>(
       builder: (context, state) {
         final rentalDays =
             state.dateRange != null ? state.dateRange!.duration.inDays : 1;
 
-        final totalKilometers = rentalDays * (car.kmLimitPerDay ?? 0);
+        final totalKilometers = rentalDays * (usagePolicy?.dailyKmLimit?.toInt() ?? 0);
 
-        final price = car.rentalOptions.availableWithDriver
-            ? car.rentalOptions.dailyRentalPriceWithDriver
-            : car.rentalOptions.dailyRentalPrice;
+        final price = (state.withDriver ?? false)
+            ? rentalOptions?.dailyRentalPriceWithDriver
+            : rentalOptions?.dailyRentalPrice;
 
         final totalPrice = (price ?? 0) * rentalDays;
 
@@ -33,21 +40,20 @@ class CarDetailsScreen extends StatelessWidget {
           backgroundColor: Colors.grey.shade100,
           body: CustomScrollView(
             slivers: [
-              _buildSliverAppBar(context),
+              _buildSliverAppBar(context, car),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.all(20.r),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildCarHeader(),
+                      _buildCarHeader(car),
                       SizedBox(height: 24.h),
-                      _buildCarFeatures(),
+                      _buildCarFeatures(car),
                       SizedBox(height: 24.h),
-                      _buildRentalSummary(
-                          rentalDays, totalKilometers, totalPrice),
+                      _buildRentalSummary(rentalDays, totalKilometers, totalPrice, usagePolicy),
                       SizedBox(height: 32.h),
-                      _buildBookingButton(context),
+                      _buildBookingButton(context, car),
                     ],
                   ),
                 ),
@@ -59,7 +65,17 @@ class CarDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context) {
+  Widget _buildSliverAppBar(BuildContext context, CarModel car) {
+    ImageProvider imageProvider;
+    if (car.imageUrl != null && car.imageUrl!.isNotEmpty) {
+      if (car.imageUrl!.startsWith('http')) {
+        imageProvider = NetworkImage(car.imageUrl!);
+      } else {
+        imageProvider = FileImage(File(car.imageUrl!));
+      }
+    } else {
+      imageProvider = AssetImage('assets/images/placeholder_car.png');
+    }
     return SliverAppBar(
       expandedHeight: 250.h,
       backgroundColor: Colors.transparent,
@@ -77,8 +93,8 @@ class CarDetailsScreen extends StatelessWidget {
             ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
           },
           blendMode: BlendMode.darken,
-          child: Image.network(
-            car.imageUrl,
+          child: Image(
+            image: imageProvider,
             fit: BoxFit.cover,
           ),
         ),
@@ -90,7 +106,7 @@ class CarDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCarHeader() {
+  Widget _buildCarHeader(CarModel car) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -114,14 +130,14 @@ class CarDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCarFeatures() {
+  Widget _buildCarFeatures(CarModel car) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildFeatureChip(
             Icons.person_outline, '${car.seatingCapacity} ${tr("seats")}'),
         _buildFeatureChip(
-            Icons.luggage_outlined, '${car.luggageCapacity} ${tr("bags")}'),
+            Icons.luggage_outlined, '- ${tr("bags")}'),
         _buildFeatureChip(Icons.settings_input_component_outlined,
             car.transmissionType.tr()),
       ],
@@ -142,7 +158,7 @@ class CarDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildRentalSummary(
-      int rentalDays, int totalKilometers, double totalPrice) {
+      int rentalDays, int totalKilometers, double totalPrice, CarUsagePolicy? usagePolicy) {
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
@@ -175,11 +191,11 @@ class CarDetailsScreen extends StatelessWidget {
           _buildSummaryRow(
               tr("mileage_package"), '$totalKilometers ${tr("km_included_dynamic")}'),
           _buildSummaryRow(tr("extra_kilometer_cost"),
-              '\$${car.extraKmRate?.toStringAsFixed(2) ?? 'N/A'} / km'),
+              '\${usagePolicy?.extraKmCost?.toStringAsFixed(2) ?? "-"} / km'),
           Divider(color: Colors.grey.shade200, height: 32.h),
           _buildSummaryRow(
             tr("total_price"),
-            '\$${totalPrice.toStringAsFixed(2)}',
+            '\${totalPrice.toStringAsFixed(2)}',
             isTotal: true,
           ),
         ],
@@ -213,7 +229,7 @@ class CarDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBookingButton(BuildContext context) {
+  Widget _buildBookingButton(BuildContext context, CarModel car) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -227,10 +243,8 @@ class CarDetailsScreen extends StatelessWidget {
         onPressed: () {
           final rentalDays =
               context.read<CarCubit>().state.dateRange?.duration.inDays ?? 1;
-          final price = car.rentalOptions.availableWithDriver
-              ? car.rentalOptions.dailyRentalPriceWithDriver
-              : car.rentalOptions.dailyRentalPrice;
-          final totalPrice = (price ?? 0) * rentalDays;
+          final price = 0.0; // Default value, update as needed
+          final totalPrice = price * rentalDays;
 
           Navigator.pushNamed(
             context,

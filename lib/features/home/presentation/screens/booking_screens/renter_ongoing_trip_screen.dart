@@ -95,26 +95,11 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
                     borderRadius: BorderRadius.circular(12.r),
                     color: Colors.grey[200],
                   ),
-                  child: car.imageUrl != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(12.r),
-                          child: Image.network(
-                            car.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.directions_car,
-                                size: 40.sp,
-                                color: Colors.grey[400],
-                              );
-                            },
-                          ),
-                        )
-                      : Icon(
-                          Icons.directions_car,
-                          size: 40.sp,
-                          color: Colors.grey[400],
-                        ),
+                  child: Icon(
+                    Icons.directions_car,
+                    size: 40.sp,
+                    color: Colors.grey[400],
+                  ),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(

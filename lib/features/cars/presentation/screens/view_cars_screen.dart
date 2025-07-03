@@ -94,7 +94,7 @@ class _ViewCarsScreenState extends State<ViewCarsScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                context.read<AddCarCubit>().deleteCar(car);
+                context.read<AddCarCubit>().deleteCar(car.id.toString());
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -146,8 +146,8 @@ class _ViewCarsScreenState extends State<ViewCarsScreen> {
     // final cars =
     //     allCars.where((car) => car.ownerId == currentUser?.id).toList();
 
-    final cars = context.watch<AddCarCubit>().getCars();
-    final filteredCars = cars.where((car) => car.ownerId == currentUser?.id).toList();
+    final carBundles = context.watch<AddCarCubit>().getCars();
+    final filteredCarBundles = carBundles.where((bundle) => bundle.car.ownerId == currentUser?.id).toList();
 
     return Scaffold(
       drawer: BlocBuilder<AuthCubit, AuthState>(
@@ -302,10 +302,10 @@ class _ViewCarsScreenState extends State<ViewCarsScreen> {
           }
 
           if (state is AddCarFetchedSuccessfully) {
-            final cars = state.cars;
-            final filteredCars = cars.where((car) => car.ownerId == currentUser?.id).toList();
+            final carBundles = state.cars;
+            final filteredCarBundles = carBundles.where((bundle) => bundle.car.ownerId == currentUser?.id).toList();
 
-            if (filteredCars.isEmpty) {
+            if (filteredCarBundles.isEmpty) {
               // No cars found, show empty state
               return Center(
                 child: Column(
@@ -356,24 +356,23 @@ class _ViewCarsScreenState extends State<ViewCarsScreen> {
                   await context.read<AddCarCubit>().fetchCarsFromServer();
                 },
                 child: CarDataTable(
-                  cars: filteredCars,
-                  onEdit: (CarModel car) {
+                  cars: filteredCarBundles,
+                  onEdit: (CarBundle bundle) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AddCarScreen(carToEdit: car),
+                        builder: (context) => AddCarScreen(carToEdit: bundle.car),
                       ),
                     ).then((_) {
-                      // Refresh cars list when returning from edit
                       context.read<AddCarCubit>().fetchCarsFromServer();
                     });
                   },
-                  onDelete: (CarModel car) => _showDeleteConfirmation(context, car),
-                  onViewDetails: (CarModel car) {
+                  onDelete: (CarBundle bundle) => _showDeleteConfirmation(context, bundle.car),
+                  onViewDetails: (CarBundle bundle) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ViewCarDetailsScreen(car: car),
+                        builder: (context) => ViewCarDetailsScreen(carBundle: bundle),
                       ),
                     );
                   },

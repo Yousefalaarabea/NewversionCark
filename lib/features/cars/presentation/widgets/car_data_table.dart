@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../home/presentation/widgets/home_widgets/car_card_widget.dart';
 import 'package:test_cark/features/home/presentation/model/car_model.dart';
+import 'package:test_cark/features/cars/presentation/cubits/add_car_state.dart';
 
 
 class CarDataTable extends StatelessWidget {
-  final List<CarModel> cars;
-  final Function(CarModel) onEdit;
-  final Function(CarModel) onDelete;
-  final Function(CarModel) onViewDetails;
+  final List<CarBundle> cars;
+  final Function(CarBundle) onEdit;
+  final Function(CarBundle) onDelete;
+  final Function(CarBundle) onViewDetails;
 
   const CarDataTable({
     super.key,
@@ -25,14 +26,15 @@ class CarDataTable extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: cars.length,
       itemBuilder: (context, index) {
-        final car = cars[index];
+        final bundle = cars[index];
         return Padding(
           padding: EdgeInsets.only(bottom: 16.h),
           child: CarCardWidget(
-            car: car,
-            onTap: () => onViewDetails(car),
-            onEdit: () => onEdit(car),
-            onDelete: () => onDelete(car),
+            car: bundle.car,
+            rentalOptions: bundle.rentalOptions,
+            onTap: () => onViewDetails(bundle),
+            onEdit: () => onEdit(bundle),
+            onDelete: () => onDelete(bundle),
           ),
         );
       },

@@ -109,6 +109,16 @@ class CarCubit extends Cubit<ChooseCarState> {
     emit(state.copyWith(returnStation: station));
   }
 
+  void setPickupText(String value) =>
+      emit(state.copyWith(
+        pickupStation: LocationModel(name: value, address: value),
+      ));
+
+  void setDropoffText(String value) =>
+      emit(state.copyWith(
+        returnStation: LocationModel(name: value, address: value),
+      ));
+
   void addStop(LocationModel stop) {
     final List<LocationModel> updatedStops = List.from(state.stops)..add(stop);
     emit(state.copyWith(stops: updatedStops));
@@ -129,6 +139,7 @@ class CarCubit extends Cubit<ChooseCarState> {
   void setPickupDate(DateTime date) {
     emit(state.copyWith(pickupDate: date));
   }
+
 
   void setDateRange(DateTimeRange range) =>
       emit(state.copyWith(dateRange: range));

@@ -1,5 +1,14 @@
 import 'package:equatable/equatable.dart';
 import 'package:test_cark/features/home/presentation/model/car_model.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
+
+class CarBundle {
+  final CarModel car;
+  final CarRentalOptions? rentalOptions;
+  final CarUsagePolicy? usagePolicy;
+  CarBundle({required this.car, this.rentalOptions, this.usagePolicy});
+}
 
 abstract class AddCarState extends Equatable {
   const AddCarState();
@@ -13,12 +22,12 @@ class AddCarInitial extends AddCarState {}
 class AddCarLoading extends AddCarState {}
 
 class AddCarSuccess extends AddCarState {
-  final CarModel car;
+  final CarBundle carBundle;
 
-  const AddCarSuccess({required this.car});
+  const AddCarSuccess({required this.carBundle});
 
   @override
-  List<Object?> get props => [car];
+  List<Object?> get props => [carBundle];
 }
 
 class AddCarError extends AddCarState {
@@ -29,8 +38,9 @@ class AddCarError extends AddCarState {
   @override
   List<Object?> get props => [message];
 }
+
 class AddCarFetchedSuccessfully extends AddCarState {
-  final List<CarModel> cars;
+  final List<CarBundle> cars;
 
   const AddCarFetchedSuccessfully({required this.cars});
 

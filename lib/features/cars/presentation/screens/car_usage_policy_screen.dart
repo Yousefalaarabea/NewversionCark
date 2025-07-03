@@ -8,10 +8,12 @@ import '../../../home/presentation/model/car_model.dart';
 import '../cubits/add_car_cubit.dart';
 import '../cubits/add_car_state.dart';
 import '../models/car_usage_policy.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import 'package:test_cark/config/routes/screens_name.dart';
 
 class CarUsagePolicyScreen extends StatefulWidget {
   final CarModel carData;
-  final RentalOptions rentalOptions;
+  final CarRentalOptions rentalOptions;
 
   const CarUsagePolicyScreen({
     super.key,
@@ -33,14 +35,8 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Initialize form fields with existing usage policy if available
-    if (widget.carData.usagePolicy != null) {
-      _dailyKmLimitController.text = widget.carData.usagePolicy!.dailyKmLimit.toString();
-      _extraKmCostController.text = widget.carData.usagePolicy!.extraKmCost.toString();
-      _dailyHourLimitController.text = widget.carData.usagePolicy!.dailyHourLimit.toString();
-      _extraHourCostController.text = widget.carData.usagePolicy!.extraHourCost.toString();
-    }
+    // Initialize form fields with empty values or from passed arguments if needed
+    // (No usagePolicy in carData anymore)
   }
 
   @override
@@ -65,20 +61,16 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       final policy = CarUsagePolicy(
-        dailyKmLimit: int.parse(_dailyKmLimitController.text),
+        dailyKmLimit: double.parse(_dailyKmLimitController.text),
         extraKmCost: double.parse(_extraKmCostController.text),
-        dailyHourLimit: int.parse(_dailyHourLimitController.text),
-        extraHourCost: double.parse(_extraHourCostController.text),
+        dailyHourLimit: int.tryParse(_dailyHourLimitController.text),
+        extraHourCost: double.tryParse(_extraHourCostController.text),
       );
-
-      // Create complete car with all data from three steps
-      final car = widget.carData.copyWith(
+      context.read<AddCarCubit>().addCar(
+        car: widget.carData,
         rentalOptions: widget.rentalOptions,
         usagePolicy: policy,
       );
-
-      // Finally call addCar with complete data
-      context.read<AddCarCubit>().addCar(car);
     }
   }
 
@@ -90,10 +82,10 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
       ),
       body: BlocConsumer<AddCarCubit, AddCarState>(
         listener: (context, state) {
-          if (state is AddCarSuccess) {
+          if (state is AddCarSuccess || state is AddCarFetchedSuccessfully) {
             Navigator.of(context).pushNamedAndRemoveUntil(
-              '/ownerNavigationScreen',
-                  (route) => false,
+              ScreensName.ownerHomeScreen,
+              (route) => false,
             );
           } else if (state is AddCarError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -182,35 +174,6 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
           children: [
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  // Navigate back to CarRentalOptionsScreen with current data
-                  final currentCar = widget.carData.copyWith(
-                    rentalOptions: widget.rentalOptions,
-                    usagePolicy: _formKey.currentState!.validate()
-                        ? CarUsagePolicy(
-                      dailyKmLimit: int.parse(_dailyKmLimitController.text),
-                      extraKmCost: double.parse(_extraKmCostController.text),
-                      dailyHourLimit: int.parse(_dailyHourLimitController.text),
-                      extraHourCost: double.parse(_extraHourCostController.text),
-                    )
-                        : null,
-                  );
-                  Navigator.pop(context, currentCar);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[300],
-                  foregroundColor: Colors.black87,
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text('Previous'),
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: ElevatedButton(
                 onPressed: _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1a237e),
@@ -221,6 +184,7 @@ class _CarUsagePolicyScreenState extends State<CarUsagePolicyScreen> {
                   ),
                 ),
                 child: const Text('Submit'),
+
               ),
             ),
           ],

@@ -37,19 +37,12 @@ class TripDetailsConfirmationScreen extends StatelessWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(14),
-                              child: tripDetails.car.imageUrl.isNotEmpty
-                                  ? Image.network(
-                                      tripDetails.car.imageUrl,
-                                      width: 110,
-                                      height: 90,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      width: 110,
-                                      height: 90,
-                                      color: Colors.grey[200],
-                                      child: const Icon(Icons.directions_car, size: 50, color: Colors.grey),
-                                    ),
+                              child: Container(
+                                width: 110,
+                                height: 90,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.directions_car, size: 50, color: Colors.grey),
+                              ),
                             ),
                             const SizedBox(width: 20),
                             Expanded(
@@ -297,8 +290,8 @@ class TripDetailsConfirmationScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildOverviewItem(Icons.check_circle, tr("third_party_insurance"),
                     AppColors.primary),
-                _buildOverviewItem(Icons.check_circle,
-                    tr("collision_damage_waiver"), AppColors.primary),
+                _buildOverviewItem(
+                    Icons.check_circle, tr("collision_damage_waiver"), AppColors.primary),
                 _buildOverviewItem(
                     Icons.check_circle, tr("theft_protection"), AppColors.primary),
                 _buildOverviewItem(

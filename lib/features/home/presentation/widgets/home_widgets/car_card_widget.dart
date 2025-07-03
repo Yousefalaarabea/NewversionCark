@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../model/car_model.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import 'dart:io';
 
 class CarCardWidget extends StatelessWidget {
   final CarModel car;
+  final CarRentalOptions? rentalOptions;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -11,6 +14,7 @@ class CarCardWidget extends StatelessWidget {
   const CarCardWidget({
     super.key,
     required this.car,
+    required this.rentalOptions,
     required this.onTap,
     this.onEdit,
     this.onDelete,
@@ -18,9 +22,11 @@ class CarCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final price = car.rentalOptions.availableWithDriver
-        ? car.rentalOptions.dailyRentalPriceWithDriver
-        : car.rentalOptions.dailyRentalPrice;
+    final price = (rentalOptions != null)
+        ? (rentalOptions!.availableWithDriver
+            ? rentalOptions!.dailyRentalPriceWithDriver
+            : rentalOptions!.dailyRentalPrice)
+        : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -29,7 +35,7 @@ class CarCardWidget extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           image: DecorationImage(
-            image: NetworkImage(car.imageUrl),
+            image: _getCarImageProvider(),
             fit: BoxFit.cover,
           ),
           boxShadow: [
@@ -98,7 +104,7 @@ class CarCardWidget extends StatelessWidget {
                               SizedBox(width: 8.w),
                               _buildInfoChip(
                                 icon: Icons.luggage_outlined,
-                                text: '${car.luggageCapacity}',
+                                text: '-',
                               ),
                               SizedBox(width: 8.w),
                               _buildInfoChip(
@@ -203,6 +209,18 @@ class CarCardWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  ImageProvider _getCarImageProvider() {
+    if (car.imageUrl != null && car.imageUrl!.isNotEmpty) {
+      if (car.imageUrl!.startsWith('http')) {
+        return NetworkImage(car.imageUrl!);
+      } else {
+        return FileImage(File(car.imageUrl!));
+      }
+    } else {
+      return AssetImage('assets/images/placeholder_car.png');
+    }
   }
 }
 

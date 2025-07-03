@@ -1,36 +1,34 @@
 class CarUsagePolicy {
-  final int dailyKmLimit;
+  final double dailyKmLimit;
   final double extraKmCost;
-  final int dailyHourLimit;
-  final double extraHourCost;
+  final int? dailyHourLimit;
+  final double? extraHourCost;
 
   CarUsagePolicy({
     required this.dailyKmLimit,
     required this.extraKmCost,
-    required this.dailyHourLimit,
-    required this.extraHourCost,
+    this.dailyHourLimit,
+    this.extraHourCost,
   });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'daily_km_limit': dailyKmLimit,
-      'extra_km_cost': extraKmCost,
-      'daily_hour_limit': dailyHourLimit,
-      'extra_hour_cost': extraHourCost,
-    };
-  }
 
   factory CarUsagePolicy.fromJson(Map<String, dynamic> json) {
     return CarUsagePolicy(
-      dailyKmLimit: json['daily_km_limit'] as int,
-      extraKmCost: json['extra_km_cost'] as double,
-      dailyHourLimit: json['daily_hour_limit'] as int,
-      extraHourCost: json['extra_hour_cost'] as double,
+      dailyKmLimit: double.tryParse(json['daily_km_limit'].toString()) ?? 0,
+      extraKmCost: double.tryParse(json['extra_km_cost'].toString()) ?? 0,
+      dailyHourLimit: json['daily_hour_limit'] != null ? int.tryParse(json['daily_hour_limit'].toString()) : null,
+      extraHourCost: json['extra_hour_cost'] != null ? double.tryParse(json['extra_hour_cost'].toString()) : null,
     );
   }
 
+  Map<String, dynamic> toJson() => {
+    'daily_km_limit': dailyKmLimit,
+    'extra_km_cost': extraKmCost,
+    'daily_hour_limit': dailyHourLimit,
+    'extra_hour_cost': extraHourCost,
+  };
+
   CarUsagePolicy copyWith({
-    int? dailyKmLimit,
+    double? dailyKmLimit,
     double? extraKmCost,
     int? dailyHourLimit,
     double? extraHourCost,

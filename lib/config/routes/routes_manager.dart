@@ -46,6 +46,8 @@ import '../../features/owner/presentation/screens/owner_ongoing_trip_screen.dart
 import '../../features/owner/presentation/screens/live_location_map_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/saved_trips_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/trip_details_readonly_screen.dart';
+import 'package:test_cark/features/cars/presentation/cubits/add_car_state.dart';
+import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
 
 abstract class RoutesManager {
   static Route<dynamic>? onGenerateRoute(RouteSettings routeSettings) {
@@ -80,10 +82,12 @@ abstract class RoutesManager {
         final args = routeSettings.arguments as Map<String, dynamic>;
         final car = args['car'] as CarModel;
         final totalPrice = args['totalPrice'] as double;
+        final rentalOptions = args['rentalOptions'] as CarRentalOptions?;
         return MaterialPageRoute(
             builder: (context) => BookingSummaryScreen(
                   car: car,
                   totalPrice: totalPrice,
+                  rentalOptions: rentalOptions ?? CarRentalOptions(availableWithoutDriver: false, availableWithDriver: false),
                 ));
       case ScreensName.tripManagementScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;
@@ -124,7 +128,7 @@ abstract class RoutesManager {
         if (routeSettings.arguments is CarModel) {
           return MaterialPageRoute(
             builder: (context) =>
-                ViewCarDetailsScreen(car: routeSettings.arguments as CarModel),
+                ViewCarDetailsScreen(carBundle: routeSettings.arguments as CarBundle),
           );
         }
         return MaterialPageRoute(
@@ -164,7 +168,7 @@ abstract class RoutesManager {
           return MaterialPageRoute(
             builder: (context) => CarUsagePolicyScreen(
               carData: args['car'] as CarModel,
-              rentalOptions: args['rentalOptions'] as RentalOptions,
+              rentalOptions: args['rentalOptions'] as CarRentalOptions,
             ),
           );
         }
