@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_cark/config/routes/screens_name.dart';
 import 'package:test_cark/config/themes/app_colors.dart';
-import 'package:test_cark/core/services/notification_service.dart';
 import 'package:test_cark/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:test_cark/features/notifications/presentation/cubits/notification_cubit.dart';
 import '../../../../auth/presentation/models/user_model.dart';
@@ -181,22 +180,20 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
         }
       }
 
-      // Send notification to owner that deposit has been paid
-      await NotificationService().sendNotificationToUser(
-        userId: ownerId,
-        title: 'Deposit Paid',
-        body: '$renterName has paid the deposit of \$${depositAmount.toStringAsFixed(2)} for your car ${widget.car.brand} ${widget.car.model}.',
-        type: 'owner',
-        notificationType: 'deposit_paid',
-        bookingData: widget.bookingData,
-      );
-
-      // Send handover notification to owner with button to navigate to handover
-      await NotificationService().sendHandoverNotificationToOwner(
-        ownerId: ownerId,
-        renterName: renterName,
+      // Send in-app notification to owner that deposit has been paid
+      context.read<NotificationCubit>().sendPaymentNotification(
+        amount: depositAmount.toStringAsFixed(2),
         carBrand: widget.car.brand,
         carModel: widget.car.model,
+        type: 'deposit_paid',
+      );
+
+      // Send handover notification to owner
+      context.read<NotificationCubit>().sendHandoverNotification(
+        carBrand: widget.car.brand,
+        carModel: widget.car.model,
+        type: 'handover_started',
+        userName: renterName,
       );
       
       print('Owner notifications sent successfully');

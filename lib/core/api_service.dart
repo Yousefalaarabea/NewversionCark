@@ -121,6 +121,154 @@ class ApiService {
     return response;
   }
 
+  // Get with admin token for operations that need admin privileges
+  Future<Response> getWithAdminToken(String endpoint) async {
+    final prefs = await SharedPreferences.getInstance();
+    String? adminToken = prefs.getString('admin_access_token');
+    
+    if (adminToken == null) {
+      throw Exception('Admin token not found. Please login as admin first.');
+    }
+    
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        '${_dio.options.baseUrl}$endpoint',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $adminToken',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      return response;
+    } catch (e) {
+      // If token is expired, try to refresh it
+      if (e.toString().contains('401') || e.toString().contains('Unauthorized')) {
+        print('Admin token expired, attempting to refresh...');
+        // Note: You might want to implement token refresh logic here
+        // For now, we'll just rethrow the error
+      }
+      rethrow;
+    }
+  }
+
+  // Post with admin token for operations that need admin privileges
+  Future<Response> postWithAdminToken(String endpoint, dynamic data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final adminToken = prefs.getString('admin_access_token');
+    
+    if (adminToken == null) {
+      throw Exception('Admin token not found. Please login as admin first.');
+    }
+    
+    final dio = Dio();
+    final response = await dio.post(
+      '${_dio.options.baseUrl}$endpoint',
+      data: data,
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $adminToken',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+    return response;
+  }
+
+  // Patch with admin token for operations that need admin privileges
+  Future<Response> patchWithAdminToken(String endpoint, dynamic data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final adminToken = prefs.getString('admin_access_token');
+    
+    if (adminToken == null) {
+      throw Exception('Admin token not found. Please login as admin first.');
+    }
+    
+    final dio = Dio();
+    final response = await dio.patch(
+      '${_dio.options.baseUrl}$endpoint',
+      data: data,
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $adminToken',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+    return response;
+  }
+
+  // Delete with admin token for operations that need admin privileges
+  Future<Response> deleteWithAdminToken(String endpoint) async {
+    final prefs = await SharedPreferences.getInstance();
+    final adminToken = prefs.getString('admin_access_token');
+    
+    if (adminToken == null) {
+      throw Exception('Admin token not found. Please login as admin first.');
+    }
+    
+    final dio = Dio();
+    final response = await dio.delete(
+      '${_dio.options.baseUrl}$endpoint',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $adminToken',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+    return response;
+  }
+
+  // Refresh admin token
+  Future<String?> refreshAdminToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final adminRefreshToken = prefs.getString('admin_refresh_token');
+      
+      if (adminRefreshToken == null) {
+        print('No admin refresh token found');
+        return null;
+      }
+      
+      final response = await _dio.post(
+        'token/refresh/',
+        data: {
+          'refresh': adminRefreshToken,
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final newAdminAccessToken = response.data['access'];
+        await prefs.setString('admin_access_token', newAdminAccessToken);
+        print('Admin token refreshed successfully');
+        return newAdminAccessToken;
+      }
+    } catch (e) {
+      print('Error refreshing admin token: $e');
+    }
+    return null;
+  }
+
+  // Ensure admin token is valid, refresh if needed
+  Future<String?> ensureAdminTokenValid() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? adminToken = prefs.getString('admin_access_token');
+    
+    if (adminToken == null) {
+      print('No admin token found, attempting admin login...');
+      // You might want to trigger admin login here
+      return null;
+    }
+    
+    // For now, we'll assume the token is valid
+    // In a real implementation, you might want to validate the token
+    return adminToken;
+  }
+
   // GET request
   Future<Response> get(String endpoint, {Map<String, dynamic>? queryParams}) async {
     try {

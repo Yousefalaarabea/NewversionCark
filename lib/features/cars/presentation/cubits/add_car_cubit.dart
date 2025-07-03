@@ -219,56 +219,6 @@ import 'add_car_state.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class AddCarCubit extends Cubit<AddCarState> {
-  // In-memory storage for cars (replace with actual database in production)
-  // final List<CarModel> _cars = [
-  //   // Sample test data
-  //   CarModel(
-  //     id: 1,
-  //     model: 'Model S',
-  //     brand: 'Tesla',
-  //     carType: 'Sedan',
-  //     carCategory: 'Luxury',
-  //     plateNumber: 'ABC123',
-  //     year: 2020,
-  //     color: 'Red',
-  //     seatingCapacity: 5,
-  //     transmissionType: 'Automatic',
-  //     fuelType: 'Electric',
-  //     currentOdometerReading: 15000,
-  //     availability: true,
-  //     currentStatus: 'Available',
-  //     approvalStatus: true,
-  //     rentalOptions: RentalOptions(
-  //       availableWithoutDriver: true,
-  //       availableWithDriver: false,
-  //       dailyRentalPrice: 500.0,
-  //
-  //     ), ownerId: '1',
-  //   ),
-  //
-  //   CarModel(
-  //     id: 2,
-  //     model: 'Civic',
-  //     brand: 'Honda',
-  //     carType: 'Sedan',
-  //     carCategory: 'Standard',
-  //     plateNumber: 'XYZ789',
-  //     year: 2019,
-  //     color: 'Blue',
-  //     seatingCapacity: 5,
-  //     transmissionType: 'Manual',
-  //     fuelType: 'Gasoline',
-  //     currentOdometerReading: 30000,
-  //     availability: true,
-  //     currentStatus: 'Available',
-  //     approvalStatus: true,
-  //     rentalOptions: RentalOptions(
-  //       availableWithoutDriver: true,
-  //       availableWithDriver: true,
-  //       dailyRentalPrice: 300.0,
-  //     ), ownerId: '2',
-  //   ),
-  // ];
 
   final CarService _carService = CarService();
   List<CarModel> _cars = [];
@@ -289,6 +239,7 @@ class AddCarCubit extends Cubit<AddCarState> {
   //     emit(AddCarError(message: _handleError(e)));
   //   }
   // }
+
   Future<void> fetchCarsFromServer() async {
     emit(AddCarLoading());
     try {
@@ -327,7 +278,8 @@ class AddCarCubit extends Cubit<AddCarState> {
   Future<void> addCar(CarModel car) async {
     emit(AddCarLoading());
     try {
-      final response = await ApiService().postWithToken('cars/', {
+      // Use car service with admin token
+      final carData = {
         "model": car.model,
         "brand": car.brand,
         "car_type": car.carType,
@@ -339,46 +291,55 @@ class AddCarCubit extends Cubit<AddCarState> {
         "transmission_type": car.transmissionType,
         "fuel_type": car.fuelType,
         "current_odometer_reading": car.currentOdometerReading,
-      });
+      };
 
-      final responseData = response.data;
-      print("RESPONSE DATA: $responseData");
-      final newCar = CarModel.fromJson(responseData);
+      final success = await _carService.addCar(carData);
+      
+      if (success) {
+        // Refresh cars list to get the updated data
+        await fetchCarsFromServer();
+        
+        emit(AddCarSuccess(car: car));
+        
+        // Update user role if needed
+        final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
+        await authCubit.loadUserData();
+        final userId = authCubit.userModel!.id;
 
-      final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
-      await authCubit.loadUserData();
-      final userId = authCubit.userModel!.id;
+        if (userId == 1) {
+          try {
+            final roleResponse = await ApiService().postWithAdminToken(
+              'users/user-role/',
+              {
+                "user": userId,
+                "role": 2, // Owner
+              },
+            );
 
-      // Simulate an API call or database operation
-      // await Future.delayed(const Duration(seconds: 1));
-
-      // Add car to list
-      _cars.add(newCar);
-
-      // Uncomment and use repository when implemented
-      // await carRepository.addCar(car);
-
-      emit(AddCarSuccess(car: car));
-
-      if(userId == 1) {
-        try {
-          final roleResponse = await ApiService().postWithToken(
-            'users/user-role/',
-            {
-              "user": userId,
-              "role": 2, // Owner
-            },
-          );
-
-          print('Role updated: ${roleResponse.data}');
-        } catch (e) {
-          print('Failed to update role: $e');
+            print('Role updated using admin token: ${roleResponse.data}');
+          } catch (e) {
+            print('Failed to update role with admin token: $e');
+            // Fallback to user token
+            try {
+              final roleResponse = await ApiService().postWithToken(
+                'users/user-role/',
+                {
+                  "user": userId,
+                  "role": 2, // Owner
+                },
+              );
+              print('Role updated using user token: ${roleResponse.data}');
+            } catch (e2) {
+              print('Failed to update role with user token: $e2');
+            }
+          }
         }
+      } else {
+        emit(const AddCarError(message: 'Failed to add car'));
       }
     } catch (e) {
       emit(AddCarError(message: _handleError(e)));
     }
-
   }
 
   /// Updates an existing car
@@ -386,17 +347,28 @@ class AddCarCubit extends Cubit<AddCarState> {
     emit(AddCarLoading());
 
     try {
-      // Simulate an API call or database operation
-      await Future.delayed(const Duration(seconds: 1));
+      final carData = {
+        "model": updatedCar.model,
+        "brand": updatedCar.brand,
+        "car_type": updatedCar.carType,
+        "car_category": updatedCar.carCategory,
+        "plate_number": updatedCar.plateNumber,
+        "year": updatedCar.year,
+        "color": updatedCar.color,
+        "seating_capacity": updatedCar.seatingCapacity,
+        "transmission_type": updatedCar.transmissionType,
+        "fuel_type": updatedCar.fuelType,
+        "current_odometer_reading": updatedCar.currentOdometerReading,
+      };
 
-      // Find and update car
-      final index =
-      _cars.indexWhere((car) => car.plateNumber == updatedCar.plateNumber);
-      if (index != -1) {
-        _cars[index] = updatedCar;
+      final success = await _carService.updateCar(updatedCar.id.toString(), carData);
+      
+      if (success) {
+        // Refresh cars list to get the updated data
+        await fetchCarsFromServer();
         emit(AddCarSuccess(car: updatedCar));
       } else {
-        emit(const AddCarError(message: 'Car not found'));
+        emit(const AddCarError(message: 'Failed to update car'));
       }
     } catch (e) {
       emit(AddCarError(message: _handleError(e)));
@@ -408,18 +380,28 @@ class AddCarCubit extends Cubit<AddCarState> {
     emit(AddCarLoading());
 
     try {
-      // Simulate an API call or database operation
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Remove car from list
-      final success = _cars.remove(car);
+      final success = await _carService.deleteCar(car.id.toString());
+      
       if (success) {
+        // Refresh cars list to get the updated data
+        await fetchCarsFromServer();
         emit(AddCarSuccess(car: car));
       } else {
-        emit(AddCarError(message: 'Car not found'));
+        emit(const AddCarError(message: 'Failed to delete car'));
       }
     } catch (e) {
       emit(AddCarError(message: _handleError(e)));
+    }
+  }
+
+  /// Get car details by ID
+  Future<CarModel?> getCarDetails(String carId) async {
+    try {
+      final car = await _carService.getCarDetails(carId);
+      return car;
+    } catch (e) {
+      print('Error getting car details: $e');
+      return null;
     }
   }
 

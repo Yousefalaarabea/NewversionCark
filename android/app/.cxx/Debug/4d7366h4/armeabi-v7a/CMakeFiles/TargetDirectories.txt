@@ -1,0 +1,2 @@
+D:/Yousef/Fourth level/tt/NewversionCark/android/app/.cxx/Debug/4d7366h4/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Yousef/Fourth level/tt/NewversionCark/android/app/.cxx/Debug/4d7366h4/armeabi-v7a/CMakeFiles/rebuild_cache.dir

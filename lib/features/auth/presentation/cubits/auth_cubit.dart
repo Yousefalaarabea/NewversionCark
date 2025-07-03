@@ -347,61 +347,7 @@
 //     final prefs = await SharedPreferences.getInstance();
 //     await prefs.remove('user_data');
 //     await prefs.remove('access_token');
-//     await prefs.remove('refresh_token');
-//     userModel = null;
-//     emit(AuthInitial());
-//   }
-//
-//
-//   Future<int?> fetchLatestUserRole() async {
-//     try {
-//       final prefs = await SharedPreferences.getInstance();
-//       final accessToken = prefs.getString('access_token');
-//       if (accessToken == null) {
-//         print('No access token found');
-//         return null;
-//       }
-//
-//       final userId = userModel?.id;
-//       if (userId == null) {
-//         print('No user ID available');
-//         return null;
-//       }
-//
-//       final response = await ApiService().getWithToken(
-//         'user-roles/',
-//         accessToken,
-//       );
-//
-//       if (response.statusCode == 200) {
-//         final List<dynamic> rolesList = response.data;
-//
-//         // Filter user roles by current user
-//         final userRoles = rolesList
-//             .where((role) => role['user'] == userId)
-//             .toList();
-//
-//         if (userRoles.isNotEmpty) {
-//           final latest = userRoles.last;
-//           print('Latest role for user $userId is ${latest['role']}');
-//           return latest['role'];
-//         } else {
-//           print('No role found for user $userId');
-//           return null;
-//         }
-//       } else {
-//         print('Error fetching roles: ${response.statusCode}');
-//         return null;
-//       }
-//     } catch (e) {
-//       print('Error in fetchLatestUserRole: $e');
-//       return null;
-//     }
-//   }
-//
-//
-//
-// }
+
 
 import 'dart:developer';
 import 'dart:io';
@@ -411,7 +357,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/api_service.dart';
-import '../../../../core/services/notification_service.dart';
 import '../models/user_model.dart';
 part 'auth_state.dart';
 
@@ -419,11 +364,23 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit() : super(AuthInitial()) {
     // Load user data when cubit is created
     print('AuthCubit initialized, loading user data...');
-    loadUserData();
+    // loadUserData();
+    
+    // Initialize admin login in background
+    _initializeAdminLogin();
+  }
+
+  // Initialize admin login in background
+  Future<void> _initializeAdminLogin() async {
+    try {
+      print('Initializing admin login in background...');
+      await _performAdminLogin();
+    } catch (e) {
+      print('Error initializing admin login: $e');
+    }
   }
 
   final ImagePicker imagePicker = ImagePicker();
-  final NotificationService _notificationService = NotificationService();
   UserModel? userModel;
   String idImagePath = '';
   String licenceImagePath = '';
@@ -464,6 +421,8 @@ class AuthCubit extends Cubit<AuthState> {
       print('Loading user data from SharedPreferences...');
       final prefs = await SharedPreferences.getInstance();
       final userDataString = prefs.getString('user_data');
+      final accessToken = prefs.getString('access_token');
+      
       if (userDataString != null) {
         print('User data string found: $userDataString');
         final userData = jsonDecode(userDataString);
@@ -472,8 +431,25 @@ class AuthCubit extends Cubit<AuthState> {
         print('User data loaded successfully: ${userModel?.firstName} ${userModel?.lastName}');
         print('Loaded user ID: ${userModel?.id}');
         print('User model is null: ${userModel == null}');
+      } else if (accessToken != null) {
+        // If we have access token but no user data, try to fetch from server
+        print('No user data in SharedPreferences, but access token found. Fetching from server...');
+        try {
+          final userResponse = await ApiService().getWithToken('user/profile/', accessToken);
+          if (userResponse.statusCode == 200) {
+            userModel = UserModel.fromJson(userResponse.data);
+            await _saveUserData(userModel!);
+            print('User data fetched from server and saved to SharedPreferences');
+          } else {
+            print('Failed to fetch user data from server: ${userResponse.statusCode}');
+            userModel = null;
+          }
+        } catch (e) {
+          print('Error fetching user data from server: $e');
+          userModel = null;
+        }
       } else {
-        print('No user data found in SharedPreferences');
+        print('No user data or access token found in SharedPreferences');
         userModel = null;
       }
     } catch (e) {
@@ -482,77 +458,94 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Save FCM token for current user
-  Future<void> saveFcmToken() async {
-    if (userModel != null) {
-      try {
-        final fcmToken = await _notificationService.getFcmToken();
-        if (fcmToken != null) {
-          // Update user model with FCM token
-          userModel = userModel!.copyWith(fcmToken: fcmToken);
 
-          // Save to SharedPreferences
-          await _saveUserData(userModel!);
 
-          // Save to Firestore
-          await _notificationService.saveFcmTokenToUser(userModel!.id, fcmToken);
-
-          print('FCM token saved for user: ${userModel!.id}');
-        } else {
-          print('Failed to get FCM token for user: ${userModel!.id}');
-        }
-      } catch (e) {
-        print('Error saving FCM token: $e');
-        // Don't throw the error to avoid crashing the app
+  // Admin login for background operations
+  Future<String?> _performAdminLogin() async {
+    try {
+      print('Performing background admin login...');
+      final adminResponse = await ApiService().post("login/", {
+        "email": "admin@gmail.com",
+        "password": "admin123"
+      });
+      
+      if (adminResponse.statusCode == 200) {
+        final adminAccessToken = adminResponse.data['access'];
+        final adminRefreshToken = adminResponse.data['refresh'];
+        
+        // Save admin tokens separately
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('admin_access_token', adminAccessToken);
+        await prefs.setString('admin_refresh_token', adminRefreshToken);
+        
+        print('Admin login successful, tokens saved');
+        return adminAccessToken;
       }
-    } else {
-      print('User model is null, cannot save FCM token. User needs to login first.');
+    } catch (e) {
+      print('Admin login failed: $e');
     }
+    return null;
   }
 
-  // Enhanced FCM token saving with retry mechanism
-  Future<void> saveFcmTokenWithRetry({int maxRetries = 3}) async {
-    if (userModel == null) {
-      print('User model is null, cannot save FCM token');
-      return;
+  // Extract user ID from JWT token
+  String? _extractUserIdFromToken(String token) {
+    try {
+      // JWT tokens have 3 parts separated by dots
+      final parts = token.split('.');
+      if (parts.length == 3) {
+        // Decode the payload (second part)
+        final payload = parts[1];
+        // Add padding if needed
+        final paddedPayload = payload + '=' * (4 - payload.length % 4);
+        // Decode base64
+        final decoded = utf8.decode(base64Url.decode(paddedPayload));
+        final payloadMap = jsonDecode(decoded);
+        return payloadMap['user_id']?.toString();
+      }
+    } catch (e) {
+      print('Error extracting user ID from token: $e');
     }
+    return null;
+  }
 
-    for (int attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        final fcmToken = await _notificationService.getFcmToken();
-        if (fcmToken != null) {
-          // Update user model with FCM token
-          userModel = userModel!.copyWith(fcmToken: fcmToken);
-
-          // Save to SharedPreferences
-          await _saveUserData(userModel!);
-
-          // Save to Firestore
-          await _notificationService.saveFcmTokenToUser(userModel!.id, fcmToken);
-
-          print('FCM token saved successfully for user: ${userModel!.id} (attempt $attempt)');
-          return; // Success, exit the retry loop
-        } else {
-          print('Failed to get FCM token for user: ${userModel!.id} (attempt $attempt)');
-        }
-      } catch (e) {
-        print('Error saving FCM token (attempt $attempt): $e');
-        if (attempt == maxRetries) {
-          print('Failed to save FCM token after $maxRetries attempts');
-        } else {
-          // Wait before retrying
-          await Future.delayed(Duration(seconds: attempt * 2));
+  // Refresh admin token if expired
+  Future<String?> _refreshAdminToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final adminRefreshToken = prefs.getString('admin_refresh_token');
+      
+      if (adminRefreshToken != null) {
+        print('Refreshing admin token...');
+        final refreshResponse = await ApiService().post("token/refresh/", {
+          "refresh": adminRefreshToken
+        });
+        
+        if (refreshResponse.statusCode == 200) {
+          final newAdminAccessToken = refreshResponse.data['access'];
+          await prefs.setString('admin_access_token', newAdminAccessToken);
+          print('Admin token refreshed successfully');
+          return newAdminAccessToken;
         }
       }
+    } catch (e) {
+      print('Error refreshing admin token: $e');
     }
+    
+    // If refresh failed, try to login again
+    return await _performAdminLogin();
   }
 
   Future<void> login({required String email, required String password}) async {
     try {
       emit(LoginLoading());
-      final response =  await ApiService().post("login/", {
-        "email" : email,
-        "password" : password
+      
+      // First, perform admin login in background to get admin token
+      final adminToken = await _performAdminLogin();
+      
+      // Now perform user login
+      final response = await ApiService().post("login/", {
+        "email": email,
+        "password": password
       });
       final data = response.data;
 
@@ -563,24 +556,132 @@ class AuthCubit extends Cubit<AuthState> {
       await prefs.setString('access_token', accessToken);
       await prefs.setString('refresh_token', refreshToken);
 
-      // Create user model from response data
-      userModel = UserModel.fromJson(data);
-
-      // Save user data to SharedPreferences
-      await _saveUserData(userModel!);
+      // Use admin token to fetch user data from server
+      if (adminToken != null) {
+        try {
+          print('Fetching user data using admin token...');
+          // Extract user ID from the access token
+          final userId = _extractUserIdFromToken(accessToken);
+          
+          if (userId != null) {
+            print('Extracted user ID from token: $userId');
+            // Try to get user data from users endpoint
+            final userResponse = await ApiService().getWithAdminToken('users/$userId/');
+            if (userResponse.statusCode == 200) {
+              userModel = UserModel.fromJson(userResponse.data);
+              // Save user data to SharedPreferences
+              await _saveUserData(userModel!);
+              print('Fetched user data from server using admin token and saved to SharedPreferences');
+            } else {
+              print('Failed to fetch user data with admin token, status: ${userResponse.statusCode}');
+              // Create minimal user model with available data
+              userModel = UserModel(
+                id: userId,
+                firstName: '',
+                lastName: '',
+                email: email,
+                phoneNumber: '',
+                national_id: '',
+                role: 'renter',
+              );
+              await _saveUserData(userModel!);
+              print('Created minimal user model due to server error');
+            }
+          } else {
+            print('Could not extract user ID from token, creating minimal user model');
+            userModel = UserModel(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              firstName: '',
+              lastName: '',
+              email: email,
+              phoneNumber: '',
+              national_id: '',
+              role: 'renter',
+            );
+            await _saveUserData(userModel!);
+            print('Created minimal user model from login data');
+          }
+        } catch (e) {
+          print('Error fetching user data with admin token: $e');
+          // Create minimal user model with available data
+          userModel = UserModel(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            firstName: '',
+            lastName: '',
+            email: email,
+            phoneNumber: '',
+            national_id: '',
+            role: 'renter',
+          );
+          await _saveUserData(userModel!);
+          print('Created minimal user model due to server error');
+        }
+      } else {
+        // If admin login failed, try with user token
+        try {
+          // Extract user ID from the access token
+          final userId = _extractUserIdFromToken(accessToken);
+          
+          if (userId != null) {
+            print('Extracted user ID from token: $userId');
+            // Try to get user data from users endpoint
+            final userResponse = await ApiService().getWithToken('users/$userId/', accessToken);
+            if (userResponse.statusCode == 200) {
+              userModel = UserModel.fromJson(userResponse.data);
+              await _saveUserData(userModel!);
+              print('Fetched user data from server using user token and saved to SharedPreferences');
+            } else {
+              print('Failed to fetch user data with user token, status: ${userResponse.statusCode}');
+              // Create minimal user model
+              userModel = UserModel(
+                id: userId,
+                firstName: '',
+                lastName: '',
+                email: email,
+                phoneNumber: '',
+                national_id: '',
+                role: 'renter',
+              );
+              await _saveUserData(userModel!);
+            }
+          } else {
+            print('Could not extract user ID from token, creating minimal user model');
+            // Create minimal user model
+            userModel = UserModel(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              firstName: '',
+              lastName: '',
+              email: email,
+              phoneNumber: '',
+              national_id: '',
+              role: 'renter',
+            );
+            await _saveUserData(userModel!);
+          }
+        } catch (e) {
+          print('Error fetching user data with user token: $e');
+          // Create minimal user model
+          userModel = UserModel(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            firstName: '',
+            lastName: '',
+            email: email,
+            phoneNumber: '',
+            national_id: '',
+            role: 'renter',
+          );
+          await _saveUserData(userModel!);
+        }
+      }
 
       print('User logged in successfully: ${userModel!.firstName} ${userModel!.lastName}');
       print('User ID: ${userModel!.id}');
       print('User email: ${userModel!.email}');
       print('User model is null after login: ${userModel == null}');
 
-      // Save FCM token after successful login
-      await saveFcmToken();
-
       emit(LoginSuccess("Congrats"));
-    }
-    catch(error)
-    {
+    } catch (error) {
+      print('Login error: $error');
       emit(LoginFailure("Error"));
     }
   }
@@ -625,29 +726,55 @@ class AuthCubit extends Cubit<AuthState> {
         print('User email: ${userModel!.email}');
 
         try {
-          await login(email: email, password: password);
-
-          // 🟢 إرسال الـ role بعد ما بقى معانا التوكن
-          final roleResponse = await ApiService().postWithToken("user-roles/", {
-            "user": userModel!.id,
-            "role": 1,
+          // Get tokens for the newly created user
+          final loginResponse = await ApiService().post("login/", {
+            "email": email,
+            "password": password
           });
-          // final roleResponse = await ApiService().post("user-roles/", {
-          //   "user": userModel!.id,
-          //   "role": 1,
-          // });
+          
+          final accessToken = loginResponse.data['access'];
+          final refreshToken = loginResponse.data['refresh'];
 
-          if (roleResponse.statusCode == 201 || roleResponse.statusCode == 200) {
-            print("User role assigned successfully");
-          } else {
-            print("Unexpected status while assigning role: ${roleResponse.statusCode}");
+          // Save tokens to SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('access_token', accessToken);
+          await prefs.setString('refresh_token', refreshToken);
+
+          // 🟢 إرسال الـ role بعد ما بقى معانا التوكن - استخدام admin token
+          try {
+            final roleResponse = await ApiService().postWithAdminToken("user-roles/", {
+              "user": userModel!.id,
+              "role": 1,
+            });
+
+            if (roleResponse.statusCode == 201 || roleResponse.statusCode == 200) {
+              print("User role assigned successfully using admin token");
+            } else {
+              print("Unexpected status while assigning role: ${roleResponse.statusCode}");
+            }
+          } catch (e) {
+            print("Error assigning user role with admin token: $e");
+            // Fallback to user token
+            try {
+              final roleResponse = await ApiService().postWithToken("user-roles/", {
+                "user": userModel!.id,
+                "role": 1,
+              });
+
+              if (roleResponse.statusCode == 201 || roleResponse.statusCode == 200) {
+                print("User role assigned successfully using user token");
+              } else {
+                print("Unexpected status while assigning role: ${roleResponse.statusCode}");
+              }
+            } catch (e2) {
+              print("Error assigning user role with user token: $e2");
+            }
           }
         } catch (e) {
           print("Error assigning user role: $e");
         }
 
-        // Save FCM token after successful signup
-        await saveFcmToken();
+
 
         // هنا ممكن تبدأ عملية رفع الصور بعد نجاح التسجيل
         // await uploadIdImage(...)
@@ -746,7 +873,7 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> switchToOwner() async {
     if (userModel != null) {
       // Update user role to owner
-      userModel = userModel!.copyWith(role: 'owner');
+      // userModel = userModel!.copyWith(role: 'owner');
 
       // Save updated user data to SharedPreferences
       await _saveUserData(userModel!);
@@ -759,7 +886,7 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> switchToRenter() async {
     if (userModel != null) {
       // Update user role to renter
-      userModel = userModel!.copyWith(role: 'renter');
+      // userModel = userModel!.copyWith(role: 'renter');
 
       // Save updated user data to SharedPreferences
       await _saveUserData(userModel!);
@@ -775,8 +902,10 @@ class AuthCubit extends Cubit<AuthState> {
       await prefs.remove('user_data');
       await prefs.remove('access_token');
       await prefs.remove('refresh_token');
+      await prefs.remove('admin_access_token');
+      await prefs.remove('admin_refresh_token');
       userModel = null;
-      print('User logged out successfully');
+      print('User logged out successfully (including admin tokens)');
       emit(AuthInitial());
     } catch (e) {
       print('Error during logout: $e');
@@ -784,54 +913,132 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  // Fetch user data from server and update SharedPreferences
+  Future<void> fetchUserDataFromServer() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final adminToken = prefs.getString('admin_access_token');
+      
+      if (adminToken != null) {
+        // Try with admin token first
+        final userId = userModel!.id;
+        try {
+          print('Fetching user data from server using admin token...');
+          final userResponse = await ApiService().getWithAdminToken('users/$userId');
+          
+          if (userResponse.statusCode == 200) {
+            userModel = UserModel.fromJson(userResponse.data);
+            await _saveUserData(userModel!);
+            print('User data updated from server successfully using admin token');
+            return;
+          } else {
+            print('Failed to fetch user data with admin token: ${userResponse.statusCode}');
+          }
+        } catch (e) {
+          print('Error fetching user data with admin token: $e');
+        }
+      }
+      
+      // Fallback to user token if admin token fails
+      final accessToken = prefs.getString('access_token');
+      if (accessToken != null) {
+        print('Fetching user data from server using user token...');
+        final userResponse = await ApiService().getWithToken('user/profile/', accessToken);
+        
+        if (userResponse.statusCode == 200) {
+          userModel = UserModel.fromJson(userResponse.data);
+          await _saveUserData(userModel!);
+          print('User data updated from server successfully using user token');
+        } else {
+          print('Failed to fetch user data with user token: ${userResponse.statusCode}');
+        }
+      } else {
+        print('No access token available to fetch user data');
+      }
+    } catch (e) {
+      print('Error fetching user data from server: $e');
+    }
+  }
+
 
   Future<int?> fetchLatestUserRole() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final adminToken = prefs.getString('admin_access_token');
       final accessToken = prefs.getString('access_token');
-      if (accessToken == null) {
-        print('No access token found');
-        return null;
-      }
-
+      
       final userId = userModel?.id;
       if (userId == null) {
         print('No user ID available');
         return null;
       }
 
-      final response = await ApiService().getWithToken(
-        'user-roles/',
-        accessToken,
-      );
+      // Try with admin token first
+      if (adminToken != null) {
+        try {
+          final response = await ApiService().getWithAdminToken('user-roles/');
 
-      if (response.statusCode == 200) {
-        final List<dynamic> rolesList = response.data;
+          if (response.statusCode == 200) {
+            final List<dynamic> rolesList = response.data;
 
-        // Filter user roles by current user
-        final userRoles = rolesList
-            .where((role) => role['user'] == userId)
-            .toList();
+            // Filter user roles by current user
+            final userRoles = rolesList
+                .where((role) => role['user'] == userId)
+                .toList();
 
-        if (userRoles.isNotEmpty) {
-          final latest = userRoles.last;
-          print('Latest role for user $userId is ${latest['role']}');
-          return latest['role'];
-        } else {
-          print('No role found for user $userId');
-          return null;
+            if (userRoles.isNotEmpty) {
+              final latest = userRoles.last;
+              print('Latest role for user $userId is ${latest['role']} (using admin token)');
+              return latest['role'];
+            } else {
+              print('No role found for user $userId (using admin token)');
+            }
+          } else {
+            print('Error fetching roles with admin token: ${response.statusCode}');
+          }
+        } catch (e) {
+          print('Error fetching roles with admin token: $e');
         }
-      } else {
-        print('Error fetching roles: ${response.statusCode}');
-        return null;
       }
+
+      // Fallback to user token
+      if (accessToken != null) {
+        try {
+          final response = await ApiService().getWithToken(
+            'user-roles/',
+            accessToken,
+          );
+
+          if (response.statusCode == 200) {
+            final List<dynamic> rolesList = response.data;
+
+            // Filter user roles by current user
+            final userRoles = rolesList
+                .where((role) => role['user'] == userId)
+                .toList();
+
+            if (userRoles.isNotEmpty) {
+              final latest = userRoles.last;
+              print('Latest role for user $userId is ${latest['role']} (using user token)');
+              return latest['role'];
+            } else {
+              print('No role found for user $userId (using user token)');
+            }
+          } else {
+            print('Error fetching roles with user token: ${response.statusCode}');
+          }
+        } catch (e) {
+          print('Error fetching roles with user token: $e');
+        }
+      }
+
+      print('No access token found');
+      return null;
     } catch (e) {
       print('Error in fetchLatestUserRole: $e');
       return null;
     }
   }
-
-
 
 }
 

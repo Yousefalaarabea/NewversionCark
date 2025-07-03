@@ -4,9 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../config/routes/screens_name.dart';
 import '../../../../../config/themes/app_colors.dart';
-import '../../../../../core/services/notification_service.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../../auth/presentation/models/user_model.dart';
+import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 
 class OwnerTripRequestScreen extends StatefulWidget {
   final String bookingRequestId;
@@ -82,11 +82,14 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
       final carModel = widget.bookingData['carModel'] as String? ?? '';
 
       if (renterId != null) {
-        await NotificationService().sendBookingAcceptanceNotification(
-          renterId: renterId,
-          ownerName: '${currentUser.firstName} ${currentUser.lastName}',
+        // Send in-app notification to renter
+        context.read<NotificationCubit>().sendBookingNotification(
+          renterName: 'You',
           carBrand: carBrand,
           carModel: carModel,
+          ownerId: currentUser.id.toString(),
+          renterId: renterId,
+          type: 'booking_accepted',
         );
       }
 
@@ -138,13 +141,14 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
 
       final renterId = widget.bookingData['renterId'] as String?;
       if (renterId != null) {
-        await NotificationService().sendNotificationToUser(
-          userId: renterId,
-          title: 'Booking Request Declined',
-          body: 'Your booking request has been declined by the car owner.',
-          type: 'renter',
-          notificationType: 'booking_declined',
-          bookingData: widget.bookingData,
+        // Send in-app notification to renter
+        context.read<NotificationCubit>().sendBookingNotification(
+          renterName: 'You',
+          carBrand: widget.bookingData['carBrand'] as String? ?? '',
+          carModel: widget.bookingData['carModel'] as String? ?? '',
+          ownerId: '',
+          renterId: renterId,
+          type: 'booking_declined',
         );
       }
 

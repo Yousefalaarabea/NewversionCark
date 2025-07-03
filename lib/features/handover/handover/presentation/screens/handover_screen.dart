@@ -4,8 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../../config/routes/screens_name.dart';
 import '../../../../../config/themes/app_colors.dart';
-import '../../../../../core/services/notification_service.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 import '../cubits/contract_upload_cubit.dart';
 import '../cubits/handover_cubit.dart';
 import '../widgets/contract_upload_widget.dart';
@@ -430,12 +430,12 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
         final ownerName = '${currentUser.firstName} ${currentUser.lastName}';
 
         if (renterId != null) {
-          // Send notification to renter that owner has completed handover
-          await NotificationService().sendOwnerHandoverCompletedNotification(
-            renterId: renterId,
-            ownerName: ownerName,
+          // Send in-app notification to renter that owner has completed handover
+          context.read<NotificationCubit>().sendHandoverNotification(
             carBrand: carBrand,
             carModel: carModel,
+            type: 'handover_started',
+            userName: ownerName,
           );
 
           // Update booking status to 'owner_handover_completed'

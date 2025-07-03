@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../config/routes/screens_name.dart';
-import '../../../../../core/services/notification_service.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 import '../cubits/renter_handover_cubit.dart';
 
 class RenterHandoverScreen extends StatefulWidget {
@@ -283,12 +283,19 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
         final renterName = '${currentUser.firstName} ${currentUser.lastName}';
 
         if (ownerId != null) {
-          // Send notification to owner that renter has completed handover
-          await NotificationService().sendRenterHandoverCompletedNotification(
-            ownerId: ownerId,
-            renterName: renterName,
+          // Send in-app notification to owner that renter has completed handover
+          context.read<NotificationCubit>().sendHandoverNotification(
             carBrand: carBrand,
             carModel: carModel,
+            type: 'handover_completed',
+            userName: renterName,
+          );
+
+          // Send trip started notification
+          context.read<NotificationCubit>().sendTripNotification(
+            carBrand: carBrand,
+            carModel: carModel,
+            type: 'trip_started',
           );
 
           // Update booking status to 'trip_started'

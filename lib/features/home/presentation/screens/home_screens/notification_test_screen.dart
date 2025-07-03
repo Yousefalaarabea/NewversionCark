@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../../core/services/notification_service.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 
 class NotificationTestScreen extends StatelessWidget {
   const NotificationTestScreen({super.key});
@@ -19,19 +19,24 @@ class NotificationTestScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Test Notification System',
+              'Test In-App Notification System',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
 
             // Test new car notification
             ElevatedButton(
-              onPressed: () async {
+              onPressed: () {
                 try {
-                  await NotificationService().sendNewCarNotification(
-                    carBrand: 'Tesla',
-                    carModel: 'Model S',
-                    ownerName: 'John Doe',
+                  context.read<NotificationCubit>().addNotification(
+                    title: 'New Car Added',
+                    message: 'John Doe has added a new Tesla Model S to the platform',
+                    type: 'car_added',
+                    data: {
+                      'carBrand': 'Tesla',
+                      'carModel': 'Model S',
+                      'ownerName': 'John Doe',
+                    },
                   );
                   _showSnackBar(context, 'New car notification sent!', false);
                 } catch (e) {
@@ -50,7 +55,7 @@ class NotificationTestScreen extends StatelessWidget {
 
             // Test car booked notification
             ElevatedButton(
-              onPressed: () async {
+              onPressed: () {
                 try {
                   final authCubit = context.read<AuthCubit>();
                   final currentUser = authCubit.userModel;
@@ -60,11 +65,13 @@ class NotificationTestScreen extends StatelessWidget {
                     return;
                   }
 
-                  await NotificationService().sendCarBookedNotification(
-                    ownerId: currentUser.id,
+                  context.read<NotificationCubit>().sendBookingNotification(
                     renterName: 'Test Renter',
                     carBrand: 'BMW',
                     carModel: 'X5',
+                    ownerId: currentUser.id.toString(),
+                    renterId: 'renter123',
+                    type: 'booking_request',
                   );
                   _showSnackBar(
                       context, 'Car booked notification sent!', false);
@@ -82,30 +89,123 @@ class NotificationTestScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Test booking notifications
+            // Test payment notification
             ElevatedButton(
-              onPressed: () async {
+              onPressed: () {
                 try {
-                  final authCubit = context.read<AuthCubit>();
-                  final currentUser = authCubit.userModel;
-
-                  if (currentUser == null) {
-                    _showSnackBar(context, 'No user logged in', true);
-                    return;
-                  }
-
-                  await NotificationService().sendBookingNotifications(
-                    renterId: currentUser.id,
-                    ownerId: 'owner123',
-                    carName: 'Toyota Camry',
+                  context.read<NotificationCubit>().sendPaymentNotification(
+                    amount: '500.00',
+                    carBrand: 'Toyota',
+                    carModel: 'Camry',
+                    type: 'deposit_paid',
                   );
-                  _showSnackBar(context, 'Booking notifications sent!', false);
+                  _showSnackBar(context, 'Payment notification sent!', false);
                 } catch (e) {
                   _showSnackBar(context, 'Error: $e', true);
                 }
               },
               child: Text(
-                'Test Booking Notifications',
+                'Test Payment Notification',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Test handover notification
+            ElevatedButton(
+              onPressed: () {
+                try {
+                  context.read<NotificationCubit>().sendHandoverNotification(
+                    carBrand: 'Mercedes',
+                    carModel: 'C-Class',
+                    type: 'handover_started',
+                    userName: 'Jane Smith',
+                  );
+                  _showSnackBar(context, 'Handover notification sent!', false);
+                } catch (e) {
+                  _showSnackBar(context, 'Error: $e', true);
+                }
+              },
+              child: Text(
+                'Test Handover Notification',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Test trip notification
+            ElevatedButton(
+              onPressed: () {
+                try {
+                  context.read<NotificationCubit>().sendTripNotification(
+                    carBrand: 'Audi',
+                    carModel: 'A4',
+                    type: 'trip_started',
+                  );
+                  _showSnackBar(context, 'Trip notification sent!', false);
+                } catch (e) {
+                  _showSnackBar(context, 'Error: $e', true);
+                }
+              },
+              child: Text(
+                'Test Trip Notification',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Test multiple notifications
+            ElevatedButton(
+              onPressed: () {
+                try {
+                  final cubit = context.read<NotificationCubit>();
+                  
+                  // Send multiple test notifications
+                  cubit.sendBookingNotification(
+                    renterName: 'John Doe',
+                    carBrand: 'BMW',
+                    carModel: 'X5',
+                    ownerId: 'owner123',
+                    renterId: 'renter456',
+                    type: 'booking_request',
+                  );
+                  
+                  cubit.sendPaymentNotification(
+                    amount: '750.00',
+                    carBrand: 'BMW',
+                    carModel: 'X5',
+                    type: 'payment_completed',
+                  );
+                  
+                  cubit.sendHandoverNotification(
+                    carBrand: 'BMW',
+                    carModel: 'X5',
+                    type: 'handover_completed',
+                    userName: 'John Doe',
+                  );
+                  
+                  cubit.sendTripNotification(
+                    carBrand: 'BMW',
+                    carModel: 'X5',
+                    type: 'trip_completed',
+                  );
+                  
+                  _showSnackBar(context, 'Multiple notifications sent!', false);
+                } catch (e) {
+                  _showSnackBar(context, 'Error: $e', true);
+                }
+              },
+              child: Text(
+                'Test Multiple Notifications',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary,
                 ),
@@ -134,9 +234,33 @@ class NotificationTestScreen extends StatelessWidget {
                     Text('Email: ${user.email}'),
                     Text('Role: ${user.role}'),
                     Text('ID: ${user.id}'),
-                    Text('FCM Token: ${user.fcmToken ?? 'Not set'}'),
                   ],
                 );
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Notification Stats:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
+            BlocBuilder<NotificationCubit, NotificationState>(
+              builder: (context, state) {
+                if (state is NotificationLoaded) {
+                  final unreadCount = context.read<NotificationCubit>().unreadCount;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Total Notifications: ${state.notifications.length}'),
+                      Text('Unread Notifications: $unreadCount'),
+                      Text('Read Notifications: ${state.notifications.length - unreadCount}'),
+                    ],
+                  );
+                }
+                return const Text('Loading notification stats...');
               },
             ),
           ],

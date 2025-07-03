@@ -9,9 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/themes/app_colors.dart';
 import '../../../../core/utils/assets_manager.dart';
 import '../../../../core/utils/text_manager.dart';
-import '../../../../core/services/notification_service.dart';
 import 'package:test_cark/features/home/presentation/model/car_model.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../notifications/presentation/cubits/notification_cubit.dart';
 import '../widgets/add_car_form.dart';
 import '../cubits/add_car_cubit.dart';
 import '../cubits/add_car_state.dart';
@@ -427,10 +427,16 @@ class _AddCarScreenState extends State<AddCarScreen> with SingleTickerProviderSt
 
                               if (authCubit.userModel != null) {
                                 final ownerName = '${authCubit.userModel!.firstName} ${authCubit.userModel!.lastName}';
-                                await NotificationService().sendNewCarNotification(
-                                  carBrand: car.brand,
-                                  carModel: car.model,
-                                  ownerName: ownerName,
+                                // Send in-app notification for new car
+                                context.read<NotificationCubit>().addNotification(
+                                  title: 'New Car Added',
+                                  message: '$ownerName has added a new ${car.brand} ${car.model} to the platform',
+                                  type: 'car_added',
+                                  data: {
+                                    'carBrand': car.brand,
+                                    'carModel': car.model,
+                                    'ownerName': ownerName,
+                                  },
                                 );
                               }
                             }

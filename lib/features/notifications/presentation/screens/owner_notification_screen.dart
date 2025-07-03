@@ -2,489 +2,360 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_cark/config/routes/screens_name.dart';
-import 'package:test_cark/core/services/notification_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../cubits/notification_cubit.dart';
 
 class OwnerNotificationScreen extends StatelessWidget {
   const OwnerNotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AuthCubit>().userModel;
-    final userId = user?.id ?? '1';
-    print('###################################Current userId for Notification Screen: $userId'); //
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: const Text('Owner Notifications'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
         actions: [
-          IconButton(
-            onPressed: () {
-              // Navigate to OwnerOngoingTripScreen for testing
-              Navigator.pushNamed(
-                context,
-                ScreensName.ownerOngoingTripScreen,
-                arguments: {
-                  'tripId': 'trip_123',
-                  'carId': '1',
-                  'renterId': 'renter_456',
-                },
-              );
+          BlocBuilder<NotificationCubit, NotificationState>(
+            builder: (context, state) {
+              if (state is NotificationLoaded && state.notifications.isNotEmpty) {
+                return PopupMenuButton<String>(
+                  onSelected: (value) {
+                    final cubit = context.read<NotificationCubit>();
+                    switch (value) {
+                      case 'mark_all_read':
+                        cubit.markAllAsRead();
+                        break;
+                      case 'clear_all':
+                        cubit.clearAllNotifications();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'mark_all_read',
+                      child: Row(
+                        children: [
+                          Icon(Icons.mark_email_read),
+                          SizedBox(width: 8),
+                          Text('Mark all as read'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'clear_all',
+                      child: Row(
+                        children: [
+                          Icon(Icons.clear_all),
+                          SizedBox(width: 8),
+                          Text('Clear all'),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
             },
-            icon: const Icon(Icons.directions_car),
-            tooltip: 'View Ongoing Trip',
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('notifications')
-            .where('userId', isEqualTo: userId)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline,
-                      size: 64, color: Colors.grey.shade400),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading notifications',
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Please try again later',
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (!snapshot.hasData) {
+      body: BlocConsumer<NotificationCubit, NotificationState>(
+        builder: (context, state) {
+          if (state is NotificationLoading) {
             return const Center(child: CircularProgressIndicator());
-          }
-
-          final docs = snapshot.data!.docs;
-
-          if (docs.isEmpty) {
+          } else if (state is NotificationError) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'No notifications yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'You\'ll see notifications here when you have updates',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    state.message,
+                    style: TextStyle(color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<NotificationCubit>().getAllNotifications(),
+                    child: const Text('Retry'),
+                  ),
                 ],
               ),
             );
-          }
-
-          return ListView.builder(
-            padding: EdgeInsets.all(16.r),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
-              final timestamp = data['timestamp'] as Timestamp?;
-              final date = timestamp?.toDate();
-              final isRead = data['read'] ?? false;
-              final notificationType = data['type'] ?? 'general';
-              final notificationTypeSpecific = data['notification_type'] ?? '';
-
-              String formattedTime = '';
-              if (date != null) {
-                final now = DateTime.now();
-                final difference = now.difference(date);
-
-                if (difference.inDays > 0) {
-                  formattedTime = '${difference.inDays}d ago';
-                } else if (difference.inHours > 0) {
-                  formattedTime = '${difference.inHours}h ago';
-                } else if (difference.inMinutes > 0) {
-                  formattedTime = '${difference.inMinutes}m ago';
-                } else {
-                  formattedTime = 'Just now';
-                }
-              }
-
-              // Choose icon based on notification type
-              IconData notificationIcon;
-              Color iconColor;
-
-              switch (notificationType) {
-                case 'booking':
-                  notificationIcon = Icons.calendar_today;
-                  iconColor = Colors.blue;
-                  break;
-                case 'payment':
-                  notificationIcon = Icons.payment;
-                  iconColor = Colors.green;
-                  break;
-                case 'car':
-                  notificationIcon = Icons.directions_car;
-                  iconColor = Colors.orange;
-                  break;
-                default:
-                  notificationIcon = Icons.notifications;
-                  iconColor = Colors.grey;
-              }
-
-              return Card(
-                margin: EdgeInsets.only(bottom: 12.h),
-                color: isRead ? Colors.grey.shade50 : Colors.white,
+          } else if (state is NotificationLoaded) {
+            if (state.notifications.isEmpty) {
+              return Center(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: isRead ? Colors.grey.shade300 : iconColor,
-                        child: Icon(
-                          notificationIcon,
-                          color: isRead ? Colors.grey.shade600 : Colors.white,
-                        ),
+                    Icon(Icons.notifications_none,
+                        size: 64, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No notifications yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
                       ),
-                      title: Text(
-                        data['title'] ?? '',
-                        style: TextStyle(
-                          fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(data['body'] ?? ''),
-                          SizedBox(height: 4.h),
-                          Text(
-                            formattedTime,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        // Mark as read
-                        FirebaseFirestore.instance
-                            .collection('notifications')
-                            .doc(docs[index].id)
-                            .update({'read': true});
-
-                        // Navigate to trip request screen for booking requests
-                        if (notificationType == 'owner' &&
-                            notificationTypeSpecific == 'car_booked') {
-                          final bookingData = data['booking_data'] as Map<String, dynamic>?;
-                          if (bookingData != null) {
-                            _navigateToTripRequest(context, docs[index].id, bookingData);
-                          }
-                        }
-                      },
                     ),
-                    // Show action buttons for booking requests
-                    if (notificationType == 'owner' &&
-                        notificationTypeSpecific == 'car_booked' &&
-                        !isRead)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () => _acceptBookingRequest(context, data, docs[index].id),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: const Text('Accept'),
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () => _declineBookingRequest(context, data, docs[index].id),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: const Text('Decline'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    // Show action button for handover notifications
-                    if (notificationType == 'owner' &&
-                        notificationTypeSpecific == 'handover_ready' &&
-                        !isRead)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => _navigateToHandover(context, docs[index].id),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Proceed to Handover'),
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'You\'ll see notifications here when you have updates',
+                      style: TextStyle(color: Colors.grey[500]),
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               );
-            },
-          );
+            }
+
+            return ListView.builder(
+              padding: EdgeInsets.all(16.r),
+              itemCount: state.notifications.length,
+              itemBuilder: (context, index) {
+                final notification = state.notifications[index];
+                return _buildNotificationCard(context, notification);
+              },
+            );
+          }
+          return const SizedBox.shrink();
+        },
+        listener: (BuildContext context, NotificationState state) {
+          // Handle any side effects here if needed
         },
       ),
     );
   }
 
-  Future<void> _acceptBookingRequest(BuildContext context, Map<String, dynamic> data, String notificationId) async {
-    try {
-      // Extract booking data from the notification
-      final bookingData = data['booking_data'] as Map<String, dynamic>?;
-      if (bookingData == null) {
-        throw Exception('Booking data not found in notification');
-      }
-
-      final renterId = bookingData['renterId'] as String?;
-      final renterName = bookingData['renterName'] as String? ?? 'A renter';
-      final carBrand = bookingData['carBrand'] as String? ?? '';
-      final carModel = bookingData['carModel'] as String? ?? '';
-      final carId = bookingData['carId'] as String?;
-      final totalPrice = bookingData['totalPrice'] as double? ?? 0.0;
-
-      // Get current user (owner)
-      final authCubit = context.read<AuthCubit>();
-      final currentUser = authCubit.userModel;
-
-      if (currentUser == null) {
-        throw Exception('User not found');
-      }
-
-      if (renterId == null) {
-        throw Exception('Renter ID not found in booking data');
-      }
-
-      // Update booking request status in Firestore
-      final bookingRequestsQuery = await FirebaseFirestore.instance
-          .collection('booking_requests')
-          .where('renterId', isEqualTo: renterId)
-          .where('carId', isEqualTo: carId)
-          .where('status', isEqualTo: 'pending')
-          .get();
-
-      if (bookingRequestsQuery.docs.isNotEmpty) {
-        final bookingRequestId = bookingRequestsQuery.docs.first.id;
-        await FirebaseFirestore.instance
-            .collection('booking_requests')
-            .doc(bookingRequestId)
-            .update({
-          'status': 'accepted',
-          'acceptedAt': DateTime.now().toIso8601String(),
-          'ownerId': currentUser.id,
-        });
-      }
-
-      // Send acceptance notification to renter
-      await NotificationService().sendBookingAcceptanceNotification(
-        renterId: renterId,
-        ownerName: '${currentUser.firstName} ${currentUser.lastName}',
-        carBrand: carBrand,
-        carModel: carModel,
-      );
-
-      // Mark notification as read and update status
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .doc(notificationId)
-          .update({
-        'read': true,
-        'status': 'accepted',
-      });
-
-      // Show success message
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Booking request accepted! Notification sent to $renterName.'),
-            backgroundColor: Colors.green,
+  Widget _buildNotificationCard(BuildContext context, AppNotification notification) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: InkWell(
+        onTap: () {
+          // Mark as read when tapped
+          context.read<NotificationCubit>().markAsRead(notification.id);
+          
+          // Handle navigation based on notification type
+          _handleNotificationTap(context, notification);
+        },
+        borderRadius: BorderRadius.circular(12.r),
+        child: ListTile(
+          contentPadding: EdgeInsets.all(16.r),
+          leading: Container(
+            width: 48.w,
+            height: 48.h,
+            decoration: BoxDecoration(
+              color: notification.isRead
+                  ? Colors.grey[200]
+                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+            child: Icon(
+              _getNotificationIcon(notification.type),
+              color: notification.isRead
+                  ? Colors.grey[600]
+                  : Theme.of(context).colorScheme.primary,
+              size: 24.sp,
+            ),
           ),
-        );
-      }
-    } catch (e) {
-      print('Error accepting booking request: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error accepting booking request: $e'),
-            backgroundColor: Colors.red,
+          title: Text(
+            notification.title,
+            style: TextStyle(
+              fontWeight: notification.isRead
+                  ? FontWeight.normal
+                  : FontWeight.bold,
+              color: notification.isRead
+                  ? Colors.grey[700]
+                  : Colors.black,
+            ),
           ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 4.h),
+              Text(
+                notification.message,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14.sp,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    size: 12.sp,
+                    color: Colors.grey[500],
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    _formatTimestamp(notification.date),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: _getTypeColor(notification.type).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      _getTypeDisplayName(notification.type).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w600,
+                        color: _getTypeColor(notification.type),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleNotificationTap(BuildContext context, AppNotification notification) {
+    // Handle navigation based on notification type and data
+    switch (notification.type) {
+      case 'booking_request':
+        // Navigate to booking request screen
+        Navigator.pushNamed(
+          context,
+          ScreensName.ownerTripRequestScreen,
+          arguments: notification.data,
         );
-      }
+        break;
+      case 'deposit_paid':
+      case 'handover_started':
+        // Navigate to handover screen
+        Navigator.pushNamed(
+          context,
+          ScreensName.handoverScreen,
+          arguments: notification.data,
+        );
+        break;
+      case 'handover_completed':
+      case 'trip_started':
+        // Navigate to ongoing trip screen
+        Navigator.pushNamed(
+          context,
+          ScreensName.ownerOngoingTripScreen,
+          arguments: notification.data,
+        );
+        break;
+      default:
+        // Default behavior - just mark as read
+        break;
     }
   }
 
-  Future<void> _declineBookingRequest(BuildContext context, Map<String, dynamic> data, String notificationId) async {
-    try {
-      // Extract booking data from the notification
-      final bookingData = data['booking_data'] as Map<String, dynamic>?;
-      if (bookingData != null) {
-        final renterId = bookingData['renterId'] as String?;
-        final carId = bookingData['carId'] as String?;
-
-        if (renterId != null && carId != null) {
-          // Update booking request status in Firestore
-          final bookingRequestsQuery = await FirebaseFirestore.instance
-              .collection('booking_requests')
-              .where('renterId', isEqualTo: renterId)
-              .where('carId', isEqualTo: carId)
-              .where('status', isEqualTo: 'pending')
-              .get();
-
-          if (bookingRequestsQuery.docs.isNotEmpty) {
-            final bookingRequestId = bookingRequestsQuery.docs.first.id;
-            await FirebaseFirestore.instance
-                .collection('booking_requests')
-                .doc(bookingRequestId)
-                .update({
-              'status': 'declined',
-              'declinedAt': DateTime.now().toIso8601String(),
-            });
-          }
-
-          // Send decline notification to renter
-          await NotificationService().sendNotificationToUser(
-            userId: renterId,
-            title: 'Booking Request Declined',
-            body: 'Your booking request has been declined by the car owner.',
-            type: 'renter',
-            notificationType: 'booking_declined',
-            bookingData: bookingData,
-          );
-        }
-      }
-
-      // Mark notification as read and update status
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .doc(notificationId)
-          .update({
-        'read': true,
-        'status': 'declined',
-      });
-
-      // Show success message
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking request declined.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    } catch (e) {
-      print('Error declining booking request: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error declining booking request: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+  IconData _getNotificationIcon(String type) {
+    switch (type) {
+      case 'booking_request':
+      case 'booking_accepted':
+      case 'booking_declined':
+        return Icons.car_rental;
+      case 'deposit_paid':
+      case 'payment_completed':
+      case 'refund_processed':
+        return Icons.payment;
+      case 'handover_started':
+      case 'handover_completed':
+      case 'handover_cancelled':
+        return Icons.swap_horiz;
+      case 'trip_started':
+      case 'trip_completed':
+      case 'trip_cancelled':
+        return Icons.directions_car;
+      default:
+        return Icons.notifications;
     }
   }
 
-  Future<void> _navigateToHandover(BuildContext context, String notificationId) async {
-    try {
-      // Mark notification as read
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .doc(notificationId)
-          .update({'read': true});
-
-      // Navigate to handover screen
-      if (context.mounted) {
-        Navigator.pushNamed(context, ScreensName.handoverScreen);
-      }
-    } catch (e) {
-      print('Error navigating to handover: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error navigating to handover: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'booking_request':
+        return Colors.orange;
+      case 'booking_accepted':
+        return Colors.green;
+      case 'booking_declined':
+        return Colors.red;
+      case 'deposit_paid':
+      case 'payment_completed':
+        return Colors.blue;
+      case 'refund_processed':
+        return Colors.purple;
+      case 'handover_started':
+      case 'handover_completed':
+        return Colors.teal;
+      case 'handover_cancelled':
+        return Colors.red;
+      case 'trip_started':
+      case 'trip_completed':
+        return Colors.indigo;
+      case 'trip_cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
-  Future<void> _navigateToTripRequest(BuildContext context, String notificationId, Map<String, dynamic> bookingData) async {
-    try {
-      // Find the booking request ID
-      final renterId = bookingData['renterId'] as String?;
-      final carId = bookingData['carId'] as String?;
+  String _getTypeDisplayName(String type) {
+    switch (type) {
+      case 'booking_request':
+        return 'Booking Request';
+      case 'booking_accepted':
+        return 'Booking Accepted';
+      case 'booking_declined':
+        return 'Booking Declined';
+      case 'deposit_paid':
+        return 'Deposit Paid';
+      case 'payment_completed':
+        return 'Payment Completed';
+      case 'refund_processed':
+        return 'Refund Processed';
+      case 'handover_started':
+        return 'Handover Started';
+      case 'handover_completed':
+        return 'Handover Completed';
+      case 'handover_cancelled':
+        return 'Handover Cancelled';
+      case 'trip_started':
+        return 'Trip Started';
+      case 'trip_completed':
+        return 'Trip Completed';
+      case 'trip_cancelled':
+        return 'Trip Cancelled';
+      default:
+        return 'General';
+    }
+  }
 
-      if (renterId != null && carId != null) {
-        final bookingRequestsQuery = await FirebaseFirestore.instance
-            .collection('booking_requests')
-            .where('renterId', isEqualTo: renterId)
-            .where('carId', isEqualTo: carId)
-            .where('status', isEqualTo: 'pending')
-            .get();
+  String _formatTimestamp(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
 
-        if (bookingRequestsQuery.docs.isNotEmpty) {
-          final bookingRequestId = bookingRequestsQuery.docs.first.id;
-
-          // Navigate to trip request screen
-          if (context.mounted) {
-            Navigator.pushNamed(
-              context,
-              ScreensName.ownerTripRequestScreen,
-              arguments: {
-                'bookingRequestId': bookingRequestId,
-                'bookingData': bookingData,
-              },
-            );
-          }
-        }
-      }
-    } catch (e) {
-      print('Error navigating to trip request: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error navigating to trip request: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
     }
   }
 }

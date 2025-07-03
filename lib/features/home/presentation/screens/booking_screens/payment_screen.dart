@@ -5,9 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 import 'package:test_cark/core/utils/custom_toast.dart';
-import 'package:test_cark/core/services/notification_service.dart';
 import 'package:test_cark/features/home/presentation/model/car_model.dart';
 import 'package:test_cark/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:test_cark/features/notifications/presentation/cubits/notification_cubit.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -148,16 +148,28 @@ class _PaymentScreenState extends material.State<PaymentScreen> {
 
       final renterId = currentUser.id.toString();
       final ownerId = widget.car!.ownerId;
-      final carName = '${widget.car!.brand} ${widget.car!.model}';
+      final renterName = '${currentUser.firstName} ${currentUser.lastName}';
 
-      await NotificationService().sendBookingNotifications(
-        renterId: renterId,
+      // Send booking notification to owner
+      context.read<NotificationCubit>().sendBookingNotification(
+        renterName: renterName,
+        carBrand: widget.car!.brand,
+        carModel: widget.car!.model,
         ownerId: ownerId,
-        carName: carName,
+        renterId: renterId,
+        type: 'booking_request',
+      );
+
+      // Send payment notification
+      context.read<NotificationCubit>().sendPaymentNotification(
+        amount: widget.totalPrice.toStringAsFixed(2),
+        carBrand: widget.car!.brand,
+        carModel: widget.car!.model,
+        type: 'payment_completed',
       );
 
       print('Booking notifications sent successfully');
-      print('Renter ID: $renterId, Owner ID: $ownerId, Car: $carName');
+      print('Renter ID: $renterId, Owner ID: $ownerId, Car: ${widget.car!.brand} ${widget.car!.model}');
     } catch (e) {
       print('Error sending booking notifications: $e');
     }

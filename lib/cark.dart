@@ -82,12 +82,12 @@ class Cark extends StatelessWidget {
               supportedLocales: context.supportedLocales,
               locale: context.locale,
               onGenerateRoute: RoutesManager.onGenerateRoute,
-              title: 'Cark',
+              title: 'Carك',
               debugShowCheckedModeBanner: false,
               theme: lightTheme,
               // darkTheme: ThemeData.dark(),
               themeMode: ThemeMode.light,
-              initialRoute: ScreensName.login // Initial screen
+              initialRoute: ScreensName.signup // Initial screen
 
             ),
           );

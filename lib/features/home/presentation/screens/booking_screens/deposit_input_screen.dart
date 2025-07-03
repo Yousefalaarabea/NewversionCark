@@ -67,16 +67,19 @@ class _DepositInputScreenState extends State<DepositInputScreen> {
       final ownerId = widget.car.ownerId;
       final carName = '${widget.car.brand} ${widget.car.model}';
 
-      // Send booking notifications using the cubit
-      await context.read<NotificationCubit>().sendBookingNotifications(
-        renterId: renterId,
+      // Send booking notification using the new notification system
+      context.read<NotificationCubit>().sendBookingNotification(
+        renterName: '${currentUser.firstName} ${currentUser.lastName}',
+        carBrand: widget.car.brand,
+        carModel: widget.car.model,
         ownerId: ownerId,
-        carName: carName,
+        renterId: renterId,
+        type: 'booking_request',
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Deposit of \$$deposit submitted! Booking notifications sent.'),
+          content: Text('Deposit of \$$deposit submitted! Booking request sent.'),
           backgroundColor: Colors.green,
         ),
       );

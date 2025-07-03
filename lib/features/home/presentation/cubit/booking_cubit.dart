@@ -3,14 +3,12 @@ import 'package:meta/meta.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:test_cark/features/home/presentation/model/booking_model.dart';
 import 'package:test_cark/features/home/presentation/model/car_model.dart';
-import 'package:test_cark/core/services/notification_service.dart';
+import 'package:test_cark/features/notifications/presentation/cubits/notification_cubit.dart';
 
 part 'booking_state.dart';
 
 class BookingCubit extends Cubit<BookingState> {
   BookingCubit() : super(BookingInitial());
-
-  final NotificationService _notificationService = NotificationService();
 
   Future<void> fetchBookings() async {
     try {
@@ -52,6 +50,8 @@ class BookingCubit extends Cubit<BookingState> {
     required String pickupStation,
     required String returnStation,
     required String dateRange,
+    required String renterName,
+    NotificationCubit? notificationCubit,
   }) async {
     try {
       emit(BookingLoading());
@@ -76,12 +76,14 @@ class BookingCubit extends Cubit<BookingState> {
           .collection('booking_requests')
           .add(bookingRequestData);
 
-      // Send notification to owner
-      await _notificationService.sendCarBookedNotification(
-        ownerId: ownerId,
-        renterName: 'A renter', // This should be passed from the caller
+      // Send in-app notification to owner
+      notificationCubit?.sendBookingNotification(
+        renterName: renterName,
         carBrand: car.brand,
         carModel: car.model,
+        ownerId: ownerId,
+        renterId: renterId,
+        type: 'booking_request',
       );
 
       emit(BookingRequestCreated(bookingRequestData));
@@ -98,6 +100,7 @@ class BookingCubit extends Cubit<BookingState> {
     required String carBrand,
     required String carModel,
     required String ownerName,
+    NotificationCubit? notificationCubit,
   }) async {
     try {
       emit(BookingLoading());
@@ -111,12 +114,14 @@ class BookingCubit extends Cubit<BookingState> {
         'acceptedAt': DateTime.now().toIso8601String(),
       });
 
-      // Send notification to renter
-      await _notificationService.sendBookingAcceptanceNotification(
-        renterId: renterId,
-        ownerName: ownerName,
+      // Send in-app notification to renter
+      notificationCubit?.sendBookingNotification(
+        renterName: 'You',
         carBrand: carBrand,
         carModel: carModel,
+        ownerId: ownerId,
+        renterId: renterId,
+        type: 'booking_accepted',
       );
 
       emit(BookingRequestAccepted());
@@ -129,6 +134,9 @@ class BookingCubit extends Cubit<BookingState> {
   Future<void> declineBookingRequest({
     required String bookingRequestId,
     required String renterId,
+    required String carBrand,
+    required String carModel,
+    NotificationCubit? notificationCubit,
   }) async {
     try {
       emit(BookingLoading());
@@ -142,13 +150,14 @@ class BookingCubit extends Cubit<BookingState> {
         'declinedAt': DateTime.now().toIso8601String(),
       });
 
-      // Send notification to renter
-      await _notificationService.sendNotificationToUser(
-        userId: renterId,
-        title: 'Booking Request Declined',
-        body: 'Your booking request has been declined by the car owner.',
-        type: 'renter',
-        notificationType: 'booking_declined',
+      // Send in-app notification to renter
+      notificationCubit?.sendBookingNotification(
+        renterName: 'You',
+        carBrand: carBrand,
+        carModel: carModel,
+        ownerId: '',
+        renterId: renterId,
+        type: 'booking_declined',
       );
 
       emit(BookingRequestDeclined());
@@ -166,6 +175,7 @@ class BookingCubit extends Cubit<BookingState> {
     required String renterName,
     required String carBrand,
     required String carModel,
+    NotificationCubit? notificationCubit,
   }) async {
     try {
       emit(BookingLoading());
@@ -180,12 +190,20 @@ class BookingCubit extends Cubit<BookingState> {
         'depositPaidAt': DateTime.now().toIso8601String(),
       });
 
-      // Send notification to owner
-      await _notificationService.sendHandoverNotificationToOwner(
-        ownerId: ownerId,
-        renterName: renterName,
+      // Send in-app notification to owner
+      notificationCubit?.sendPaymentNotification(
+        amount: depositAmount.toStringAsFixed(2),
         carBrand: carBrand,
         carModel: carModel,
+        type: 'deposit_paid',
+      );
+
+      // Send handover notification to owner
+      notificationCubit?.sendHandoverNotification(
+        carBrand: carBrand,
+        carModel: carModel,
+        type: 'handover_started',
+        userName: renterName,
       );
 
       emit(DepositPaid(depositAmount));
@@ -202,6 +220,7 @@ class BookingCubit extends Cubit<BookingState> {
     required String ownerName,
     required String carBrand,
     required String carModel,
+    NotificationCubit? notificationCubit,
   }) async {
     try {
       emit(BookingLoading());
@@ -215,12 +234,12 @@ class BookingCubit extends Cubit<BookingState> {
         'ownerHandoverCompletedAt': DateTime.now().toIso8601String(),
       });
 
-      // Send notification to renter
-      await _notificationService.sendOwnerHandoverCompletedNotification(
-        renterId: renterId,
-        ownerName: ownerName,
+      // Send in-app notification to renter
+      notificationCubit?.sendHandoverNotification(
         carBrand: carBrand,
         carModel: carModel,
+        type: 'handover_started',
+        userName: ownerName,
       );
 
       emit(OwnerHandoverCompleted());
@@ -237,6 +256,7 @@ class BookingCubit extends Cubit<BookingState> {
     required String renterName,
     required String carBrand,
     required String carModel,
+    NotificationCubit? notificationCubit,
   }) async {
     try {
       emit(BookingLoading());
@@ -251,12 +271,19 @@ class BookingCubit extends Cubit<BookingState> {
         'tripStartedAt': DateTime.now().toIso8601String(),
       });
 
-      // Send notification to owner
-      await _notificationService.sendRenterHandoverCompletedNotification(
-        ownerId: ownerId,
-        renterName: renterName,
+      // Send in-app notification to owner
+      notificationCubit?.sendHandoverNotification(
         carBrand: carBrand,
         carModel: carModel,
+        type: 'handover_completed',
+        userName: renterName,
+      );
+
+      // Send trip started notification
+      notificationCubit?.sendTripNotification(
+        carBrand: carBrand,
+        carModel: carModel,
+        type: 'trip_started',
       );
 
       emit(RenterHandoverCompleted());
