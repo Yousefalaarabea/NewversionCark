@@ -245,9 +245,9 @@ abstract class RoutesManager {
           builder: (context) => const TripDetailsScreen(),
         );
 
-      case ScreensName.bookingRequestScreen:
-        return MaterialPageRoute(
-            builder: (context) => const BookingRequestScreen());
+      // case ScreensName.bookingRequestScreen:
+      //   return MaterialPageRoute(
+      //       builder: (context) => const BookingRequestScreen());
 
       case ScreensName.bookingHistoryScreen:
         return MaterialPageRoute(

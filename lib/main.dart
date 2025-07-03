@@ -22,7 +22,7 @@ Future<void> main() async {
   await NotificationService().handleInitialMessage();
 
   // Optionally: Save FCM token to backend after login (see NotificationService for details)
-  // final authCubit = AuthCubit();
+  final authCubit = AuthCubit();
   // await authCubit.saveFcmToken();
 
   runApp(

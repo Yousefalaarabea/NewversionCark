@@ -1,5 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:http/http.dart' as context;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:test_cark/features/auth/presentation/models/user_model.dart';
+import '../../../../core/api_service.dart';
+import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../models/notification_model.dart';
 import '../../../../core/services/notification_service.dart';
 
@@ -41,7 +46,7 @@ abstract class NotificationState extends Equatable {
 class NotificationInitial extends NotificationState {}
 class NotificationLoading extends NotificationState {}
 class NotificationLoaded extends NotificationState {
-  final List<NotificationModel> notifications;
+  final List<NewNotificationModel> notifications;
   const NotificationLoaded(this.notifications);
   @override
   List<Object?> get props => [notifications];
@@ -56,52 +61,53 @@ class NotificationError extends NotificationState {
 // Cubit
 class NotificationCubit extends Cubit<NotificationState> {
   NotificationCubit() : super(NotificationInitial());
+  static NotificationCubit get(context)=>BlocProvider.of(context);
   final NotificationService _notificationService = NotificationService();
 
   // Fetch notifications for a specific user and type
-  Future<void> fetchNotificationsForUser(String userId, String type) async {
-    emit(NotificationLoading());
-    try {
-      await for (final notifications in _notificationService.getNotificationsForUser(userId, type)) {
-        emit(NotificationLoaded(notifications));
-      }
-    } catch (e) {
-      emit(NotificationError('Failed to load notifications: $e'));
-    }
-  }
-
-  // Fetch all notifications for a user (both types)
-  Future<void> fetchAllNotificationsForUser(String userId) async {
-    emit(NotificationLoading());
-    try {
-      await for (final notifications in _notificationService.getAllNotificationsForUser(userId)) {
-        emit(NotificationLoaded(notifications));
-      }
-    } catch (e) {
-      emit(NotificationError('Failed to load notifications: $e'));
-    }
-  }
+  // Future<void> fetchNotificationsForUser(String userId, String type) async {
+  //   emit(NotificationLoading());
+  //   try {
+  //     await for (final notifications in _notificationService.getNotificationsForUser(userId, type)) {
+  //       emit(NotificationLoaded(notifications));
+  //     }
+  //   } catch (e) {
+  //     emit(NotificationError('Failed to load notifications: $e'));
+  //   }
+  // }
+  //
+  // // Fetch all notifications for a user (both types)
+  // Future<void> fetchAllNotificationsForUser(String userId) async {
+  //   emit(NotificationLoading());
+  //   try {
+  //     await for (final notifications in _notificationService.getAllNotificationsForUser(userId)) {
+  //       emit(NotificationLoaded(notifications));
+  //     }
+  //   } catch (e) {
+  //     emit(NotificationError('Failed to load notifications: $e'));
+  //   }
+  // }
 
   // Mark notification as read
-  Future<void> markAsRead(String notificationId) async {
-    try {
-      await _notificationService.markNotificationAsRead(notificationId);
-      
-      // Update local state
-      if (state is NotificationLoaded) {
-        final currentNotifications = (state as NotificationLoaded).notifications;
-        final updatedNotifications = currentNotifications.map((notification) {
-          if (notification.id == notificationId) {
-            return notification.copyWith(isRead: true);
-          }
-          return notification;
-        }).toList();
-        emit(NotificationLoaded(updatedNotifications));
-      }
-    } catch (e) {
-      emit(NotificationError('Failed to mark notification as read: $e'));
-    }
-  }
+  // Future<void> markAsRead(String notificationId) async {
+  //   try {
+  //     await _notificationService.markNotificationAsRead(notificationId);
+  //
+  //     // Update local state
+  //     if (state is NotificationLoaded) {
+  //       final currentNotifications = (state as NotificationLoaded).notifications;
+  //       final updatedNotifications = currentNotifications.map((notification) {
+  //         if (notification.id == notificationId) {
+  //           return notification.copyWith(isRead: true);
+  //         }
+  //         return notification;
+  //       }).toList();
+  //       emit(NotificationLoaded(updatedNotifications));
+  //     }
+  //   } catch (e) {
+  //     emit(NotificationError('Failed to mark notification as read: $e'));
+  //   }
+  // }
 
   // Send booking notifications
   Future<void> sendBookingNotifications({
@@ -117,6 +123,20 @@ class NotificationCubit extends Cubit<NotificationState> {
       );
     } catch (e) {
       emit(NotificationError('Failed to send booking notifications: $e'));
+    }
+  }
+
+   NewNotificationModel? notificationModel ;
+
+  Future<void> getAllNotifications() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('user_data');
+      final response = await ApiService().getWithToken("register/", token!);
+      notificationModel = NewNotificationModel.fromJson(response.data);
+
+    } catch (e) {
+      emit(NotificationError('Failed to get notifications: $e'));
     }
   }
 } 

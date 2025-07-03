@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,9 +21,14 @@ import 'notification_test_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   void _navigateAndCloseDrawer(BuildContext context, Widget screen) {
     Navigator.pop(context); // Close the drawer
     Navigator.push(
@@ -42,15 +49,23 @@ class HomeScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    Timer? _timer;
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) => print("#####hello####"));
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
           leading: Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
+            builder: (context) =>
+                IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
           ),
           actions: [
             // Notification icon with badge
@@ -60,9 +75,11 @@ class HomeScreen extends StatelessWidget {
                 final authCubit = context.read<AuthCubit>();
                 final user = authCubit.userModel;
                 if (user?.role == 'owner') {
-                  Navigator.pushNamed(context, ScreensName.ownerNotificationScreen);
+                  Navigator.pushNamed(
+                      context, ScreensName.ownerNotificationScreen);
                 } else {
-                  Navigator.pushNamed(context, ScreensName.renterNotificationScreen);
+                  Navigator.pushNamed(
+                      context, ScreensName.renterNotificationScreen);
                 }
               },
             ),
@@ -78,7 +95,9 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   DrawerHeader(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
+                      color: Theme
+                          .of(context)
+                          .primaryColor,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -128,10 +147,11 @@ class HomeScreen extends StatelessWidget {
                       final authCubit = context.read<AuthCubit>();
                       await authCubit.switchToOwner();
                       Navigator.pop(context); // Close drawer
-                      
+
                       // Navigate to OwnerHomeScreen
-                      Navigator.pushReplacementNamed(context, ScreensName.ownerHomeScreen);
-                      
+                      Navigator.pushReplacementNamed(
+                          context, ScreensName.ownerHomeScreen);
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Switched to Owner mode')),
                       );
@@ -146,17 +166,20 @@ class HomeScreen extends StatelessWidget {
                         final authCubit = context.read<AuthCubit>();
                         await authCubit.switchToRenter();
                         Navigator.pop(context); // Close drawer
-                        Navigator.pushReplacementNamed(context, ScreensName.homeScreen);
+                        Navigator.pushReplacementNamed(
+                            context, ScreensName.homeScreen);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Switched to Renter mode')),
+                          const SnackBar(content: Text(
+                              'Switched to Renter mode')),
                         );
                       },
                     ),
                   ListTile(
                     leading: const Icon(Icons.history),
                     title: const Text('Booking History'),
-                    onTap: () => _navigateAndCloseDrawer(
-                        context, BookingHistoryScreen()),
+                    onTap: () =>
+                        _navigateAndCloseDrawer(
+                            context, const BookingHistoryScreen()),
                   ),
                   // Booking Requests (only for renters)
                   if (user?.role == 'renter')
@@ -165,7 +188,8 @@ class HomeScreen extends StatelessWidget {
                       title: const Text('Booking Requests'),
                       onTap: () {
                         Navigator.pop(context); // Close drawer
-                        Navigator.pushNamed(context, ScreensName.bookingRequestScreen);
+                        Navigator.pushNamed(
+                            context, ScreensName.bookingRequestScreen);
                       },
                     ),
                   // ListTile(
@@ -178,20 +202,21 @@ class HomeScreen extends StatelessWidget {
                     leading: const Icon(Icons.contact_support),
                     title: const Text('Contact & Help'),
                     onTap: () =>
-                        _navigateAndCloseDrawer(context, ContactHelpScreen()),
+                        _navigateAndCloseDrawer(context, const ContactHelpScreen()),
                   ),
                   ListTile(
                     leading: const Icon(Icons.feedback),
                     title: const Text('Feedback'),
                     onTap: () =>
-                        _navigateAndCloseDrawer(context, FeedbackScreen()),
+                        _navigateAndCloseDrawer(context, const FeedbackScreen()),
                   ),
                   // Test Notifications (for development)
                   ListTile(
                     leading: const Icon(Icons.notifications_active),
                     title: const Text('Test Notifications'),
                     onTap: () =>
-                        _navigateAndCloseDrawer(context, const NotificationTestScreen()),
+                        _navigateAndCloseDrawer(
+                            context, const NotificationTestScreen()),
                   ),
                   const Divider(),
                   ListTile(

@@ -15,19 +15,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadNotifications();
+    NotificationCubit notificationCubit = NotificationCubit.get(context);
+    notificationCubit.getAllNotifications();
+    // _loadNotifications();
   }
 
-  void _loadNotifications() {
-    final authCubit = context.read<AuthCubit>();
-    final currentUser = authCubit.userModel;
-    
-    if (currentUser != null) {
-      final userId = currentUser.id.toString();
-      // Load all notifications for the current user
-      context.read<NotificationCubit>().fetchAllNotificationsForUser(userId);
-    }
-  }
+  // void _loadNotifications() {
+  //   final authCubit = context.read<AuthCubit>();
+  //   final currentUser = authCubit.userModel;
+  //
+  //   if (currentUser != null) {
+  //     final userId = currentUser.id.toString();
+  //     // Load all notifications for the current user
+  //     context.read<NotificationCubit>().getAllNotifications();
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +40,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         foregroundColor: Colors.black,
         elevation: 1,
       ),
-      body: BlocBuilder<NotificationCubit, NotificationState>(
+      body: BlocConsumer<NotificationCubit, NotificationState>(
         builder: (context, state) {
+          NotificationCubit notificationCubit = NotificationCubit.get(context);
           if (state is NotificationLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is NotificationError) {
@@ -56,7 +59,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: _loadNotifications,
+                    onPressed: notificationCubit.getAllNotifications,
                     child: const Text('Retry'),
                   ),
                 ],
@@ -68,7 +71,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.notifications_none, size: 64, color: Colors.grey[400]),
+                    Icon(Icons.notifications_none,
+                        size: 64, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
                       'No notifications yet',
@@ -88,22 +92,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
               );
             }
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: state.notifications.length,
-              itemBuilder: (context, index) {
-                final notification = state.notifications[index];
-                return _buildNotificationCard(notification);
-              },
-            );
+
+            if (notificationCubit.notificationModel == null) {
+              return const Text('No items returned');
+            } else {
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemBuilder: (context, index) {
+                  // final notification = state.notifications[index];
+                  return _buildNotificationCard(notificationCubit.notificationModel!, index);
+                },
+              );
+            }
           }
           return const SizedBox.shrink();
         },
+        listener: (BuildContext context, NotificationState state) {},
       ),
     );
   }
 
-  Widget _buildNotificationCard(NotificationModel notification) {
+  Widget _buildNotificationCard(NewNotificationModel notification, int index) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -114,24 +123,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: notification.isRead 
-                ? Colors.grey[200] 
+            color: notification.results![index].isRead!
+                ? Colors.grey[200]
                 : Theme.of(context).colorScheme.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Icon(
-            _getNotificationIcon(notification.type),
-            color: notification.isRead 
-                ? Colors.grey[600] 
+            _getNotificationIcon(notification.results![index].typeDisplay!),
+            color: notification.results![index].isRead!
+                ? Colors.grey[600]
                 : Theme.of(context).colorScheme.primary,
             size: 24,
           ),
         ),
         title: Text(
-          notification.title,
+          notification.results![index].title!,
           style: TextStyle(
-            fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
-            color: notification.isRead ? Colors.grey[700] : Colors.black,
+            fontWeight: notification.results![index].isRead!
+                ? FontWeight.normal
+                : FontWeight.bold,
+            color: notification.results![index].isRead!
+                ? Colors.grey[700]
+                : Colors.black,
           ),
         ),
         subtitle: Column(
@@ -139,7 +152,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             const SizedBox(height: 4),
             Text(
-              notification.body,
+              notification.results![index].message!,
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
@@ -155,7 +168,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _formatTimestamp(notification.timestamp),
+                  _formatTimestamp(notification.results![index].timeAgo!),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[500],
@@ -163,17 +176,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: _getTypeColor(notification.type).withOpacity(0.1),
+                    color:
+                        _getTypeColor(notification.results![index].typeDisplay!)
+                            .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    notification.type.toUpperCase(),
+                    notification.results![index].typeDisplay!.toUpperCase(),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: _getTypeColor(notification.type),
+                      color: _getTypeColor(
+                          notification.results![index].typeDisplay!),
                     ),
                   ),
                 ),
@@ -182,9 +199,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ],
         ),
         onTap: () {
-          if (!notification.isRead) {
-            context.read<NotificationCubit>().markAsRead(notification.id);
-          }
+          // if (!notification.results![index].isRead!) {
+          //   context.read<NotificationCubit>().markAsRead(notification.results![index].id!);
+          // }
         },
       ),
     );
@@ -220,18 +237,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  String _formatTimestamp(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
+  // String _formatTimestamp(DateTime timestamp) {
+  //   final now = DateTime.now();
+  //   final difference = now.difference(timestamp);
+  //
+  //   if (difference.inDays > 0) {
+  //     return '${difference.inDays}d ago';
+  //   } else if (difference.inHours > 0) {
+  //     return '${difference.inHours}h ago';
+  //   } else if (difference.inMinutes > 0) {
+  //     return '${difference.inMinutes}m ago';
+  //   } else {
+  //     return 'Just now';
+  //   }
+  // }
+  String _formatTimestamp(String createdAt) {
+    try {
+      final timestamp =
+          DateTime.parse(createdAt).toLocal(); // تحويل للتوقيت المحلي لو حابة
+      final now = DateTime.now();
+      final difference = now.difference(timestamp);
 
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
+      if (difference.inDays > 0) {
+        return '${difference.inDays}d ago';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes}m ago';
+      } else {
+        return 'Just now';
+      }
+    } catch (e) {
+      return 'Invalid date';
     }
   }
 }

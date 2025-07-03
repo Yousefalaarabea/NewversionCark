@@ -210,7 +210,7 @@ class _DepositPaymentScreenState extends State<DepositPaymentScreen> {
     try {
       // Mark the booking request notification as read/completed
       if (widget.requestId != null) {
-        await context.read<NotificationCubit>().markAsRead(widget.requestId!);
+        // await context.read<NotificationCubit>().markAsRead(widget.requestId!);
       }
     } catch (e) {
       print('Error marking request as completed: $e');
