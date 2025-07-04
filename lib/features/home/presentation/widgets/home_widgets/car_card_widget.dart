@@ -22,16 +22,22 @@ class CarCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final price = (rentalOptions != null)
-        ? (rentalOptions!.availableWithDriver
-            ? rentalOptions!.dailyRentalPriceWithDriver
-            : rentalOptions!.dailyRentalPrice)
-        : null;
+    // Calculate price - show default price if rental options are not available
+    double? price;
+    if (rentalOptions != null) {
+      price = rentalOptions!.availableWithDriver
+          ? rentalOptions!.dailyRentalPriceWithDriver
+          : rentalOptions!.dailyRentalPrice;
+    } else {
+      // Default price when rental options are not available
+      price = 150.0; // Default daily price
+    }
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 250.h,
+        height: 280.h,
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           image: DecorationImage(
@@ -40,9 +46,9 @@ class CarCardWidget extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -50,132 +56,212 @@ class CarCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
+              // Gradient overlay
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.6),
-                      Colors.black.withOpacity(0.2),
+                      Colors.black.withOpacity(0.7),
+                      Colors.black.withOpacity(0.3),
                       Colors.transparent,
+                      Colors.black.withOpacity(0.4),
                     ],
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                  ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(16.r),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Top section with car info chips
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${car.brand} ${car.model}',
-                            style: TextStyle(
-                              fontSize: 22.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'or similar | ${car.carType}',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.grey.shade300,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Bottom section with pricing and details
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              _buildInfoChip(
-                                icon: Icons.person_outline,
-                                text: '${car.seatingCapacity}',
-                              ),
-                              SizedBox(width: 8.w),
-                              _buildInfoChip(
-                                icon: Icons.luggage_outlined,
-                                text: '-',
-                              ),
-                              SizedBox(width: 8.w),
-                              _buildInfoChip(
-                                icon: Icons.settings_input_component_outlined,
-                                text: car.transmissionType,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12.h),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              RichText(
-                                text: TextSpan(
-                                  style: TextStyle(
-                                    fontSize: 18.sp,
-                                    color: Colors.white,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: '\$${price?.toStringAsFixed(2) ?? 'N/A'}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    TextSpan(
-                                      text: ' / day',
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (price != null)
-                                Text(
-                                  '\$${(price * 3).toStringAsFixed(2)} total',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.3, 0.7, 1.0],
                   ),
                 ),
               ),
-              // Edit and Delete icons (top right)
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Row(
+              
+              // Content
+              Padding(
+                padding: EdgeInsets.all(20.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (onEdit != null)
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.white, size: 22.sp),
-                        onPressed: onEdit,
-                        tooltip: 'Edit',
-                      ),
-                    if (onDelete != null)
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent, size: 22.sp),
-                        onPressed: onDelete,
-                        tooltip: 'Delete',
-                      ),
+                    // Top section with car info
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Car brand and model
+                        Text(
+                          '${car.brand}',
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        Text(
+                          car.model,
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        
+                        // Car type and category
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                              ),
+                              child: Text(
+                                car.carType,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                car.carCategory,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // Bottom section with details and price
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Car specifications
+                        Row(
+                          children: [
+                            _buildSpecChip(
+                              icon: Icons.person_outline,
+                              text: '${car.seatingCapacity} seats',
+                            ),
+                            SizedBox(width: 12.w),
+                            _buildSpecChip(
+                              icon: Icons.settings_input_component_outlined,
+                              text: car.transmissionType,
+                            ),
+                            SizedBox(width: 12.w),
+                            _buildSpecChip(
+                              icon: Icons.local_gas_station_outlined,
+                              text: car.fuelType,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        
+                        // Price and year
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'From',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                ),
+                                Text(
+                                  '\$${(price ?? 0).toStringAsFixed(0)}/day',
+                                  style: TextStyle(
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                if (rentalOptions == null)
+                                  Text(
+                                    'Price estimate',
+                                    style: TextStyle(
+                                      fontSize: 10.sp,
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                              ),
+                              child: Text(
+                                '${car.year}',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
+              
+              // Edit and Delete icons (top right) - only for owners
+              if (onEdit != null || onDelete != null)
+                Positioned(
+                  top: 15,
+                  right: 15,
+                  child: Row(
+                    children: [
+                      if (onEdit != null)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.edit, color: Colors.white, size: 20.sp),
+                            onPressed: onEdit,
+                            tooltip: 'Edit',
+                          ),
+                        ),
+                      if (onDelete != null) ...[
+                        SizedBox(width: 8.w),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.white, size: 20.sp),
+                            onPressed: onDelete,
+                            tooltip: 'Delete',
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -183,27 +269,29 @@ class CarCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoChip({required IconData icon, required String text}) {
+  Widget _buildSpecChip({required IconData icon, required String text}) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            color: Colors.grey.shade300,
-            size: 16.sp,
+            color: Colors.white.withOpacity(0.9),
+            size: 14.sp,
           ),
           SizedBox(width: 6.w),
           Text(
             text,
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 11.sp,
               color: Colors.white,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -219,7 +307,8 @@ class CarCardWidget extends StatelessWidget {
         return FileImage(File(car.imageUrl!));
       }
     } else {
-      return AssetImage('assets/images/placeholder_car.png');
+      // Use a default car image based on brand
+      return AssetImage('assets/images/home/car_background.jpeg');
     }
   }
 }

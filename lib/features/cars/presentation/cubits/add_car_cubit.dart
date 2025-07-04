@@ -23,15 +23,30 @@ class AddCarCubit extends Cubit<AddCarState> {
   // Fetch all available cars for home screen
   Future<List<CarBundle>> fetchAllAvailableCars() async {
     try {
+      print('🔄 AddCarCubit: Fetching all available cars...');
       final carBundlesRaw = await _carService.fetchAllCars();
-      final carBundles = carBundlesRaw.map((e) => CarBundle(
-        car: e['car'],
-        rentalOptions: e['rentalOptions'],
-        usagePolicy: e['usagePolicy'],
-      )).toList();
+      print('✅ AddCarCubit: Raw data received: ${carBundlesRaw.length} cars');
+      
+      final carBundles = carBundlesRaw.map((e) {
+        final car = e['car'] as CarModel;
+        final rentalOptions = e['rentalOptions'] as CarRentalOptions?;
+        final usagePolicy = e['usagePolicy'] as CarUsagePolicy?;
+        
+        print('   📦 Creating CarBundle for: ${car.brand} ${car.model}');
+        print('      - RentalOptions: ${rentalOptions != null ? "Available" : "Null"}');
+        print('      - UsagePolicy: ${usagePolicy != null ? "Available" : "Null"}');
+        
+        return CarBundle(
+          car: car,
+          rentalOptions: rentalOptions,
+          usagePolicy: usagePolicy,
+        );
+      }).toList();
+      
+      print('✅ AddCarCubit: Created ${carBundles.length} CarBundles');
       return carBundles;
     } catch (e) {
-      print('❌ Error fetching all available cars: $e');
+      print('❌ AddCarCubit: Error fetching all available cars: $e');
       return [];
     }
   }

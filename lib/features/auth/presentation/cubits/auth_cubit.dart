@@ -115,10 +115,12 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       print('Performing background admin login...');
       final adminResponse = await ApiService().post("login/", {
-        "email": "admin@gmail.com",
-        "password": "admin123"
+        //"email": "admin@gmail.com",
+       // "password": "admin123"
+        "email": "ahmed5@example.com",
+        "password": "A12345678"
       });
-      
+
       if (adminResponse.statusCode == 200) {
         final adminAccessToken = adminResponse.data['access'];
         final adminRefreshToken = adminResponse.data['refresh'];
@@ -231,18 +233,7 @@ class AuthCubit extends Cubit<AuthState> {
               print('Fetched user data from server using admin token and saved to SharedPreferences');
             } else {
               print('Failed to fetch user data with admin token, status: ${userResponse.statusCode}');
-              // Create minimal user model with available data
-              userModel = UserModel(
-                id: userId,
-                firstName: '',
-                lastName: '',
-                email: email,
-                phoneNumber: '',
-                national_id: '',
-                role: 'renter',
-              );
               await _saveUserData(userModel!);
-              print('Created minimal user model due to server error');
             }
           } else {
             print('Could not extract user ID from token');

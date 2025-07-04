@@ -49,7 +49,7 @@ class CarModel {
 
   factory CarModel.fromJson(Map<String, dynamic> json) {
     return CarModel(
-      ownerId: json['ownerId'],
+      ownerId: json['owner'].toString(),
       id: json['id'],
       model: json['model'],
       brand: json['brand'],

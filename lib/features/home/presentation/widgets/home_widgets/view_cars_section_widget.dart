@@ -37,13 +37,22 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
     });
 
     try {
+      print('🔄 Loading available cars...');
       final addCarCubit = context.read<AddCarCubit>();
       final cars = await addCarCubit.fetchAllAvailableCars();
+      print('✅ Loaded ${cars.length} cars from API');
+      
+      for (int i = 0; i < cars.length; i++) {
+        final car = cars[i].car;
+        print('   ${i + 1}. ${car.brand} ${car.model} (Owner: ${car.ownerId})');
+      }
+      
       setState(() {
         _availableCars = cars;
         _isLoading = false;
       });
     } catch (e) {
+      print('❌ Error loading cars: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -103,6 +112,21 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
           );
         }
 
+        // Debug logging for filter state
+        print('🔍 Filter State:');
+        print('   - Car Type: ${state.carType}');
+        print('   - Category: ${state.category}');
+        print('   - Transmission: ${state.transmission}');
+        print('   - Fuel: ${state.fuel}');
+        print('   - Show With Driver: $showWithDriver');
+        print('   - Show Without Driver: $showWithoutDriver');
+        print('   - User Role: ${currentUser?.role}');
+        print('   - User ID: ${currentUser?.id}');
+        
+        // For testing: show all cars without filtering
+        // Uncomment the next line to show all cars without any filtering
+        // final filteredCars = _availableCars;
+        
         final filteredCars = _availableCars.where((bundle) {
           final car = bundle.car;
           final rentalOptions = bundle.rentalOptions;
@@ -117,26 +141,48 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
 
           final matchesFuel = state.fuel == null || car.fuelType == state.fuel;
 
-          // Driver filter logic:
-          final matchesDriver = (showWithDriver == true &&
-                  rentalOptions?.availableWithDriver == true) ||
-              (showWithoutDriver == true &&
-                  rentalOptions?.availableWithoutDriver == true) ||
-              (showWithDriver == null && showWithoutDriver == null);
+          // Driver filter logic - simplified to handle null rentalOptions
+          bool matchesDriver = true; // Default to true
+          if (showWithDriver == true || showWithoutDriver == true) {
+            // Only apply driver filter if user explicitly selected it
+            if (rentalOptions != null) {
+              matchesDriver = (showWithDriver == true &&
+                      rentalOptions.availableWithDriver == true) ||
+                  (showWithoutDriver == true &&
+                      rentalOptions.availableWithoutDriver == true);
+            } else {
+              // If rentalOptions is null, assume car is available for both options
+              matchesDriver = true;
+            }
+          }
 
-          // For home screen: show cars that don't belong to current user
+          // For home screen: show all available cars to renters
           // For owner home screen: show only current user's cars
           final matchesOwnership = currentUser?.role == 'owner' 
               ? car.ownerId == currentUser?.id  // Owner sees only their cars
-              : car.ownerId != currentUser?.id; // Renter sees cars from other owners
+              : true; // Renter sees all available cars
 
-          return matchesType &&
+          final shouldInclude = matchesType &&
               matchesCategory &&
               matchesTransmission &&
               matchesFuel &&
               matchesDriver &&
               matchesOwnership;
+
+          // Debug logging
+          print('🔍 Filtering car: ${car.brand} ${car.model}');
+          print('   - Type match: $matchesType (${state.carType} vs ${car.carType})');
+          print('   - Category match: $matchesCategory (${state.category} vs ${car.carCategory})');
+          print('   - Transmission match: $matchesTransmission (${state.transmission} vs ${car.transmissionType})');
+          print('   - Fuel match: $matchesFuel (${state.fuel} vs ${car.fuelType})');
+          print('   - Driver match: $matchesDriver (rentalOptions: ${rentalOptions != null ? "Available" : "Null"})');
+          print('   - Ownership match: $matchesOwnership (User role: ${currentUser?.role}, User ID: ${currentUser?.id}, Car owner: ${car.ownerId})');
+          print('   - Final result: $shouldInclude');
+
+          return shouldInclude;
         }).toList();
+
+        print('🎯 Total cars after filtering: ${filteredCars.length}');
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,15 +212,15 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
                   children: [
                     Icon(
                       Icons.directions_car_outlined,
-                      size: 48.sp,
-                      color: Colors.grey,
+                      size: 64.sp,
+                      color: Colors.grey[400],
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 16.h),
                     Text(
                       currentUser?.role == 'owner' 
                           ? "You haven't added any cars yet."
                           : "No cars available at the moment.",
-                      style: TextStyle(fontSize: 16.sp, color: Colors.grey, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 18.sp, color: Colors.grey[600], fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8.h),
@@ -182,9 +228,23 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
                       currentUser?.role == 'owner'
                           ? "Add your first car to start renting!"
                           : "Check back later for new cars.",
-                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
                       textAlign: TextAlign.center,
                     ),
+                    SizedBox(height: 24.h),
+                    if (currentUser?.role == 'owner')
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/addCarScreen');
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Car'),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                   ],
                 ),
               )
@@ -195,21 +255,19 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
                   itemCount: filteredCars.length,
                   shrinkWrap: true,
                   physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
                   itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: CarCardWidget(
-                        car: filteredCars[index].car,
-                        rentalOptions: filteredCars[index].rentalOptions,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CarDetailsScreen(carBundle: filteredCars[index]),
-                            ),
-                          );
-                        },
-                      ),
+                    return CarCardWidget(
+                      car: filteredCars[index].car,
+                      rentalOptions: filteredCars[index].rentalOptions,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CarDetailsScreen(carBundle: filteredCars[index]),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

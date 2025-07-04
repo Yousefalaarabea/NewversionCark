@@ -6,6 +6,7 @@ import 'package:test_cark/features/home/presentation/model/car_model.dart';
 import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
 import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../core/api_service.dart';
 // import 'package:test_cark/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +18,7 @@ class CarService {
   final Dio _dio = Dio(
     BaseOptions(
       //baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
-      baseUrl: 'https://start-heading-ships-translations.trycloudflare.com/api/',
+      baseUrl: 'http://127.0.0.1:8000/api/',
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       headers: {
@@ -39,8 +40,31 @@ class CarService {
       print('Fetching user cars from /my-cars/ using user token...');
       final response = await ApiService().getWithToken('my-cars/', token);
       if (response.statusCode == 200) {
-        final data = response.data;
-        for (final carJson in data) {
+        print("🔍 User cars response data type: ${response.data.runtimeType}");
+        print("🔍 User cars response data: ${response.data}");
+        
+        List carsData;
+        if (response.data is Map) {
+          // If response is a Map, try to extract the list from it
+          final data = response.data as Map;
+          if (data.containsKey('results')) {
+            carsData = List.from(data['results']);
+          } else if (data.containsKey('data')) {
+            carsData = List.from(data['data']);
+          } else {
+            print("❌ Unexpected user cars response format");
+            return [];
+          }
+        } else if (response.data is List) {
+          carsData = List.from(response.data);
+        } else {
+          print("❌ Unexpected user cars response format");
+          return [];
+        }
+        
+        print("🔍 Total cars fetched from API: ${carsData.length}");
+        
+        for (final carJson in carsData) {
           final car = CarModel.fromJson(carJson);
           CarRentalOptions? rentalOptions;
           CarUsagePolicy? usagePolicy;
@@ -52,7 +76,7 @@ class CarService {
           });
         }
       } else {
-        print('Failed to fetch user cars, status: \\${response.statusCode}');
+        print('Failed to fetch user cars, status: ${response.statusCode}');
       }
       return result;
     } catch (e) {
@@ -67,18 +91,48 @@ class CarService {
     final List<Map<String, dynamic>> result = [];
     try {
       final prefs = await SharedPreferences.getInstance();
-      final adminToken = prefs.getString('admin_access_token');
-      if (adminToken == null) {
+      final token = prefs.getString('admin_access_token');
+      if (token == null) {
         throw Exception('User access token not found');
       }
-      print('Fetching All cars from /available-cars/ using user token...');
-      final response = await ApiService().getWithToken('available-cars/', adminToken);
+      print('Fetching all available cars from /cars/ using user token...');
+      final response = await ApiService().getWithToken('cars/', token);
       if (response.statusCode == 200) {
-        final data = response.data;
-        for (final carJson in data) {
+        print("🔍 Cars response data type: ${response.data.runtimeType}");
+        print("🔍 Cars response data: ${response.data}");
+        
+        // Debug: Check user roles to understand the difference
+        await debugUserRoles();
+        
+        List carsData;
+        if (response.data is Map) {
+          // If response is a Map, try to extract the list from it
+          final data = response.data as Map;
+          if (data.containsKey('results')) {
+            carsData = List.from(data['results']);
+          } else if (data.containsKey('data')) {
+            carsData = List.from(data['data']);
+          } else {
+            print("❌ Unexpected cars response format");
+            return [];
+          }
+        } else if (response.data is List) {
+          carsData = List.from(response.data);
+        } else {
+          print("❌ Unexpected cars response format");
+          return [];
+        }
+        
+        print("🔍 Total cars fetched from API: ${carsData.length}");
+        
+        for (final carJson in carsData) {
           final car = CarModel.fromJson(carJson);
-          // Only include cars that are available and approved
-          if (car.availability && car.approvalStatus) {
+          print("🔍 Car owner ID: ${car.ownerId} (this is the user ID who owns the car)");
+          print("🔍 Car availability: ${car.availability}, approval status: ${car.approvalStatus}");
+          print("🔍 Car model: ${car.model}, brand: ${car.brand}");
+          // Include cars that are available (approval status can be false for now)
+          if (car.availability) {
+            print("✅ Car is available, adding to result list");
             CarRentalOptions? rentalOptions;
             CarUsagePolicy? usagePolicy;
             // يمكن لاحقاً جلب rentalOptions و usagePolicy إذا احتجت
@@ -87,6 +141,8 @@ class CarService {
               'rentalOptions': rentalOptions,
               'usagePolicy': usagePolicy,
             });
+          } else {
+            print("❌ Car is not available, skipping");
           }
         }
         print('✅ Successfully fetched ${result.length} available cars');
@@ -105,7 +161,7 @@ class CarService {
     try {
       if (useAdminToken) {
         print('Posting car using admin token...');
-        return await ApiService().postWithAdminToken('cars/', carData);
+        return await ApiService().postWithToken('cars/', carData);
       } else {
         print('Posting car using user token...');
         return await ApiService().postWithToken('cars/', carData);
@@ -126,7 +182,7 @@ class CarService {
       };
       print('Posting rental options to $endpoint...');
       return useAdminToken
-          ? await ApiService().postWithAdminToken(endpoint, data)
+          ? await ApiService().postWithToken(endpoint, data)
           : await ApiService().postWithToken(endpoint, data);
     } catch (e) {
       print('Error posting rental options: $e');
@@ -144,13 +200,14 @@ class CarService {
       };
       print('Posting usage policy to $endpoint...');
       return useAdminToken
-          ? await ApiService().postWithAdminToken(endpoint, data)
+          ? await ApiService().postWithToken(endpoint, data)
           : await ApiService().postWithToken(endpoint, data);
     } catch (e) {
       print('Error posting usage policy: $e');
       return null;
     }
   }
+
 
 
   Future<bool> addCar({
@@ -174,6 +231,26 @@ class CarService {
       final policyRes = await postUsagePolicy(carId, usagePolicyData, useAdminToken: useAdmin);
       print('Usage Policy Response: ${policyRes?.statusCode} | ${policyRes?.data}');
 
+      // ✅ Get userId from AuthCubit
+      final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
+      await authCubit.loadUserData();
+      final userId = authCubit.userModel?.id;
+
+      // ✅ Call assign role if userId is valid
+      if (userId != null) {
+        // Check if this is the first car (assign owner role)
+        await assignRoleOwner(userId );
+        
+        // Check if "with driver" option is selected (assign driver role)
+        final hasWithDriverOption = rentalOptionsData['available_with_driver'] == true;
+        if (hasWithDriverOption) {
+          print("🚗 With driver option selected - assigning driver role");
+          await assignRoleDriver(userId );
+        }
+      } else {
+        print("❌ userId not found. Cannot assign role.");
+      }
+
       return true;
     } else {
       print('❌ Failed to add car. Response: ${carResponse?.statusCode} | ${carResponse?.data}');
@@ -183,6 +260,130 @@ class CarService {
   }
 
 
+  Future<void> assignRoleOwner(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final adminToken = prefs.getString('admin_access_token');
+      if (adminToken == null) {
+        print("❌ Admin token not found. Cannot assign owner role.");
+        return;
+      }
+
+      // Get current roles (you may want to GET user-role/ to check if already has Owner)
+      final rolesResponse = await ApiService().getWithAdminToken("user-roles/");
+      print("🔍 Roles response data type: ${rolesResponse.data.runtimeType}");
+      print("🔍 Roles response data: ${rolesResponse.data}");
+      
+      List roles;
+      if (rolesResponse.data is Map) {
+        // If response is a Map, try to extract the list from it
+        final data = rolesResponse.data as Map;
+        if (data.containsKey('results')) {
+          roles = List.from(data['results']);
+        } else if (data.containsKey('data')) {
+          roles = List.from(data['data']);
+        } else {
+          // If it's a Map but no known structure, try to convert it to a list
+          roles = [data];
+        }
+      } else if (rolesResponse.data is List) {
+        roles = List.from(rolesResponse.data);
+      } else {
+        print("❌ Unexpected response format for user roles");
+        return;
+      }
+
+      print("🔍 Processed roles list: $roles");
+
+      final hasOwnerRole = roles.any((role) =>
+          role['user'].toString() == userId && role['role'] == 2);
+
+      final isRenterOnly = roles.any((role) =>
+          role['user'].toString() == userId && role['role'] == 1) &&
+          !hasOwnerRole;
+
+      print("🔍 Has owner role: $hasOwnerRole");
+      print("🔍 Is renter only: $isRenterOnly");
+
+      if (isRenterOnly) {
+        final response = await ApiService().postWithAdminToken("user-roles/", {
+          "user": int.parse(userId),
+          "role": 2, // Owner
+        });
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          print("✅ Owner role assigned to user $userId");
+        } else {
+          print("❌ Failed to assign Owner role. Status: ${response.statusCode}");
+          print("❌ Response data: ${response.data}");
+        }
+      } else {
+        print("ℹ️ User already has Owner role or is not just a Renter.");
+      }
+    } catch (e) {
+      print("❌ Error assigning Owner role: $e");
+    }
+  }
+
+  Future<void> assignRoleDriver(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final adminToken = prefs.getString('admin_access_token');
+      if (adminToken == null) {
+        print("❌ Admin token not found. Cannot assign driver role.");
+        return;
+      }
+
+      // Get current roles to check if already has Driver role
+      final rolesResponse = await ApiService().getWithAdminToken("user-roles/");
+      print("🔍 Driver roles response data type: ${rolesResponse.data.runtimeType}");
+      print("🔍 Driver roles response data: ${rolesResponse.data}");
+      
+      List roles;
+      if (rolesResponse.data is Map) {
+        // If response is a Map, try to extract the list from it
+        final data = rolesResponse.data as Map;
+        if (data.containsKey('results')) {
+          roles = List.from(data['results']);
+        } else if (data.containsKey('data')) {
+          roles = List.from(data['data']);
+        } else {
+          // If it's a Map but no known structure, try to convert it to a list
+          roles = [data];
+        }
+      } else if (rolesResponse.data is List) {
+        roles = List.from(rolesResponse.data);
+      } else {
+        print("❌ Unexpected response format for user roles");
+        return;
+      }
+
+      print("🔍 Processed driver roles list: $roles");
+
+      final hasDriverRole = roles.any((role) =>
+          role['user'].toString() == userId && role['role'] == 3);
+
+      print("🔍 Has driver role: $hasDriverRole");
+
+      if (!hasDriverRole) {
+        final response = await ApiService().postWithAdminToken("user-roles/", {
+          "user": int.parse(userId),
+          "role": 3, // Driver
+        });
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          print("✅ Driver role assigned to user $userId");
+        } else {
+          print("❌ Failed to assign Driver role. Status: ${response.statusCode}");
+          print("❌ Response data: ${response.data}");
+        }
+      } else {
+        print("ℹ️ User already has Driver role.");
+      }
+    } catch (e) {
+      print("❌ Error assigning Driver role: $e");
+    }
+  }
 
 
 
@@ -195,11 +396,26 @@ class CarService {
   }) async {
     try {
       print('Updating car using admin token...');
-      final carRes = await ApiService().patchWithAdminToken('cars/$carId/', carData);
-      final rentalRes = await ApiService().patchWithAdminToken('car-rental-options/$carId/', rentalOptionsData);
-      final usageRes = await ApiService().patchWithAdminToken('car-usage-policy/$carId/', usagePolicyData);
+      final carRes = await ApiService().patchWithToken('cars/$carId/', carData);
+      final rentalRes = await ApiService().patchWithToken('car-rental-options/$carId/', rentalOptionsData);
+      final usageRes = await ApiService().patchWithToken('car-usage-policy/$carId/', usagePolicyData);
       if (carRes.statusCode == 200 && rentalRes.statusCode == 200 && usageRes.statusCode == 200) {
         print('Car, rental options, and usage policy updated successfully');
+        
+        // ✅ Check for role assignment after successful update
+        final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
+        await authCubit.loadUserData();
+        final userId = authCubit.userModel?.id;
+
+        if (userId != null) {
+          // Check if "with driver" option is selected (assign driver role)
+          final hasWithDriverOption = rentalOptionsData['available_with_driver'] == true;
+          if (hasWithDriverOption) {
+            print("🚗 With driver option selected during update - assigning driver role");
+            await assignRoleDriver(userId);
+          }
+        }
+        
         return true;
       } else {
         print('Failed to update car or related data');
@@ -218,6 +434,21 @@ class CarService {
         final usageRes = await ApiService().patchWithToken('car-usage-policy/$carId/', usagePolicyData);
         if (carRes.statusCode == 200 && rentalRes.statusCode == 200 && usageRes.statusCode == 200) {
           print('Car, rental options, and usage policy updated successfully (user token)');
+          
+          // ✅ Check for role assignment after successful update
+          final authCubit = BlocProvider.of<AuthCubit>(navigatorKey.currentContext!);
+          await authCubit.loadUserData();
+          final userId = authCubit.userModel?.id;
+
+          if (userId != null) {
+            // Check if "with driver" option is selected (assign driver role)
+            final hasWithDriverOption = rentalOptionsData['available_with_driver'] == true;
+            if (hasWithDriverOption) {
+              print("🚗 With driver option selected during update - assigning driver role");
+              await assignRoleDriver(userId);
+            }
+          }
+          
           return true;
         } else {
           print('Failed to update car or related data (user token)');
@@ -339,5 +570,62 @@ class CarService {
       print('Error getting car details with user token: $e');
     }
     return null;
+  }
+
+  // Debug function to check user roles
+  Future<void> debugUserRoles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final adminToken = prefs.getString('admin_access_token');
+      if (adminToken == null) {
+        print("❌ Admin token not found. Cannot check user roles.");
+        return;
+      }
+
+      print("🔍 Checking all user roles...");
+      final rolesResponse = await ApiService().getWithAdminToken("user-roles/");
+      print("🔍 Roles response data type: ${rolesResponse.data.runtimeType}");
+      print("🔍 Roles response data: ${rolesResponse.data}");
+      
+      List roles;
+      if (rolesResponse.data is Map) {
+        final data = rolesResponse.data as Map;
+        if (data.containsKey('results')) {
+          roles = List.from(data['results']);
+        } else if (data.containsKey('data')) {
+          roles = List.from(data['data']);
+        } else {
+          roles = [data];
+        }
+      } else if (rolesResponse.data is List) {
+        roles = List.from(rolesResponse.data);
+      } else {
+        print("❌ Unexpected response format for user roles");
+        return;
+      }
+
+      print("🔍 All user roles:");
+      for (final role in roles) {
+        final userId = role['user'];
+        final roleId = role['role'];
+        String roleName = '';
+        switch (roleId) {
+          case 1:
+            roleName = 'Renter';
+            break;
+          case 2:
+            roleName = 'Owner';
+            break;
+          case 3:
+            roleName = 'Driver';
+            break;
+          default:
+            roleName = 'Unknown';
+        }
+        print("   User ID: $userId → Role: $roleId ($roleName)");
+      }
+    } catch (e) {
+      print("❌ Error checking user roles: $e");
+    }
   }
 }

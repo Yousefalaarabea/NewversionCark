@@ -13,7 +13,7 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
    ///     baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
-        baseUrl: 'https://start-heading-ships-translations.trycloudflare.com/api/',
+        baseUrl: 'https://independent-brook-nobody-conferences.trycloudflare.com/api/',
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         headers: {
@@ -202,6 +202,69 @@ class ApiService {
     );
     return response;
   }
+
+  // Future<void> assignRoleOwner(int userId) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final adminToken = prefs.getString('admin_access_token');
+  //     if (adminToken == null) {
+  //       print("❌ Admin token not found. Cannot assign owner role.");
+  //       return;
+  //     }
+  //
+  //     // Get current roles (you may want to GET user-role/ to check if already has Owner)
+  //     final rolesResponse = await ApiService().getWithAdminToken("user-roles/");
+  //     final List roles = rolesResponse.data;
+  //
+  //     final hasOwnerRole = roles.any((role) =>
+  //     role['user'] == userId && role['role'] == 2);
+  //
+  //     final isRenterOnly = roles.any((role) =>
+  //     role['user'] == userId && role['role'] == 1) &&
+  //         !hasOwnerRole;
+  //
+  //     if (isRenterOnly) {
+  //       final response = await ApiService().postWithAdminToken("user-roles/", {
+  //         "user": userId,
+  //         "role": 2, // Owner
+  //       });
+  //
+  //       if (response.statusCode == 201 || response.statusCode == 200) {
+  //         print("✅ Owner role assigned to user $userId");
+  //       } else {
+  //         print("❌ Failed to assign Owner role. Status: ${response.statusCode}");
+  //       }
+  //     } else {
+  //       print("ℹ️ User already has Owner role or is not just a Renter.");
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error assigning Owner role: $e");
+  //   }
+  // }
+  //
+  // Future<void> assignRoleDriver(int userId) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final adminToken = prefs.getString('admin_access_token');
+  //     if (adminToken == null) {
+  //       print("❌ Admin token not found. Cannot assign driver role.");
+  //       return;
+  //     }
+  //
+  //     final response = await ApiService().postWithAdminToken("user-roles/", {
+  //       "user": userId,
+  //       "role": 3, // Driver
+  //     });
+  //
+  //     if (response.statusCode == 201 || response.statusCode == 200) {
+  //       print("✅ Driver role assigned to user $userId");
+  //     } else {
+  //       print("❌ Failed to assign Driver role. Status: ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error assigning Driver role: $e");
+  //   }
+  // }
 
   // Delete with admin token for operations that need admin privileges
   Future<Response> deleteWithAdminToken(String endpoint) async {
