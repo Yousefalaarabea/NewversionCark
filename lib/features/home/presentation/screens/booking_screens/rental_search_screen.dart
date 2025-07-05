@@ -6,6 +6,7 @@ import 'package:test_cark/config/routes/screens_name.dart';
 import 'package:test_cark/core/utils/assets_manager.dart';
 import '../../cubit/car_cubit.dart';
 import '../../model/car_model.dart';
+import '../../model/location_model.dart';
 import '../../widgets/rental_widgets/date_selector.dart';
 import '../../widgets/rental_widgets/driver_filter_selector.dart';
 import '../../widgets/rental_widgets/payment_method_selector.dart';
@@ -133,42 +134,92 @@ class RentalSearchScreen extends StatelessWidget {
 
                         const DriverFilterSelector(),
 
-                        // Pick-up
                         // const StationInput(isPickup: true),
                         //
                         // SizedBox(height: 20.h),
-
-                        // Return Station (Optional)
+                        //
+                        // // Return Station (Optional)
                         // const StationInput(isPickup: false),
                         //
                         // SizedBox(height: 16.h),
-
-                        // // ✅ Manual Pickup TextField
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Enter Pickup Location',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
-                            prefixIcon: Icon(Icons.location_on),
-                          ),
-                          onChanged: (value) {
-                            context.read<CarCubit>().setPickupText(value);
-                          },
-                        ),
-
-                        SizedBox(height: 20.h),
                         //
-                        // // ✅ Manual Dropoff TextField
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Enter Dropoff Location',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
-                            prefixIcon: Icon(Icons.location_on_outlined),
-                          ),
-                          onChanged: (value) {
-                            context.read<CarCubit>().setDropoffText(value);
+                        // // // ✅ Manual Pickup TextField
+                        // // TextFormField(
+                        // //   decoration: InputDecoration(
+                        // //     labelText: 'Enter Pickup Location',
+                        // //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                        // //     prefixIcon: Icon(Icons.location_on),
+                        // //   ),
+                        // //   onChanged: (value) {
+                        // //     context.read<CarCubit>().setPickupText(value);
+                        // //   },
+                        // // ),
+                        // //
+                        // // SizedBox(height: 20.h),
+                        // // //
+                        // // // // ✅ Manual Dropoff TextField
+                        // // TextFormField(
+                        // //   decoration: InputDecoration(
+                        // //     labelText: 'Enter Dropoff Location',
+                        // //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                        // //     prefixIcon: Icon(Icons.location_on_outlined),
+                        // //   ),
+                        // //   onChanged: (value) {
+
+                        // ===== Default Location Inputs (Temporary for offline/demo) =====
+                        Builder(
+                          builder: (context) {
+                            // Set default pickup and return stations ONCE
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final carCubit = context.read<CarCubit>();
+                              if (carCubit.state.pickupStation == null) {
+                                carCubit.setPickupStation(
+                                  LocationModel(
+                                    name: 'Cairo Airport',
+                                    address: 'Cairo International Airport, Cairo, Egypt',
+                                    lat: 30.1121,
+                                    lng: 31.4004,
+                                  ),
+                                );
+                              }
+                              if (carCubit.state.returnStation == null) {
+                                carCubit.setReturnStation(
+                                  LocationModel(
+                                    name: 'Downtown Cairo',
+                                    address: 'Tahrir Square, Cairo, Egypt',
+                                    lat: 30.0444,
+                                    lng: 31.2357,
+                                  ),
+                                );
+                              }
+                            });
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  initialValue: 'Cairo Airport',
+                                  enabled: false,
+                                  decoration: InputDecoration(
+                                    labelText: 'Pickup Location (Default)',
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                                    prefixIcon: Icon(Icons.location_on),
+                                  ),
+                                ),
+                                SizedBox(height: 20.h),
+                                TextFormField(
+                                  initialValue: 'Downtown Cairo',
+                                  enabled: false,
+                                  decoration: InputDecoration(
+                                    labelText: 'Return Location (Default)',
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                                    prefixIcon: Icon(Icons.location_on_outlined),
+                                  ),
+                                ),
+                                SizedBox(height: 16.h),
+                              ],
+                            );
                           },
                         ),
-                        SizedBox(height: 20.h),
 
                         // Stops Section (only with driver)
                         if (withDriver == true) ...[
@@ -394,32 +445,6 @@ class RentalSearchScreen extends StatelessWidget {
                                         ),
                                       );
                                       return;
-                                    }
-
-                                    // --- SAVE SEARCH DATA TO FIRESTORE ---
-                                    try {
-                                      await FirebaseFirestore.instance.collection('rental_searches').add({
-                                        'pickupStation': pickupStation.name,
-                                        'returnStation': returnStation.name,
-                                        'fromDate': dateRange.start.toIso8601String(),
-                                        'toDate': dateRange.end.toIso8601String(),
-                                        'withDriver': withDriver,
-                                        'paymentMethod': selectedPaymentMethod,
-                                        'createdAt': DateTime.now().toIso8601String(),
-                                      });
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Search saved successfully!'),
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      );
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Failed to save search: ' + e.toString()),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
                                     }
 
                                     // Navigate to offers/home screen

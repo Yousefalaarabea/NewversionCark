@@ -10,7 +10,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Keep Firebase for Firestore
+  //await Firebase.initializeApp(); // Keep Firebase for Firestore
   await EasyLocalization.ensureInitialized();
   Bloc.observer = MyBlocObserver();
 

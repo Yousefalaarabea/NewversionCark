@@ -1,11 +1,45 @@
+// Example notification payload required for this screen:
+// {
+//   "id": "f71a12a9-eb89-4bc1-a245-a6f6c0129005",
+//   "sender": 2,
+//   "sender_email": "ahmed5@example.com",
+//   "receiver": 2,
+//   "receiver_email": "ahmed5@example.com",
+//   "title": "New Booking Request",
+//   "message": "Ahmed Ali has requested to rent your Toyota Toyota Corolla",
+//   "notification_type": "RENTAL",
+//   "type_display": "حجز",
+//   "priority": "HIGH",
+//   "priority_display": "عالية",
+//   "data": {
+//       "renterId": 2,
+//       "carId": 1,
+//       "status": "PendingOwnerConfirmation",
+//       "rentalId": 20,
+//       "startDate": "2025-06-17T00:00:00+00:00",
+//       "endDate": "2025-06-20T00:00:00+00:00",
+//       "pickupAddress": "Tahrir Square, Cairo",
+//       "dropoffAddress": "Pyramids of Giza",
+//       "renterName": "Ahmed Ali",
+//       "carName": "Toyota Toyota Corolla",
+//       "dailyPrice": 100.0,
+//       "totalDays": 4,
+//       "totalAmount": 496.6,
+//       "depositAmount": 74.49
+//   },
+//   "navigation_id": "REQ_OWNER",
+//   "is_read": true,
+//   "read_at": "2025-07-05T00:21:04.399980Z",
+//   "created_at": "2025-07-05T00:20:24.663694Z",
+//   "time_ago": "منذ 5 ساعة"
+// }
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../config/routes/screens_name.dart';
 import '../../../../../config/themes/app_colors.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
-import '../../../../auth/presentation/models/user_model.dart';
 import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 
 class OwnerTripRequestScreen extends StatefulWidget {
@@ -24,31 +58,41 @@ class OwnerTripRequestScreen extends StatefulWidget {
 
 class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
   bool _isLoading = false;
-  UserModel? _renterInfo;
 
   @override
   void initState() {
     super.initState();
-    _loadRenterInfo();
+    // Debug logs
+    print('OwnerTripRequestScreen: initState called');
+    print('OwnerTripRequestScreen: bookingRequestId: ${widget.bookingRequestId}');
+    print('OwnerTripRequestScreen: bookingData: ${widget.bookingData}');
   }
 
-  Future<void> _loadRenterInfo() async {
+  // Helper function to format date from ISO string
+  String _formatDate(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) return 'Unknown';
     try {
-      final renterId = widget.bookingData['renterId'] as String?;
-      if (renterId != null) {
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(renterId)
-            .get();
-        
-        if (userDoc.exists) {
-          setState(() {
-            _renterInfo = UserModel.fromJson(userDoc.data()!);
-          });
-        }
-      }
+      final date = DateTime.parse(isoDate);
+      return '${date.day}/${date.month}/${date.year}';
     } catch (e) {
-      print('Error loading renter info: $e');
+      return 'Invalid Date';
+    }
+  }
+
+  // Helper function to extract car brand and model from carName
+  Map<String, String> _extractCarInfo(String? carName) {
+    if (carName == null || carName.isEmpty) {
+      return {'brand': '', 'model': ''};
+    }
+    
+    final parts = carName.split(' ');
+    if (parts.length >= 2) {
+      return {
+        'brand': parts[0],
+        'model': parts.sublist(1).join(' '),
+      };
+    } else {
+      return {'brand': carName, 'model': ''};
     }
   }
 
@@ -56,43 +100,27 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
     setState(() {
       _isLoading = true;
     });
-
     try {
       final authCubit = context.read<AuthCubit>();
       final currentUser = authCubit.userModel;
-      
-      if (currentUser == null) {
-        throw Exception('User not found');
-      }
+      if (currentUser == null) throw Exception('User not found');
 
-      // Update booking request status
-      await FirebaseFirestore.instance
-          .collection('booking_requests')
-          .doc(widget.bookingRequestId)
-          .update({
-        'status': 'accepted',
-        'acceptedAt': DateTime.now().toIso8601String(),
-        'ownerId': currentUser.id,
-      });
-
-      // Send notification to renter
-      final renterId = widget.bookingData['renterId'] as String?;
+      // Send notification to renter (in-app only)
+      final renterId = widget.bookingData['renterId']?.toString();
       final renterName = widget.bookingData['renterName'] as String? ?? 'A renter';
-      final carBrand = widget.bookingData['carBrand'] as String? ?? '';
-      final carModel = widget.bookingData['carModel'] as String? ?? '';
-
+      final carName = widget.bookingData['carName'] as String? ?? '';
+      
       if (renterId != null) {
-        // Send in-app notification to renter
         context.read<NotificationCubit>().sendBookingNotification(
-          renterName: 'You',
-          carBrand: carBrand,
-          carModel: carModel,
+          renterName: renterName,
+          carBrand: carName,
+          carModel: '', // We'll use carName as carBrand
           ownerId: currentUser.id.toString(),
           renterId: renterId,
           type: 'booking_accepted',
         );
       }
-
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -100,7 +128,6 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        
         Navigator.pop(context);
       }
     } catch (e) {
@@ -113,45 +140,28 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() { _isLoading = false; });
     }
   }
 
   Future<void> _rejectRequest() async {
     final reason = await _showRejectionDialog();
     if (reason == null) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
+    
+    setState(() { _isLoading = true; });
     try {
-      await FirebaseFirestore.instance
-          .collection('booking_requests')
-          .doc(widget.bookingRequestId)
-          .update({
-        'status': 'declined',
-        'declinedAt': DateTime.now().toIso8601String(),
-        'rejectionReason': reason,
-      });
-
-      final renterId = widget.bookingData['renterId'] as String?;
+      final renterId = widget.bookingData['renterId']?.toString();
       if (renterId != null) {
-        // Send in-app notification to renter
         context.read<NotificationCubit>().sendBookingNotification(
-          renterName: 'You',
-          carBrand: widget.bookingData['carBrand'] as String? ?? '',
-          carModel: widget.bookingData['carModel'] as String? ?? '',
+          renterName: widget.bookingData['renterName'] as String? ?? '',
+          carBrand: widget.bookingData['carName'] as String? ?? '',
+          carModel: '',
           ownerId: '',
           renterId: renterId,
           type: 'booking_declined',
         );
       }
-
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -159,7 +169,6 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
             backgroundColor: Colors.orange,
           ),
         );
-        
         Navigator.pop(context);
       }
     } catch (e) {
@@ -172,17 +181,12 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() { _isLoading = false; });
     }
   }
 
   Future<String?> _showRejectionDialog() async {
     final TextEditingController reasonController = TextEditingController();
-    
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -220,7 +224,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    final data = widget.bookingData;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trip Request'),
@@ -235,13 +239,13 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildRenterInfoCard(theme),
+                  _buildRenterInfoCard(theme, data),
                   SizedBox(height: 16.h),
-                  _buildCarDetailsCard(theme),
+                  _buildCarDetailsCard(theme, data),
                   SizedBox(height: 16.h),
-                  _buildLocationAndDatesCard(theme),
+                  _buildLocationAndDatesCard(theme, data),
                   SizedBox(height: 16.h),
-                  _buildPaymentDetailsCard(theme),
+                  _buildPaymentDetailsCard(theme, data),
                   SizedBox(height: 32.h),
                 ],
               ),
@@ -250,7 +254,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
     );
   }
 
-  Widget _buildRenterInfoCard(ThemeData theme) {
+  Widget _buildRenterInfoCard(ThemeData theme, Map<String, dynamic> data) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -273,7 +277,6 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
               ],
             ),
             SizedBox(height: 16.h),
-            
             Row(
               children: [
                 CircleAvatar(
@@ -286,35 +289,24 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
                   ),
                 ),
                 SizedBox(width: 16.w),
-                
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _renterInfo != null 
-                            ? '${_renterInfo!.firstName} ${_renterInfo!.lastName}'
-                            : widget.bookingData['renterName'] ?? 'Unknown Renter',
+                        data['renterName'] ?? 'Unknown Renter',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 4.h),
-                      if (_renterInfo != null) ...[
+                      if (data['sender_email'] != null)
                         Text(
-                          _renterInfo!.email,
+                          data['sender_email'],
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.grey[600],
                           ),
                         ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _renterInfo!.phoneNumber,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -326,10 +318,10 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
     );
   }
 
-  Widget _buildCarDetailsCard(ThemeData theme) {
-    final carBrand = widget.bookingData['carBrand'] as String? ?? '';
-    final carModel = widget.bookingData['carModel'] as String? ?? '';
-
+  Widget _buildCarDetailsCard(ThemeData theme, Map<String, dynamic> data) {
+    final carName = data['carName'] as String? ?? '';
+    final carInfo = _extractCarInfo(carName);
+    
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -352,20 +344,25 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
               ],
             ),
             SizedBox(height: 16.h),
-            
             _buildDetailRow(
               icon: Icons.directions_car,
               title: 'Car Brand',
-              value: carBrand,
+              value: carInfo['brand'] ?? '',
               iconColor: Colors.blue,
             ),
             SizedBox(height: 12.h),
-            
             _buildDetailRow(
               icon: Icons.car_rental,
               title: 'Car Model',
-              value: carModel,
+              value: carInfo['model'] ?? '',
               iconColor: Colors.indigo,
+            ),
+            SizedBox(height: 12.h),
+            _buildDetailRow(
+              icon: Icons.attach_money,
+              title: 'Daily Price',
+              value: '\$${(data['dailyPrice'] as double? ?? 0.0).toStringAsFixed(2)}',
+              iconColor: Colors.green,
             ),
           ],
         ),
@@ -373,30 +370,13 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
     );
   }
 
-  Widget _buildLocationAndDatesCard(ThemeData theme) {
-    final pickupStation = widget.bookingData['pickupStation'] as String? ?? '';
-    final returnStation = widget.bookingData['returnStation'] as String? ?? '';
-    final dateRange = widget.bookingData['dateRange'] as String? ?? '';
+  Widget _buildLocationAndDatesCard(ThemeData theme, Map<String, dynamic> data) {
+    final pickupAddress = data['pickupAddress'] as String? ?? '';
+    final dropoffAddress = data['dropoffAddress'] as String? ?? '';
+    final startDate = _formatDate(data['startDate'] as String?);
+    final endDate = _formatDate(data['endDate'] as String?);
+    final totalDays = data['totalDays'] as int? ?? 0;
     
-    // Parse date range to extract start and end dates
-    String startDate = 'Unknown';
-    String endDate = 'Unknown';
-    
-    try {
-      if (dateRange.contains(' - ')) {
-        final dates = dateRange.split(' - ');
-        if (dates.length >= 2) {
-          startDate = dates[0].trim();
-          endDate = dates[1].trim();
-        }
-      } else {
-        startDate = dateRange;
-        endDate = dateRange;
-      }
-    } catch (e) {
-      print('Error parsing date range: $e');
-    }
-
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -419,7 +399,6 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
               ],
             ),
             SizedBox(height: 16.h),
-            
             // Pickup location with start date
             Row(
               children: [
@@ -438,7 +417,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
                         ),
                       ),
                       Text(
-                        pickupStation,
+                        pickupAddress,
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
@@ -472,7 +451,6 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
               ],
             ),
             SizedBox(height: 16.h),
-            
             // Return location with end date
             Row(
               children: [
@@ -491,7 +469,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
                         ),
                       ),
                       Text(
-                        returnStation,
+                        dropoffAddress,
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
@@ -524,16 +502,42 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
                 ),
               ],
             ),
+            SizedBox(height: 16.h),
+            // Total days
+            Row(
+              children: [
+                Icon(Icons.calendar_today, color: Colors.orange, size: 20.sp),
+                SizedBox(width: 12.w),
+                Text(
+                  'Total Days: ',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  '$totalDays days',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPaymentDetailsCard(ThemeData theme) {
-    final totalPrice = widget.bookingData['totalPrice'] as double? ?? 0.0;
-    final paymentMethod = widget.bookingData['paymentMethod'] as String? ?? 'Unknown';
-
+  Widget _buildPaymentDetailsCard(ThemeData theme, Map<String, dynamic> data) {
+    final totalAmount = data['totalAmount'] as double? ?? 0.0;
+    final depositAmount = data['depositAmount'] as double? ?? 0.0;
+    final dailyPrice = data['dailyPrice'] as double? ?? 0.0;
+    final totalDays = data['totalDays'] as int? ?? 0;
+    
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -556,20 +560,32 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
               ],
             ),
             SizedBox(height: 16.h),
-            
             _buildDetailRow(
               icon: Icons.attach_money,
-              title: 'Total Price',
-              value: '\$${totalPrice.toStringAsFixed(2)}',
-              iconColor: Colors.green,
+              title: 'Daily Price',
+              value: '\$${dailyPrice.toStringAsFixed(2)}',
+              iconColor: Colors.blue,
             ),
             SizedBox(height: 12.h),
-            
+            _buildDetailRow(
+              icon: Icons.calendar_today,
+              title: 'Total Days',
+              value: '$totalDays days',
+              iconColor: Colors.orange,
+            ),
+            SizedBox(height: 12.h),
             _buildDetailRow(
               icon: Icons.account_balance_wallet,
-              title: 'Payment Method',
-              value: paymentMethod,
-              iconColor: Colors.purple,
+              title: 'Deposit Amount',
+              value: '\$${depositAmount.toStringAsFixed(2)}',
+              iconColor: Colors.amber,
+            ),
+            SizedBox(height: 12.h),
+            _buildDetailRow(
+              icon: Icons.payment,
+              title: 'Total Amount',
+              value: '\$${totalAmount.toStringAsFixed(2)}',
+              iconColor: Colors.green,
             ),
           ],
         ),
@@ -656,7 +672,6 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
             ),
           ),
           SizedBox(width: 16.w),
-          
           Expanded(
             child: ElevatedButton(
               onPressed: _isLoading ? null : _acceptRequest,

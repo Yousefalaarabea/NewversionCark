@@ -13,7 +13,7 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
    ///     baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
-        baseUrl: 'https://independent-brook-nobody-conferences.trycloudflare.com/api/',
+        baseUrl: 'https://tight-probe-galaxy-criteria.trycloudflare.com/api/',
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         headers: {
@@ -368,6 +368,22 @@ class ApiService {
   Future<Response> delete(String endpoint) async {
     try {
       final response = await _dio.delete(endpoint);
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Login method
+  Future<Response> login({required String email, required String password}) async {
+    try {
+      final response = await _dio.post(
+        'token/',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
       return response;
     } catch (e) {
       rethrow;

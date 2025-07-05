@@ -74,13 +74,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Navigate to appropriate notification screen based on user role
                 final authCubit = context.read<AuthCubit>();
                 final user = authCubit.userModel;
-                if (user?.role == 'owner') {
-                  Navigator.pushNamed(
-                      context, ScreensName.ownerNotificationScreen);
-                } else {
-                  Navigator.pushNamed(
-                      context, ScreensName.renterNotificationScreen);
-                }
+                // if (user?.role == 'owner') {
+                //   Navigator.pushNamed(
+                //       context, ScreensName.newnotifytest);
+                // } else {
+                //   Navigator.pushNamed(
+                //       context, ScreensName.newnotifytest);
+                // }
+                Navigator.pushNamed(
+                    context, ScreensName.newnotifytest);
               },
             ),
           ],
@@ -217,6 +219,33 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () =>
                         _navigateAndCloseDrawer(
                             context, const NotificationTestScreen()),
+                  ),
+                  // Test Login API (for development)
+                  ListTile(
+                    leading: const Icon(Icons.login),
+                    title: const Text('Test Login API'),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamed(context, '/test-login');
+                    },
+                  ),
+                  // Test Booking API (for development)
+                  ListTile(
+                    leading: const Icon(Icons.book_online),
+                    title: const Text('Test Booking API'),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamed(context, '/test-booking-api');
+                    },
+                  ),
+                  // Test Rental Flow (for development)
+                  ListTile(
+                    leading: const Icon(Icons.route),
+                    title: const Text('Test Rental Flow'),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamed(context, '/rental-flow-test');
+                    },
                   ),
                   const Divider(),
                   ListTile(

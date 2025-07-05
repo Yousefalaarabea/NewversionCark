@@ -5,21 +5,26 @@ import 'package:test_cark/config/themes/app_colors.dart';
 import 'package:test_cark/features/home/presentation/screens/booking_screens/payment_methods_screen.dart';
 import '../../../../../config/routes/screens_name.dart';
 import '../../model/car_model.dart';
+import '../../../model/car_rental_preview_model.dart';
 import '../../cubit/car_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../cubit/booking_api_cubit.dart';
 import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 
 import 'deposit_input_screen.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
   final CarModel car;
-  final double totalPrice;
-  final CarRentalOptions rentalOptions;
+  final CarRentalPreviewModel? rentalPreview;
 
-  const BookingSummaryScreen(
-      {super.key, required this.car, required this.totalPrice, required this.rentalOptions});
+  const BookingSummaryScreen({
+    super.key,
+    required this.car,
+    this.rentalPreview,
+  });
 
   @override
   State<BookingSummaryScreen> createState() => _BookingSummaryScreenState();
@@ -64,54 +69,87 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: Text(
-          tr("booking_confirmation"),
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
-        ),
-      ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(20.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderSection(),
-                SizedBox(height: 24.h),
-                _buildCarDetailsCard(),
-                SizedBox(height: 20.h),
-                _buildConditionsCard(),
-                SizedBox(height: 20.h),
-                _buildBookingOverviewCard(),
-                SizedBox(height: 24.h),
-                _buildAgreementSection(),
-                SizedBox(height: 32.h),
-                _buildContinueButton(),
-                SizedBox(height: 20.h),
-              ],
+    return BlocListener<BookingApiCubit, BookingApiState>(
+        listener: (context, state) {
+          if (state is BookingApiSuccess) {
+            // Send notification to car owner
+            _sendNotificationToOwner(context, state.data);
+
+            // Show success message and navigate based on rental type
+            final rentalType = state.data['rental_type'];
+            if (rentalType == 'WithDriver') {
+              // Navigate to payment screen for with driver
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                                      builder: (_) => PaymentMethodsScreen(
+                      car: widget.car,
+                      totalPrice: widget.rentalPreview?.totalPrice ?? 0.0,
+                    ),
+                ),
+              );
+            } else {
+              // Show confirmation dialog for without driver
+              _showBookingRequestDialog(
+                  context, 'Your booking request has been sent');
+            }
+          } else if (state is BookingApiError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${state.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF8F9FA),
+          appBar: AppBar(
+            title: Text(
+              tr("booking_confirmation"),
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.black87),
+            centerTitle: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(20),
+              ),
             ),
           ),
-        ),
-      ),
-    );
+          body: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeaderSection(),
+                    SizedBox(height: 24.h),
+                    _buildCarDetailsCard(),
+                    SizedBox(height: 20.h),
+                    _buildConditionsCard(),
+                    SizedBox(height: 20.h),
+                    _buildBookingOverviewCard(),
+                    SizedBox(height: 24.h),
+                    _buildAgreementSection(),
+                    SizedBox(height: 32.h),
+                    _buildContinueButton(),
+                    SizedBox(height: 20.h),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ));
   }
 
   Widget _buildHeaderSection() {
@@ -176,6 +214,16 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
   }
 
   Widget _buildCarDetailsCard() {
+    // Use car details from rental preview if available, otherwise fallback to car model
+    final carDetails = widget.rentalPreview?.carDetails;
+    final displayBrand = carDetails?.brand ?? widget.car.brand;
+    final displayModel = carDetails?.model ?? widget.car.model;
+    final displayCarType = widget.car.carType;
+    final displayColor = carDetails?.color;
+    final displayTransmission = carDetails?.transmissionType;
+    final displayFuelType = carDetails?.fuelType;
+    final displaySeatingCapacity = carDetails?.seatingCapacity ?? widget.car.seatingCapacity;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -233,7 +281,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${widget.car.brand} ${widget.car.model}',
+                    '$displayBrand $displayModel',
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
@@ -253,7 +301,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
-                          widget.car.carType,
+                          displayCarType,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: AppColors.primary,
@@ -271,11 +319,71 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                       ),
                     ],
                   ),
+                  // Add additional car details from API if available
+                  if (carDetails != null) ...[
+                    SizedBox(height: 12.h),
+                    Row(
+                      children: [
+                        _buildCarDetailChip(Icons.palette, displayColor ?? 'N/A'),
+                        SizedBox(width: 8.w),
+                        _buildCarDetailChip(Icons.settings, displayTransmission ?? 'N/A'),
+                        SizedBox(width: 8.w),
+                        _buildCarDetailChip(Icons.local_gas_station, displayFuelType ?? 'N/A'),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        _buildCarDetailChip(Icons.person, '$displaySeatingCapacity seats'),
+                        SizedBox(width: 8.w),
+                        _buildCarDetailChip(Icons.star, '${carDetails.avgRating.toStringAsFixed(1)} (${carDetails.totalReviews})'),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Icon(Icons.person_outline, color: Colors.grey.shade600, size: 16.sp),
+                        SizedBox(width: 4.w),
+                        Text(
+                          'Owner: ${carDetails.ownerName}',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCarDetailChip(IconData icon, String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(6.r),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12.sp, color: Colors.grey[600]),
+          SizedBox(width: 4.w),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -446,6 +554,13 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
               ],
             ),
             SizedBox(height: 16.h),
+            // Show rental details from API if available
+            if (widget.rentalPreview != null) ...[
+              _buildRentalDetailsSection(),
+              SizedBox(height: 16.h),
+              Divider(color: Colors.grey[200]),
+              SizedBox(height: 16.h),
+            ],
             _buildOverviewItem(
               Icons.verified,
               tr("third_party_insurance"),
@@ -461,11 +576,24 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
               tr("theft_protection"),
               Colors.purple,
             ),
-            _buildOverviewItem(
-              Icons.speed,
-              tr("km_included"),
-              Colors.orange,
-            ),
+            if (widget.rentalPreview != null) ...[
+              _buildOverviewItem(
+                Icons.speed,
+                '${widget.rentalPreview!.dailyKmLimit.toInt()} km daily limit',
+                Colors.orange,
+              ),
+              _buildOverviewItem(
+                Icons.attach_money,
+                '\$${widget.rentalPreview!.extraKmCost.toStringAsFixed(2)} per extra km',
+                Colors.red,
+              ),
+            ] else ...[
+              _buildOverviewItem(
+                Icons.speed,
+                tr("km_included"),
+                Colors.orange,
+              ),
+            ],
             _buildOverviewItem(
               Icons.schedule,
               tr("flexible_booking"),
@@ -474,6 +602,147 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRentalDetailsSection() {
+    if (widget.rentalPreview == null) return SizedBox.shrink();
+    
+    final rental = widget.rentalPreview!;
+    
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_today, color: Colors.blue, size: 16.sp),
+              SizedBox(width: 8.w),
+              Text(
+                'Rental Period',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildRentalDetailItem(
+                  'From',
+                  rental.startDate,
+                  Icons.flight_takeoff,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: _buildRentalDetailItem(
+                  'To',
+                  rental.endDate,
+                  Icons.flight_land,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildRentalDetailItem(
+                  'Duration',
+                  '${rental.durationDays} days',
+                  Icons.schedule,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: _buildRentalDetailItem(
+                  'Daily Price',
+                  '\$${rental.dailyPrice.toStringAsFixed(2)}',
+                  Icons.attach_money,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Icon(Icons.location_on, color: Colors.grey[600], size: 14.sp),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: Text(
+                  'Pickup: ${rental.pickupAddress}',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey[600],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Row(
+            children: [
+              Icon(Icons.location_on, color: Colors.grey[600], size: 14.sp),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: Text(
+                  'Dropoff: ${rental.dropoffAddress}',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey[600],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRentalDetailItem(String label, String value, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 12.sp, color: Colors.grey[600]),
+            SizedBox(width: 4.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 
@@ -548,7 +817,8 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                     width: 24.w,
                     height: 24.w,
                     decoration: BoxDecoration(
-                      color: _agreedToTerms ? AppColors.primary : Colors.grey[300],
+                      color:
+                          _agreedToTerms ? AppColors.primary : Colors.grey[300],
                       borderRadius: BorderRadius.circular(6.r),
                     ),
                     child: _agreedToTerms
@@ -574,6 +844,10 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
               ],
             ),
           ),
+          // Show pricing details from API if available
+          if (widget.rentalPreview != null) ...[
+            _buildPricingDetailsSection(),
+          ],
           Container(
             padding: EdgeInsets.all(20.r),
             decoration: BoxDecoration(
@@ -598,7 +872,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '\$${widget.totalPrice.toStringAsFixed(2)}',
+                      '\$${(widget.rentalPreview?.totalPrice ?? 0.0).toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
@@ -633,6 +907,59 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
     );
   }
 
+  Widget _buildPricingDetailsSection() {
+    if (widget.rentalPreview == null) return SizedBox.shrink();
+    
+    final pricing = widget.rentalPreview!.pricing;
+    
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.r, vertical: 16.r),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        border: Border(
+          top: BorderSide(color: Colors.grey[200]!),
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildPricingRow('Daily Price', '\$${pricing.dailyPrice.toStringAsFixed(2)}'),
+          _buildPricingRow('Base Cost', '\$${pricing.baseCost.toStringAsFixed(2)}'),
+          _buildPricingRow('Service Fee (${pricing.serviceFeePercentage}%)', '\$${pricing.serviceFee.toStringAsFixed(2)}'),
+          Divider(color: Colors.grey[200], height: 24.h),
+          _buildPricingRow('Deposit (${pricing.depositPercentage}%)', '\$${pricing.depositAmount.toStringAsFixed(2)}', isHighlighted: true),
+          _buildPricingRow('Remaining Amount', '\$${pricing.remainingAmount.toStringAsFixed(2)}', isHighlighted: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPricingRow(String label, String value, {bool isHighlighted = false}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: isHighlighted ? Colors.black87 : Colors.grey[600],
+              fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: isHighlighted ? AppColors.primary : Colors.black87,
+              fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildContinueButton() {
     return Container(
       width: double.infinity,
@@ -660,7 +987,8 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                   // Ensure there's at least a pickup and return station, even if no intermediate stops are added
                   if (stops.isEmpty) {
                     final pickup = context.read<CarCubit>().state.pickupStation;
-                    final dropoff = context.read<CarCubit>().state.returnStation;
+                    final dropoff =
+                        context.read<CarCubit>().state.returnStation;
                     if (pickup != null) stops.add(pickup);
                     if (dropoff != null) stops.add(dropoff);
                   }
@@ -678,7 +1006,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                     return;
                   }
 
-                  // Send notification to owner after agreeing to terms
+                  // User data loss
                   final authCubit = context.read<AuthCubit>();
                   final currentUser = authCubit.userModel;
 
@@ -700,54 +1028,43 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                     return;
                   }
 
-                  final renterName = '${currentUser.firstName} ${currentUser.lastName}';
-                  final renterId = currentUser.id;
+                  // Get car cubit state
+                  final carCubit = context.read<CarCubit>();
+                  final pickupLocation = carCubit.state.pickupStation;
+                  final dropoffLocation = carCubit.state.returnStation;
+                  final dateRange = carCubit.state.dateRange;
+                  final paymentMethod = 'visa'; // Default payment method
 
-                  // For demo purposes, use a valid owner ID or create one
-                  final ownerId = widget.car.ownerId == 'owner1' ? '1' : widget.car.ownerId;
-
-                  // Create booking request data
-                  final bookingRequestData = {
-                    'renterId': renterId,
-                    'renterName': renterName,
-                    'carId': widget.car.id,
-                    'carBrand': widget.car.brand,
-                    'carModel': widget.car.model,
-                    'totalPrice': widget.totalPrice,
-                    'pickupStation': context.read<CarCubit>().state.pickupStation?.name ?? '',
-                    'returnStation': context.read<CarCubit>().state.returnStation?.name ?? '',
-                    'dateRange': context.read<CarCubit>().state.dateRange?.toString() ?? '',
-                    'status': 'pending',
-                    'createdAt': DateTime.now().toIso8601String(),
-                    'ownerId': ownerId, // Add owner ID to booking data
-                  };
-
-                  // Save booking request to Firestore for tracking
-                  await _saveBookingRequest(bookingRequestData);
-
-                  // Branch by car rental option
-                  if (widget.rentalOptions.availableWithDriver) {
-                    // ✅ With Driver Flow: Navigate directly to deposit input screen
-                    // This is for cars that come with a driver, so no owner approval needed
-
-                    if (mounted) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PaymentMethodsScreen(
-                            car: widget.car,
-                            totalPrice: widget.totalPrice,
-                          ),
-                        ),
-                      );
-                    }
-                  } else if (widget.rentalOptions.availableWithoutDriver) {
-                    // ✅ Without Driver Flow: Show confirmation dialog and wait for owner acceptance
-                    // This is for cars without driver, so owner needs to approve the request
-                    if (mounted) {
-                      _showBookingRequestDialog(context, renterName);
-                    }
+                  if (pickupLocation == null ||
+                      dropoffLocation == null ||
+                      dateRange == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please fill all required fields'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
                   }
+
+                  // Determine rental type based on options
+                  String rentalType = 'WithoutDriver';
+                  // For now, default to WithoutDriver since we don't have this info in preview
+                  // This can be updated when the API provides rental type information
+
+                  // Create rental using Django API
+                  context.read<BookingApiCubit>().createRental(
+                        car: widget.car,
+                        startDate: dateRange.start,
+                        endDate: dateRange.end,
+                        rentalType: rentalType,
+                        pickupLocation: pickupLocation,
+                        dropoffLocation: dropoffLocation,
+                        paymentMethod: paymentMethod,
+                        stops: carCubit.state.stops,
+                        selectedCardId: 1
+                  );
+
                 } catch (e) {
                   print('Error in booking request: $e');
                   if (mounted) {
@@ -779,7 +1096,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
             ),
             SizedBox(width: 8.w),
             Text(
-              tr("continue_button"),
+              "Rent Car",
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
@@ -790,6 +1107,34 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
         ),
       ),
     );
+  }
+
+  void _sendNotificationToOwner(BuildContext context, Map<String, dynamic> bookingData) {
+    try {
+      // Get current user info
+      final currentUser = context.read<AuthCubit>().currentUser;
+      if (currentUser == null) return;
+
+      // Get car owner info from the car model
+      final carOwnerId = widget.car.ownerId;
+      final carOwnerName = 'Car Owner'; // We don't have owner name in car model
+
+      // Send notification to car owner using in-app notification system
+      context.read<NotificationCubit>().sendBookingNotification(
+        renterName: currentUser.firstName ?? currentUser.email ?? 'User',
+        carBrand: widget.car.brand,
+        carModel: widget.car.model,
+        ownerId: carOwnerId,
+        renterId: currentUser.id?.toString() ?? '',
+        type: 'booking_request',
+        totalPrice: widget.rentalPreview?.totalPrice ?? 0.0,
+        rentalId: bookingData['id']?.toString(),
+      );
+
+      print('✅ Notification sent to car owner: $carOwnerName');
+    } catch (e) {
+      print('❌ Error sending notification to owner: $e');
+    }
   }
 
   void _showBookingRequestDialog(BuildContext context, String renterName) {
@@ -890,19 +1235,5 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
         ],
       ),
     );
-  }
-
-  Future<void> _saveBookingRequest(Map<String, dynamic> bookingRequestData) async {
-    try {
-      // Import FirebaseFirestore at the top of the file
-      await FirebaseFirestore.instance.collection('booking_requests').add({
-        ...bookingRequestData,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      print('Booking request saved successfully');
-    } catch (e) {
-      print('Error saving booking request: $e');
-      // Don't throw the error to avoid crashing the app
-    }
   }
 }

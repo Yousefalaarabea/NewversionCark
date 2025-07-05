@@ -1,73 +1,60 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:test_cark/config/routes/screens_name.dart';
 
-import '../../../auth/presentation/cubits/auth_cubit.dart';
-import '../../../cars/presentation/models/car_rental_options.dart';
 import '../../../home/presentation/model/car_model.dart';
-import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
-
+import '../cubits/notification_cubit.dart';
 
 class RenterNotificationScreen extends StatelessWidget {
   const RenterNotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AuthCubit>().userModel;
-    final userId = user?.id ?? '1';
     return Scaffold(
       appBar: AppBar(title: const Text('Renter Notifications')),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('notifications')
-            .where('type', isEqualTo: 'renter')
-            .where('userId', isEqualTo: userId)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+      body: BlocBuilder<NotificationCubit, NotificationState>(
+        builder: (context, state) {
+          if (state is NotificationLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          final docs = snapshot.data!.docs;
-          if (docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No notifications yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600,
+          if (state is NotificationLoaded) {
+            final notifications = state.notifications;
+            if (notifications.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.notifications_none,
+                      size: 64,
+                      color: Colors.grey.shade400,
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
-          return ListView.builder(
-            padding: EdgeInsets.all(16.r),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
-              final timestamp = data['timestamp'] as Timestamp?;
-              final date = timestamp?.toDate();
-              final isRead = data['read'] ?? false;
-              final notificationType = data['notification_type'] ?? '';
+                    const SizedBox(height: 16),
+                    Text(
+                      'No notifications yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-              String formattedTime = '';
-              if (date != null) {
+            return ListView.builder(
+              padding: EdgeInsets.all(16.r),
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                final isRead = notification.isRead;
+                final notificationType = notification.type;
+                final date = notification.date;
+                String formattedTime = '';
                 final now = DateTime.now();
                 final difference = now.difference(date);
-
                 if (difference.inDays > 0) {
                   formattedTime = '${difference.inDays}d ago';
                 } else if (difference.inHours > 0) {
@@ -77,87 +64,91 @@ class RenterNotificationScreen extends StatelessWidget {
                 } else {
                   formattedTime = 'Just now';
                 }
-              }
-
-              return Card(
-                margin: EdgeInsets.only(bottom: 12.h),
-                color: isRead ? Colors.grey.shade50 : Colors.white,
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: isRead ? Colors.grey.shade300 : Colors.blue,
-                        child: Icon(
-                          _getNotificationIcon(notificationType),
-                          color: isRead ? Colors.grey.shade600 : Colors.white,
-                        ),
-                      ),
-                      title: Text(
-                        data['title'] ?? '',
-                        style: TextStyle(
-                          fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(data['body'] ?? ''),
-                          SizedBox(height: 4.h),
-                          Text(
-                            formattedTime,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        // Mark as read
-                        FirebaseFirestore.instance
-                            .collection('notifications')
-                            .doc(docs[index].id)
-                            .update({'read': true});
-                      },
-                    ),
-                    // Show action button for booking acceptance notifications
-                    if (notificationType == 'booking_accepted' && !isRead)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => _navigateToDepositPayment(context, data, docs[index].id),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: Text(''
-                                'Pay Deposit'),
+                return Card(
+                  margin: EdgeInsets.only(bottom: 12.h),
+                  color: isRead ? Colors.grey.shade50 : Colors.white,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor:
+                              isRead ? Colors.grey.shade300 : Colors.blue,
+                          child: Icon(
+                            _getNotificationIcon(notificationType),
+                            color: isRead ? Colors.grey.shade600 : Colors.white,
                           ),
                         ),
-                      ),
-                    // Show action button for handover notifications
-                    if (notificationType == 'handover' && !isRead)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => _navigateToRenterHandover(context, docs[index].id),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: Text('Proceed to Handover'),
+                        title: Text(
+                          notification.title,
+                          style: TextStyle(
+                            fontWeight:
+                                isRead ? FontWeight.normal : FontWeight.bold,
                           ),
                         ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(notification.message),
+                            SizedBox(height: 4.h),
+                            Text(
+                              formattedTime,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          _handleNotificationTap(context, notification);
+                        },
                       ),
-                  ],
-                ),
-              );
-            },
-          );
+                      // Show action button for booking acceptance notifications
+                      if (notificationType == 'booking_accepted' && !isRead)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 8.h),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => _navigateToDepositPayment(
+                                  context,
+                                  notification.data ?? {},
+                                  notification.id),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text(''
+                                  'Pay Deposit'),
+                            ),
+                          ),
+                        ),
+                      // Show action button for handover notifications
+                      if (notificationType == 'handover' && !isRead)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 8.h),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => _navigateToRenterHandover(
+                                  context, notification.id),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Proceed to Handover'),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }
+          return const SizedBox();
         },
       ),
     );
@@ -176,13 +167,11 @@ class RenterNotificationScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _navigateToRenterHandover(BuildContext context, String notificationId) async {
+  Future<void> _navigateToRenterHandover(
+      BuildContext context, String notificationId) async {
     try {
       // Mark notification as read
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .doc(notificationId)
-          .update({'read': true});
+      context.read<NotificationCubit>().markAsRead(notificationId);
 
       // Navigate to renter handover screen
       if (context.mounted) {
@@ -200,51 +189,27 @@ class RenterNotificationScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _navigateToDepositPayment(BuildContext context, Map<String, dynamic> data, String notificationId) async {
+  Future<void> _navigateToDepositPayment(BuildContext context,
+      Map<String, dynamic> data, String notificationId) async {
     try {
-      // Extract booking data from the notification
-      final bookingData = data['booking_data'] as Map<String, dynamic>?;
-      if (bookingData == null) {
-        throw Exception('Booking data not found in notification');
+      // Extract totalPrice and rentalId from the notification
+      final totalPrice = (data['totalPrice'] ?? 0.0) as num;
+      final rentalId = (data['requestId'] ?? 'test_id').toString();
+      if (totalPrice == null || rentalId == null) {
+        throw Exception('Missing totalPrice or rentalId in notification');
       }
 
       // Mark notification as read
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .doc(notificationId)
-          .update({'read': true});
-
-      // Create car model from booking data for deposit payment screen
-      final car = CarModel(
-        ownerId: bookingData['ownerId'] ?? '',
-        id: int.tryParse(bookingData['carId'].toString()) ?? 0,
-        model: bookingData['carModel'] ?? '',
-        brand: bookingData['carBrand'] ?? '',
-        carType: bookingData['carType'] ?? 'Sedan',
-        carCategory: bookingData['carCategory'] ?? 'Standard',
-        plateNumber: bookingData['plateNumber'] ?? '',
-        year: bookingData['year'] ?? 2023,
-        color: bookingData['color'] ?? 'Black',
-        seatingCapacity: bookingData['seatingCapacity'] ?? 5,
-        transmissionType: bookingData['transmissionType'] ?? 'Automatic',
-        fuelType: bookingData['fuelType'] ?? 'Gasoline',
-        currentOdometerReading: bookingData['currentOdometerReading'] ?? 0,
-        availability: true,
-        currentStatus: 'Available',
-        approvalStatus: true,
-        avgRating: 0.0,
-        totalReviews: 0,
-      );
+      context.read<NotificationCubit>().markAsRead(notificationId);
 
       // Navigate to deposit payment screen
       if (context.mounted) {
         Navigator.pushNamed(
           context,
-          ScreensName.depositPaymentScreen,
+          ScreensName.paymentMethodsScreen,
           arguments: {
-            'car': car,
-            'totalPrice': bookingData['totalPrice']?.toDouble() ?? 0.0,
-            'bookingData': bookingData,
+            'totalPrice': totalPrice.toDouble(),
+            'requestId': rentalId,
           },
         );
       }
@@ -258,6 +223,26 @@ class RenterNotificationScreen extends StatelessWidget {
           ),
         );
       }
+    }
+  }
+
+  // أضف دالة موحدة للتنقل بناءً على نوع الإشعار
+  void _handleNotificationTap(
+      BuildContext context, AppNotification notification) {
+    final notificationType = notification.type;
+    switch (notificationType) {
+      case 'booking_accepted':
+        _navigateToDepositPayment(
+            context, notification.data ?? {}, notification.id);
+        break;
+      case 'handover':
+        _navigateToRenterHandover(context, notification.id);
+        break;
+      // أضف أنواع إشعارات أخرى هنا حسب الحاجة
+      default:
+        // فقط علمه كمقروء
+        context.read<NotificationCubit>().markAsRead(notification.id);
+        break;
     }
   }
 }

@@ -3,6 +3,7 @@ import 'package:test_cark/config/routes/screens_name.dart';
 import 'package:test_cark/features/auth/presentation/screens/login/login_screen.dart';
 import 'package:test_cark/features/auth/presentation/screens/signup/signup_screen.dart';
 import 'package:test_cark/features/cars/presentation/screens/view_car_details_screen.dart';
+import 'package:test_cark/features/notifications/presentation/screens/new_notifications_screen.dart';
 import 'package:test_cark/features/splash/presentation/screens/get_started_screen.dart';
 import '../../features/auth/presentation/screens/profile/edit_profile_screen.dart';
 import '../../features/auth/presentation/screens/profile/profile_screen.dart';
@@ -46,8 +47,12 @@ import '../../features/owner/presentation/screens/owner_ongoing_trip_screen.dart
 import '../../features/owner/presentation/screens/live_location_map_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/saved_trips_screen.dart';
 import '../../features/home/presentation/screens/booking_screens/trip_details_readonly_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/test_login_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/test_booking_api_screen.dart';
+import '../../features/home/presentation/screens/booking_screens/rental_flow_test_screen.dart' as flow_test;
 import 'package:test_cark/features/cars/presentation/cubits/add_car_state.dart';
 import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
+import '../../features/home/model/car_rental_preview_model.dart';
 
 abstract class RoutesManager {
   static Route<dynamic>? onGenerateRoute(RouteSettings routeSettings) {
@@ -78,17 +83,26 @@ abstract class RoutesManager {
       case ScreensName.rentalSearchScreen:
         return MaterialPageRoute(
             builder: (context) => const RentalSearchScreen());
-      case ScreensName.bookingSummaryScreen:
+
+
+        case ScreensName.bookingSummaryScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;
         final car = args['car'] as CarModel;
-        final totalPrice = args['totalPrice'] as double;
-        final rentalOptions = args['rentalOptions'] as CarRentalOptions?;
+        
+        // Handle both old and new argument formats
+        CarRentalPreviewModel? rentalPreview;
+        
+        if (args.containsKey('rentalPreview')) {
+          // New format with rentalPreview
+          rentalPreview = args['rentalPreview'] as CarRentalPreviewModel;
+        }
+        
         return MaterialPageRoute(
             builder: (context) => BookingSummaryScreen(
                   car: car,
-                  totalPrice: totalPrice,
-                  rentalOptions: rentalOptions ?? CarRentalOptions(availableWithoutDriver: false, availableWithDriver: false),
+                  rentalPreview: rentalPreview,
                 ));
+
       case ScreensName.tripManagementScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;
         final car = args['car'] as CarModel;
@@ -117,12 +131,13 @@ abstract class RoutesManager {
                   totalPrice: totalPrice,
                   car: car,
                 ));
-      case ScreensName.ownerNotificationScreen:
-        return MaterialPageRoute(
-            builder: (context) => const OwnerNotificationScreen());
-      case ScreensName.renterNotificationScreen:
-        return MaterialPageRoute(
-            builder: (context) => const RenterNotificationScreen());
+
+      // case ScreensName.ownerNotificationScreen:
+      //   return MaterialPageRoute(
+      //       builder: (context) => const OwnerNotificationScreen());
+      // case ScreensName.renterNotificationScreen:
+      //   return MaterialPageRoute(
+      //       builder: (context) => const RenterNotificationScreen());
 
       case ScreensName.showCarDetailsScreen:
         if (routeSettings.arguments is CarModel) {
@@ -268,20 +283,20 @@ abstract class RoutesManager {
           ),
         );
 
-      case ScreensName.depositPaymentScreen:
-        final args = routeSettings.arguments as Map<String, dynamic>;
-        final car = args['car'] as CarModel;
-        final totalPrice = args['totalPrice'] as double;
-        final requestId = args['requestId'] as String?;
-        final bookingData = args['bookingData'] as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (context) => DepositPaymentScreen(
-            car: car,
-            totalPrice: totalPrice,
-            requestId: requestId,
-            bookingData: bookingData,
-          ),
-        );
+      // case ScreensName.depositPaymentScreen:
+      //   final args = routeSettings.arguments as Map<String, dynamic>;
+      //   final car = args['car'] as CarModel;
+      //   final totalPrice = args['totalPrice'] as double;
+      //   final requestId = args['requestId'] as String?;
+      //   final bookingData = args['bookingData'] as Map<String, dynamic>?;
+      //   return MaterialPageRoute(
+      //     builder: (context) => DepositPaymentScreen(
+      //       car: car,
+      //       totalPrice: totalPrice,
+      //       requestId: requestId,
+      //       bookingData: bookingData,
+      //     ),
+      //   );
 
       case ScreensName.depositInputScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;
@@ -309,13 +324,30 @@ abstract class RoutesManager {
               TripWithDriverConfirmationScreen(tripDetails: args),
         );
       case ScreensName.ownerTripRequestScreen:
-        final args = routeSettings.arguments as Map<String, dynamic>;
-        final bookingRequestId = args['bookingRequestId'] as String;
-        final bookingData = args['bookingData'] as Map<String, dynamic>;
+        print('RoutesManager: Creating ownerTripRequestScreen route');
+        if (routeSettings.arguments is Map<String, dynamic>) {
+          final args = routeSettings.arguments as Map<String, dynamic>;
+          print('RoutesManager: Arguments received: $args');
+          
+          final bookingRequestId = args['bookingRequestId'] as String? ?? 'unknown';
+          final bookingData = args['bookingData'] as Map<String, dynamic>? ?? {};
+          
+          print('RoutesManager: bookingRequestId: $bookingRequestId');
+          print('RoutesManager: bookingData: $bookingData');
+          
+          return MaterialPageRoute(
+            builder: (context) => OwnerTripRequestScreen(
+              bookingRequestId: bookingRequestId,
+              bookingData: bookingData,
+            ),
+          );
+        }
+        print('RoutesManager: Invalid arguments for ownerTripRequestScreen');
         return MaterialPageRoute(
-          builder: (context) => OwnerTripRequestScreen(
-            bookingRequestId: bookingRequestId,
-            bookingData: bookingData,
+          builder: (context) => const Scaffold(
+            body: Center(
+              child: Text('Error: Invalid arguments for owner trip request screen'),
+            ),
           ),
         );
       case ScreensName.renterOngoingTripScreen:
@@ -374,6 +406,19 @@ abstract class RoutesManager {
       case ScreensName.tripDetailsReadOnlyScreen:
         final trip = routeSettings.arguments as TripDetailsModel;
         return MaterialPageRoute(builder: (_) => TripDetailsReadOnlyScreen(trip: trip));
+
+      // Test screens
+      case ScreensName.testLoginScreen:
+        return MaterialPageRoute(builder: (_) => const TestLoginScreen());
+      
+      case ScreensName.testBookingApiScreen:
+        return MaterialPageRoute(builder: (_) => const TestBookingApiScreen());
+
+      case ScreensName.newnotifytest:
+        return MaterialPageRoute(builder: (_) => NewNotificationsScreen());
+      
+      // case ScreensName.rentalFlowTestScreen:
+      //   return MaterialPageRoute(builder: (_) => const flow_test.RentalFlowTestScreen());
 
       default:
         return MaterialPageRoute(builder: (context) {

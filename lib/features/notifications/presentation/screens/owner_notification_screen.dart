@@ -138,10 +138,6 @@ class OwnerNotificationScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: InkWell(
         onTap: () {
-          // Mark as read when tapped
-          context.read<NotificationCubit>().markAsRead(notification.id);
-          
-          // Handle navigation based on notification type
           _handleNotificationTap(context, notification);
         },
         borderRadius: BorderRadius.circular(12.r),
@@ -229,15 +225,32 @@ class OwnerNotificationScreen extends StatelessWidget {
 
   void _handleNotificationTap(BuildContext context, AppNotification notification) {
     // Handle navigation based on notification type and data
-    switch (notification.type) {
-      case 'booking_request':
+    switch (notification.navigationId) {
+      case 'REQ_OWNER':
         // Navigate to booking request screen
         Navigator.pushNamed(
           context,
           ScreensName.ownerTripRequestScreen,
-          arguments: notification.data,
+          arguments: {
+            'bookingRequestId': notification.data?['bookingRequestId'] ?? '',
+            'bookingData': notification.data ?? {},
+          },
         );
         break;
+
+      // case 'ACC_RENTER':
+      // // Navigate to booking request screen
+      //   Navigator.pushNamed(
+      //     context,
+      //     ScreensName.ownerTripRequestScreen,
+      //     arguments: {
+      //       'bookingRequestId': notification.data?['bookingRequestId'] ?? '',
+      //       'bookingData': notification.data ?? {},
+      //     },
+      //   );
+      //   break;
+
+
       case 'deposit_paid':
       case 'handover_started':
         // Navigate to handover screen

@@ -18,7 +18,7 @@ class OwnerHomeScreen extends StatelessWidget {
           // Notification icon with badge
           NotificationBadgeWidget(
             onTap: () {
-              Navigator.pushNamed(context, ScreensName.ownerNotificationScreen);
+              Navigator.pushNamed(context, ScreensName.newnotifytest);
             },
           ),
         ],

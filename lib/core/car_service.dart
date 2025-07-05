@@ -18,7 +18,7 @@ class CarService {
   final Dio _dio = Dio(
     BaseOptions(
       //baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
-      baseUrl: 'http://127.0.0.1:8000/api/',
+      baseUrl: 'https://tight-probe-galaxy-criteria.trycloudflare.com/api/',
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       headers: {

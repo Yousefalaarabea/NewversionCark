@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart'; // Commented out Firebase
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 
 class NotificationBadgeWidget extends StatelessWidget {
   final VoidCallback onTap;
@@ -25,17 +26,13 @@ class NotificationBadgeWidget extends StatelessWidget {
       );
     }
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('notifications')
-          .where('userId', isEqualTo: currentUser.id)
-          .where('read', isEqualTo: false)
-          .snapshots(),
-      builder: (context, snapshot) {
+    // Use in-app notification system instead of Firebase
+    return BlocBuilder<NotificationCubit, NotificationState>(
+      builder: (context, state) {
         int unreadCount = 0;
         
-        if (snapshot.hasData && snapshot.data != null) {
-          unreadCount = snapshot.data!.docs.length;
+        if (state is NotificationLoaded) {
+          unreadCount = state.notifications.where((notification) => !notification.isRead).length;
         }
 
         return Stack(

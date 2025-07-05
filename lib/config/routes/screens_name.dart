@@ -14,11 +14,11 @@ abstract class ScreensName{
   static const String bookingSummaryScreen = "/bookingSummaryScreen";
   static const String tripManagementScreen = "/tripManagementScreen";
   static const String paymentScreen = "/payment_screen";
-  static const String ownerNotificationScreen = "/ownerNotificationScreen";
-  static const String renterNotificationScreen = "/renterNotificationScreen";
+  // static const String ownerNotificationScreen = "/ownerNotificationScreen";
+  // static const String renterNotificationScreen = "/renterNotificationScreen";
   static const String bookingHistoryScreen = "/bookingHistoryScreen";
   static const String bookingRequestScreen = "/bookingRequestScreen";
-  static const String depositPaymentScreen = "/depositPaymentScreen";
+  //static const String depositPaymentScreen = "/depositPaymentScreen";
   static const String paymentMethodsScreen = "/paymentMethodsScreen";
 
   static const String addCarScreen = "/addCarScreen" ;
@@ -44,6 +44,12 @@ abstract class ScreensName{
   static const String sentRequestToOwnerScreen = "/sentRequestToOwnerScreen";
   static const String savedTripsScreen = "/savedTripsScreen";
   static const String tripDetailsReadOnlyScreen = "/tripDetailsReadOnlyScreen";
+
+  // Test screens
+  static const String testLoginScreen = "/test-login";
+  static const String testBookingApiScreen = "/test-booking-api";
+  static const String rentalFlowTestScreen = "/rental-flow-test";
+  static const String newnotifytest = "/newnotifytest";
 
 
 
