@@ -9,7 +9,8 @@ import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 import '../cubits/renter_handover_cubit.dart';
 
 class RenterHandoverScreen extends StatefulWidget {
-  const RenterHandoverScreen({super.key});
+  final int rentalId;
+  const RenterHandoverScreen({super.key, required this.rentalId});
 
   @override
   State<RenterHandoverScreen> createState() => _RenterHandoverScreenState();
@@ -23,6 +24,7 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
   @override
   void initState() {
     super.initState();
+    context.read<RenterHandoverCubit>().setRentalId(widget.rentalId);
     context.read<RenterHandoverCubit>().fetchHandoverStatus();
   }
 

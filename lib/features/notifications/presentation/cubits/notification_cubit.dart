@@ -145,6 +145,23 @@ class AppNotification extends Equatable {
     // Debug logging for other fields
     print('[AppNotification.fromJson] Raw sender: ${json['sender']} (type: ${json['sender']?.runtimeType})');
     print('[AppNotification.fromJson] Raw receiver: ${json['receiver']} (type: ${json['receiver']?.runtimeType})');
+    
+    // Debug logging for data field
+    print('[AppNotification.fromJson] Raw data field: ${json['data']} (type: ${json['data']?.runtimeType})');
+    if (json['data'] is Map) {
+      print('[AppNotification.fromJson] Data field keys: ${(json['data'] as Map).keys.toList()}');
+      // Check for rentalId in data
+      final data = json['data'] as Map;
+      if (data.containsKey('rentalId')) {
+        print('[AppNotification.fromJson] Found rentalId in data: ${data['rentalId']} (type: ${data['rentalId'].runtimeType})');
+      } else if (data.containsKey('rental_id')) {
+        print('[AppNotification.fromJson] Found rental_id in data: ${data['rental_id']} (type: ${data['rental_id'].runtimeType})');
+      } else if (data.containsKey('id')) {
+        print('[AppNotification.fromJson] Found id in data: ${data['id']} (type: ${data['id'].runtimeType})');
+      } else {
+        print('[AppNotification.fromJson] No rentalId found in data field');
+      }
+    }
 
     // Handle sender conversion safely
     int? senderId;
@@ -234,6 +251,152 @@ class NotificationCubit extends Cubit<NotificationState> {
   // Local storage for in-app notifications
   List<AppNotification> _localNotifications = [];
 
+  // Helper method to analyze notification data
+  void _analyzeNotificationData(Map<String, dynamic> json) {
+    print('[Notification Analysis] Analyzing notification:');
+    print('  - ID: ${json['id']}');
+    print('  - Type: ${json['notification_type']}');
+    print('  - Title: ${json['title']}');
+    print('  - Message: ${json['message']}');
+    
+    // Analyze data field
+    final data = json['data'];
+    print('  - Data field: $data (type: ${data.runtimeType})');
+    
+    if (data is Map) {
+      print('  - Data keys: ${data.keys.toList()}');
+      
+      // Check for rentalId in various possible field names
+      final possibleRentalIdFields = ['rentalId', 'rental_id', 'id', 'rental', 'rentalId', 'rentalId'];
+      for (final field in possibleRentalIdFields) {
+        if (data.containsKey(field)) {
+          final value = data[field];
+          print('  - Found $field: $value (type: ${value.runtimeType})');
+        }
+      }
+      
+      // If no rentalId found, print all data for debugging
+      if (!data.containsKey('rentalId') && 
+          !data.containsKey('rental_id') && 
+          !data.containsKey('id') && 
+          !data.containsKey('rental')) {
+        print('  - No rentalId found. All data: $data');
+      }
+    }
+  }
+
+  // Debug method to analyze all notifications of a specific type
+  void analyzeNotificationsByType(String type) {
+    print('[Notification Analysis] Analyzing all notifications of type: $type');
+    final notifications = _localNotifications.where((n) => 
+      n.type == type || n.notificationType == type
+    ).toList();
+    
+    print('[Notification Analysis] Found ${notifications.length} notifications of type $type');
+    
+    for (int i = 0; i < notifications.length; i++) {
+      final notification = notifications[i];
+      print('[Notification Analysis] Notification $i:');
+      print('  - ID: ${notification.id}');
+      print('  - Type: ${notification.type}');
+      print('  - NotificationType: ${notification.notificationType}');
+      print('  - NavigationId: ${notification.navigationId}');
+      print('  - Title: ${notification.title}');
+      print('  - Message: ${notification.message}');
+      print('  - Data: ${notification.data}');
+      
+      if (notification.data != null) {
+        final data = notification.data!;
+        print('  - Data keys: ${data.keys.toList()}');
+        
+        // Check for rentalId in various possible field names
+        final possibleRentalIdFields = ['rentalId', 'rental_id', 'id', 'rental'];
+        for (final field in possibleRentalIdFields) {
+          if (data.containsKey(field)) {
+            final value = data[field];
+            print('  - Found $field: $value (type: ${value.runtimeType})');
+          }
+        }
+        
+        // Check for carDetails
+        if (data.containsKey('carDetails')) {
+          final carDetails = data['carDetails'] as Map<String, dynamic>?;
+          if (carDetails != null) {
+            print('  - Found carDetails with keys: ${carDetails.keys.toList()}');
+            if (carDetails.containsKey('images')) {
+              final images = carDetails['images'] as List<dynamic>?;
+              print('  - Found ${images?.length ?? 0} car images');
+              if (images != null && images.isNotEmpty) {
+                final firstImage = images.first as Map<String, dynamic>;
+                print('  - First image URL: ${firstImage['url']}');
+              }
+            }
+          }
+        }
+        
+        // Check for renterDetails
+        if (data.containsKey('renterDetails')) {
+          final renterDetails = data['renterDetails'] as Map<String, dynamic>?;
+          if (renterDetails != null) {
+            print('  - Found renterDetails with keys: ${renterDetails.keys.toList()}');
+            print('  - Renter name: ${renterDetails['name']}');
+          }
+        }
+      }
+    }
+  }
+
+  // Debug method to analyze DEP_OWNER notifications (including PAYMENT with DEP_OWNER navigation_id)
+  void analyzeDepOwnerNotifications() {
+    print('[Notification Analysis] Analyzing all DEP_OWNER related notifications...');
+    
+    // Find notifications that are either DEP_OWNER type or PAYMENT type with DEP_OWNER navigation_id
+    final depOwnerNotifications = _localNotifications.where((n) => 
+      n.type == 'DEP_OWNER' || 
+      n.notificationType == 'DEP_OWNER' ||
+      (n.type == 'PAYMENT' && n.navigationId == 'DEP_OWNER') ||
+      (n.notificationType == 'PAYMENT' && n.navigationId == 'DEP_OWNER')
+    ).toList();
+    
+    print('[Notification Analysis] Found ${depOwnerNotifications.length} DEP_OWNER related notifications');
+    
+    for (int i = 0; i < depOwnerNotifications.length; i++) {
+      final notification = depOwnerNotifications[i];
+      print('[Notification Analysis] DEP_OWNER Notification $i:');
+      print('  - ID: ${notification.id}');
+      print('  - Type: ${notification.type}');
+      print('  - NotificationType: ${notification.notificationType}');
+      print('  - NavigationId: ${notification.navigationId}');
+      print('  - Title: ${notification.title}');
+      print('  - Message: ${notification.message}');
+      
+      if (notification.data != null) {
+        final data = notification.data!;
+        print('  - Data keys: ${data.keys.toList()}');
+        
+        // Check for rentalId
+        if (data.containsKey('rentalId')) {
+          final rentalId = data['rentalId'];
+          print('  - ✅ Found rentalId: $rentalId (type: ${rentalId.runtimeType})');
+        } else {
+          print('  - ❌ No rentalId found in data');
+        }
+        
+        // Check for carDetails
+        if (data.containsKey('carDetails')) {
+          final carDetails = data['carDetails'] as Map<String, dynamic>?;
+          if (carDetails != null) {
+            print('  - Found carDetails with keys: ${carDetails.keys.toList()}');
+            if (carDetails.containsKey('images')) {
+              final images = carDetails['images'] as List<dynamic>?;
+              print('  - Found ${images?.length ?? 0} car images');
+            }
+          }
+        }
+      }
+    }
+  }
+
   // Get all notifications (both from API and local)
   Future<void> getAllNotifications() async {
     emit(NotificationLoading());
@@ -257,11 +420,26 @@ class NotificationCubit extends Cubit<NotificationState> {
           final data = response.data;
           final List<dynamic> results = data['results'] ?? [];
 
-          // Debug: Print first notification data structure
+          // Debug: Print notification structure for analysis
           if (results.isNotEmpty) {
-            print('[getAllNotifications] First notification raw data:');
+            print('[getAllNotifications] Found ${results.length} notifications');
+            print('[getAllNotifications] First notification structure:');
             print(results.first);
-            print('[getAllNotifications] First notification keys: ${results.first.keys.toList()}');
+            
+            // Check for DEP_OWNER notifications specifically
+            final depOwnerNotifications = results.where((json) => 
+              json['notification_type'] == 'DEP_OWNER' || 
+              json['type'] == 'DEP_OWNER'
+            ).toList();
+            
+            if (depOwnerNotifications.isNotEmpty) {
+              print('[getAllNotifications] Found ${depOwnerNotifications.length} DEP_OWNER notifications:');
+              for (int i = 0; i < depOwnerNotifications.length; i++) {
+                final notification = depOwnerNotifications[i];
+                print('[getAllNotifications] DEP_OWNER notification $i:');
+                _analyzeNotificationData(notification);
+              }
+            }
           }
 
           // Convert API notifications to AppNotification format using fromJson
@@ -668,27 +846,43 @@ class NotificationCubit extends Cubit<NotificationState> {
     );
   }
 
-  // جلب الإشعارات الجديدة فقط وإضافتها على القائمة بدون تكرار
+  // Fetch new notifications from API
   Future<void> fetchNewNotifications() async {
-    print('[fetchNewNotifications] called at: ' + DateTime.now().toIso8601String());
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('access_token');
+
       if (token != null) {
         final response = await ApiService().getWithToken("notifications/notifications/", token);
-        print('[fetchNewNotifications] API status: ${response.statusCode}');
+
         if (response.statusCode == 200) {
           final data = response.data;
           final List<dynamic> results = data['results'] ?? [];
 
-          // Debug: Print first notification data structure
+          // Debug: Print notification structure for analysis
           if (results.isNotEmpty) {
-            print('[fetchNewNotifications] First notification raw data:');
+            print('[fetchNewNotifications] Found ${results.length} notifications');
+            print('[fetchNewNotifications] First notification structure:');
             print(results.first);
-            print('[fetchNewNotifications] First notification keys: ${results.first.keys.toList()}');
+            
+            // Check for DEP_OWNER notifications specifically
+            final depOwnerNotifications = results.where((json) => 
+              json['notification_type'] == 'DEP_OWNER' || 
+              json['type'] == 'DEP_OWNER'
+            ).toList();
+            
+            if (depOwnerNotifications.isNotEmpty) {
+              print('[fetchNewNotifications] Found ${depOwnerNotifications.length} DEP_OWNER notifications:');
+              for (int i = 0; i < depOwnerNotifications.length; i++) {
+                final notification = depOwnerNotifications[i];
+                print('[fetchNewNotifications] DEP_OWNER notification $i:');
+                _analyzeNotificationData(notification);
+              }
+            }
           }
 
-          final newNotifications = results.map((json) {
+          // Convert and update notifications
+          final apiNotifications = results.map((json) {
             try {
               return AppNotification.fromJson(json);
             } catch (e) {
@@ -698,30 +892,16 @@ class NotificationCubit extends Cubit<NotificationState> {
             }
           }).toList();
 
-          // احصل على الـ IDs الحالية
-          final currentIds = _localNotifications.map((n) => n.id).toSet();
-
-          // أضف فقط الإشعارات الجديدة
-          final onlyNew = newNotifications.where((n) => !currentIds.contains(n.id)).toList();
-          print('[fetchNewNotifications] found ${onlyNew.length} new notifications');
-          for (final n in onlyNew) {
-            print('[fetchNewNotifications] new notification id: ${n.id}, navigation_id: ${n.navigationId}');
-          }
-          if (onlyNew.isNotEmpty) {
-            _localNotifications = [...onlyNew, ..._localNotifications];
-            print('[fetchNewNotifications] total notifications after merge: ${_localNotifications.length}');
+          // Update local notifications
+          _localNotifications = apiNotifications;
+          
+          if (state is NotificationLoaded) {
             emit(NotificationLoaded(_localNotifications));
           }
-        } else {
-          print('[fetchNewNotifications] API error: ${response.statusCode} - ${response.data}');
         }
-      } else {
-        print('[fetchNewNotifications] No access token found');
       }
     } catch (e) {
-      print('[fetchNewNotifications] error: $e');
-      print('[fetchNewNotifications] error stack trace: ${StackTrace.current}');
-      // تجاهل الخطأ في التحديث التلقائي
+      print('[fetchNewNotifications] Error: $e');
     }
   }
 

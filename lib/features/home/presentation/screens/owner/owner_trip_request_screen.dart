@@ -132,7 +132,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
   Future<void> _rejectRequest() async {
     final reason = await _showRejectionDialog();
     if (reason == null) return;
-    
+
     setState(() { _isLoading = true; });
     try {
       final renterId = widget.bookingData['renterId']?.toString();
@@ -146,7 +146,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
           type: 'booking_declined',
         );
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -306,7 +306,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
   Widget _buildCarDetailsCard(ThemeData theme, Map<String, dynamic> data) {
     final carName = data['carName'] as String? ?? '';
     final carInfo = _extractCarInfo(carName);
-    
+
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -361,7 +361,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
     final startDate = _formatDate(data['startDate'] as String?);
     final endDate = _formatDate(data['endDate'] as String?);
     final totalDays = data['totalDays'] as int? ?? 0;
-    
+
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -522,7 +522,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
     final depositAmount = data['depositAmount'] as double? ?? 0.0;
     final dailyPrice = data['dailyPrice'] as double? ?? 0.0;
     final totalDays = data['totalDays'] as int? ?? 0;
-    
+
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),

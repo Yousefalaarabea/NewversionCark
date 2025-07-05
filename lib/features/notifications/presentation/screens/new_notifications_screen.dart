@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../config/routes/screens_name.dart';
+import '../../../home/presentation/model/trip_details_model.dart';
+import '../../../home/presentation/screens/booking_screens/trip_details_confirmation_screen.dart';
 import '../cubits/notification_cubit.dart';
 import 'package:test_cark/config/themes/app_colors.dart';
 import 'dart:async';
+import 'package:test_cark/features/handover/handover/presentation/screens/renter_handover_screen.dart';
 
 class NewNotificationsScreen extends StatefulWidget {
   @override
@@ -13,6 +16,74 @@ class NewNotificationsScreen extends StatefulWidget {
 
 class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
   Timer? _autoRefreshTimer;
+
+  // دالة مساعدة لاستخراج rentalId من بيانات الإشعار
+  int? _extractRentalId(Map<String, dynamic>? notificationData) {
+    if (notificationData == null) return null;
+    
+    final dynamic rawRentalId = notificationData['rentalId'] ??
+                                notificationData['rental_id'] ??
+                                notificationData['id'] ??
+                                notificationData['rental'];
+    
+    print('🔍 [_extractRentalId] Raw rentalId: $rawRentalId (type: ${rawRentalId.runtimeType})');
+    
+    if (rawRentalId is int) {
+      print('✅ [_extractRentalId] rentalId is int: $rawRentalId');
+      return rawRentalId;
+    } else if (rawRentalId is String) {
+      final parsed = int.tryParse(rawRentalId);
+      print('✅ [_extractRentalId] rentalId parsed from string: $parsed');
+      return parsed;
+    } else if (rawRentalId != null) {
+      final parsed = int.tryParse(rawRentalId.toString());
+      print('✅ [_extractRentalId] rentalId converted from ${rawRentalId.runtimeType}: $parsed');
+      return parsed;
+    } else {
+      print('❌ [_extractRentalId] No rentalId found in notification data');
+      return null;
+    }
+  }
+
+  // دالة مساعدة لعرض رسائل الخطأ
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'إغلاق',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
+  // دالة مساعدة لطباعة تفاصيل الإشعار للتشخيص
+  void _printNotificationDetails(AppNotification notification, String context) {
+    print('🔍 [$context] Notification Details:');
+    print('  - ID: ${notification.id}');
+    print('  - Type: ${notification.type}');
+    print('  - NotificationType: ${notification.notificationType}');
+    print('  - Title: ${notification.title}');
+    print('  - Message: ${notification.message}');
+    print('  - Data: ${notification.data}');
+    print('  - NavigationId: ${notification.navigationId}');
+    print('  - Sender: ${notification.sender}');
+    print('  - Receiver: ${notification.receiver}');
+    print('  - Date: ${notification.date}');
+    print('  - IsRead: ${notification.isRead}');
+  }
+
+  // دالة مساعدة لتحليل جميع إشعارات DEP_OWNER
+  void _analyzeDepOwnerNotifications() {
+    print('🔍 [DEBUG] Analyzing all DEP_OWNER notifications...');
+    context.read<NotificationCubit>().analyzeNotificationsByType('DEP_OWNER');
+  }
 
   @override
   void initState() {
@@ -498,9 +569,66 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         Navigator.pushNamed(context, ScreensName.bookingHistoryScreen, arguments: notification.data);
         break;
       case 'DEP_OWNER':
-        Navigator.pushNamed(context, ScreensName.handoverScreen, arguments: notification.data);
+      // تحويل البيانات من الإشعار إلى TripDetailsModel
+        try {
+          _printNotificationDetails(notification, 'DEP_OWNER');
+          
+          final tripDetails = TripDetailsModel.fromNotificationData(notification.data ?? {});
+          
+          // التحقق من وجود rentalId قبل الانتقال
+          if (tripDetails.rentalId == null) {
+            print('❌ [DEP_OWNER] rentalId is null! Cannot proceed.');
+            _showErrorSnackBar('خطأ: رقم الرحلة غير متوفر في الإشعار');
+            // عرض تفاصيل الإشعار كبديل
+            _showNotificationDetails(context, notification);
+            return;
+          }
+          
+          print('✅ [DEP_OWNER] Successfully created TripDetailsModel with rentalId: ${tripDetails.rentalId}');
+          
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TripDetailsConfirmationScreen(tripDetails: tripDetails),
+            ),
+          );
+
+        } catch (e) {
+          print('❌ [DEP_OWNER] Error converting notification data to TripDetailsModel: $e');
+          print('❌ [DEP_OWNER] Stack trace: ${StackTrace.current}');
+          _showErrorSnackBar('خطأ في معالجة بيانات الإشعار');
+          // Fallback: show notification details
+          _showNotificationDetails(context, notification);
+        }
         break;
-      case 'OWN_RENT_HND':
+      case 'RENTER_PICKUP':
+        try {
+          _printNotificationDetails(notification, 'RENTER_PICKUP');
+          
+          // استخدام الدالة المساعدة لاستخراج rentalId
+          final rentalId = _extractRentalId(notification.data);
+          
+          if (rentalId != null) {
+            print('✅ [RENTER_PICKUP] Successfully extracted rentalId: $rentalId');
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RenterHandoverScreen(rentalId: rentalId),
+              ),
+            );
+          } else {
+            print('❌ [RENTER_PICKUP] rentalId is null! Cannot proceed.');
+            _showErrorSnackBar('خطأ: رقم الرحلة غير متوفر في الإشعار');
+            _showNotificationDetails(context, notification);
+          }
+        } catch (e) {
+          print('❌ [RENTER_PICKUP] Error navigating to RenterHandoverScreen: $e');
+          print('❌ [RENTER_PICKUP] Stack trace: ${StackTrace.current}');
+          _showErrorSnackBar('خطأ في معالجة بيانات الإشعار');
+          _showNotificationDetails(context, notification);
+        }
+        break;
+      case 'OWN_PICKUP_COMPLETE':
         Navigator.pushNamed(context, ScreensName.renterHandoverScreen, arguments: notification.data);
         break;
       case 'REN_ONT_TRP':

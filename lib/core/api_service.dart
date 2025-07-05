@@ -389,4 +389,7 @@ class ApiService {
       rethrow;
     }
   }
+
+  // Add this public getter for baseUrl
+  String get baseUrl => _dio.options.baseUrl;
 }

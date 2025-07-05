@@ -206,25 +206,25 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                           final id = method['id']?.toString() ?? '';
                           return Column(
                             children: [
-                              GestureDetector(
-                                onTap: () {
+                      GestureDetector(
+                        onTap: () {
                                   setState(() { _selectedMethod = 'saved_card'; });
-                                },
-                                child: Container(
+                        },
+                        child: Container(
                                   margin: EdgeInsets.only(bottom: 8.h),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
+                          decoration: BoxDecoration(
+                            border: Border.all(
                                       color: _selectedMethod == 'saved_card' ? Colors.blue : Colors.grey[300]!,
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                    color: Colors.white,
-                                  ),
-                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                                  child: Row(
-                                    children: [
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10.r),
+                            color: Colors.white,
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                          child: Row(
+                            children: [
                                       _getPaymentIcon(type, brand),
-                                      SizedBox(width: 14.w),
+                              SizedBox(width: 14.w),
                                       Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
@@ -232,65 +232,65 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                           Text('•••• $last4', style: TextStyle(fontSize: 14.sp, letterSpacing: 2, color: Colors.grey[600])),
                                         ],
                                       ),
-                                      Spacer(),
+                              Spacer(),
                                       if (_selectedMethod == 'saved_card')
                                         Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                               // New card option مباشرة بعد saved card
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() { _selectedMethod = 'new_card'; });
-                                },
-                                child: Container(
+                      GestureDetector(
+                        onTap: () {
+                          setState(() { _selectedMethod = 'new_card'; });
+                        },
+                        child: Container(
                                   margin: EdgeInsets.only(bottom: 8.h),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
-                                      width: 2,
-                                    ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
+                              width: 2,
+                            ),
                                     borderRadius: BorderRadius.circular(10.r),
                                     color: Colors.white,
-                                  ),
-                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                                  child: Row(
-                                    children: [
-                                      FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
-                                      SizedBox(width: 14.w),
-                                      Text('New card', style: TextStyle(fontSize: 16.sp)),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                          child: Row(
+                            children: [
+                              FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
+                              SizedBox(width: 14.w),
+                              Text('New card', style: TextStyle(fontSize: 16.sp)),
                                       Spacer(),
                                       if (_selectedMethod == 'new_card')
                                         Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                             ],
                           );
                         }).toList(),
                       ] else ...[
                         // إذا لم يوجد saved card، فقط new card
-                        GestureDetector(
-                          onTap: () {
+                      GestureDetector(
+                        onTap: () {
                             setState(() { _selectedMethod = 'new_card'; });
-                          },
-                          child: Container(
+                        },
+                        child: Container(
                             margin: EdgeInsets.only(bottom: 8.h),
-                            decoration: BoxDecoration(
-                              border: Border.all(
+                          decoration: BoxDecoration(
+                            border: Border.all(
                                 color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
-                                width: 2,
-                              ),
+                              width: 2,
+                            ),
                               borderRadius: BorderRadius.circular(10.r),
                               color: Colors.white,
-                            ),
-                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                            child: Row(
-                              children: [
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                          child: Row(
+                            children: [
                                 FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
-                                SizedBox(width: 14.w),
+                              SizedBox(width: 14.w),
                                 Text('New card', style: TextStyle(fontSize: 16.sp)),
                                 Spacer(),
                                 if (_selectedMethod == 'new_card')
@@ -512,7 +512,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                               onPressed: () {
                                                 Navigator.of(context).pop();
                                                 Navigator.pushNamedAndRemoveUntil(
-                                                  context,
+                            context,
                                                   ScreensName.homeScreen,
                                                   (route) => false,
                                                 );

@@ -22,7 +22,7 @@ class BookingSummaryScreen extends StatefulWidget {
 
   const BookingSummaryScreen({
     super.key,
-    required this.car,
+      required this.car,
     this.rentalPreview,
   });
 
@@ -349,10 +349,10 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                           style: TextStyle(
                             fontSize: 14.sp,
                             color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
+              ),
+            ),
+          ],
+        ),
                   ],
                 ],
               ),
@@ -588,11 +588,11 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                 Colors.red,
               ),
             ] else ...[
-              _buildOverviewItem(
-                Icons.speed,
-                tr("km_included"),
-                Colors.orange,
-              ),
+            _buildOverviewItem(
+              Icons.speed,
+              tr("km_included"),
+              Colors.orange,
+            ),
             ],
             _buildOverviewItem(
               Icons.schedule,
@@ -1063,7 +1063,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                         paymentMethod: paymentMethod,
                         stops: carCubit.state.stops,
                         selectedCardId: 1
-                  );
+                      );
 
                 } catch (e) {
                   print('Error in booking request: $e');

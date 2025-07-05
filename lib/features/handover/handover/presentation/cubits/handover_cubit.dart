@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/contract_model.dart';
+import 'package:test_cark/core/booking_service.dart';
 
 part 'handover_state.dart';
 
@@ -13,6 +14,7 @@ class HandoverCubit extends Cubit<HandoverState> {
   ContractModel? _contract;
   bool _isContractSigned = false;
   bool _isRemainingAmountReceived = false;
+  int? _rentalId;
 
   ContractModel? get contract => _contract;
   bool get isContractSigned => _isContractSigned;
@@ -56,6 +58,8 @@ class HandoverCubit extends Cubit<HandoverState> {
     return true;
   }
 
+  void setRentalId(int id) => _rentalId = id;
+
   // Send handover request
   Future<void> sendHandover({required String contractImagePath, required String paymentMethod}) async {
     if (!canSendHandover(paymentMethod)) {
@@ -64,54 +68,42 @@ class HandoverCubit extends Cubit<HandoverState> {
     }
 
     try {
-      emit(HandoverSending());
-      
-      // Simulate API call with backend response
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Simulate backend response
-      final backendResponse = await _simulateBackendCall(contractImagePath);
-      
-      if (backendResponse['success'] == true) {
-        // Update contract with new data
-        _contract = _contract!.copyWith(
-          contractImagePath: contractImagePath,
-          isContractSigned: _isContractSigned,
-          isRemainingAmountReceived: _isRemainingAmountReceived,
-          status: 'completed',
-        );
-        
-        emit(HandoverSuccess(
-          message: backendResponse['message'] ?? 'Handover completed successfully',
-          contractId: backendResponse['contractId'] ?? _contract!.id,
-        ));
-      } else {
-        emit(HandoverFailure(backendResponse['error'] ?? 'Failed to complete handover'));
-      }
-    } catch (e) {
-      emit(HandoverFailure('Failed to send handover: ${e.toString()}'));
-    }
-  }
+      print("ANAAAAAAAAAAAAA CUbiiiiiiiiiiiiiiiiiit   SENDDDDDDDDDDDDDDDDDDDD");
 
-  // Simulate backend API call
-  Future<Map<String, dynamic>> _simulateBackendCall(String contractImagePath) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Simulate successful backend response
-    // In real implementation, this would be an actual API call
-    return {
-      'success': true,
-      'message': 'Handover completed successfully! Your car has been handed over to the renter.',
-      'contractId': 'CONTRACT_${DateTime.now().millisecondsSinceEpoch}',
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-    
-    // To simulate failure, uncomment the following:
-    // return {
-    //   'success': false,
-    //   'error': 'Network error occurred. Please try again.',
-    // };
+      emit(HandoverSending());
+      final bookingService = BookingService();
+      final rentalId = _rentalId;
+      if (rentalId == null) {
+        emit(HandoverFailure('Invalid rental ID'));
+        return;
+      }
+      Map<String, dynamic> response;
+      if (paymentMethod == 'cash') {
+        response = await bookingService.ownerPickupHandover(
+          rentalId: rentalId,
+          contractImagePath: contractImagePath,
+          confirmRemainingCash: _isRemainingAmountReceived,
+        );
+      } else {
+        response = await bookingService.ownerPickupHandover(
+          rentalId: rentalId,
+          contractImagePath: contractImagePath,
+        );
+      }
+      // Success
+      _contract = _contract!.copyWith(
+        contractImagePath: contractImagePath,
+        isContractSigned: _isContractSigned,
+        isRemainingAmountReceived: _isRemainingAmountReceived,
+        status: 'completed',
+      );
+      emit(HandoverSuccess(
+        message: response['message'] ?? 'Handover completed successfully',
+        contractId: response['contractId'] ?? _contract!.id,
+      ));
+    } catch (e) {
+      emit(HandoverFailure('Failed to send handover: \\${e.toString()}'));
+    }
   }
 
   // Cancel handover and refund deposit

@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meta/meta.dart';
 import '../models/renter_handover_model.dart';
 import 'dart:async';
+import 'package:test_cark/core/booking_service.dart';
 
 part 'renter_handover_state.dart';
 
@@ -10,6 +11,9 @@ class RenterHandoverCubit extends Cubit<RenterHandoverState> {
 
   RenterHandoverModel _model = RenterHandoverModel();
   bool _ownerHandoverSent = false;
+  int? _rentalId;
+
+  void setRentalId(int id) => _rentalId = id;
 
   // Simulate fetching handover status from backend
   Future<void> fetchHandoverStatus() async {
@@ -76,7 +80,22 @@ class RenterHandoverCubit extends Cubit<RenterHandoverState> {
       return;
     }
     emit(RenterHandoverSending());
-    await Future.delayed(const Duration(seconds: 2));
-    emit(RenterHandoverSuccess());
+    try {
+      final bookingService = BookingService();
+      final rentalId = _rentalId;
+      if (rentalId == null) {
+        emit(RenterHandoverFailure('Invalid rental ID'));
+        return;
+      }
+      final response = await bookingService.renterPickupHandover(
+        rentalId: rentalId,
+        carImagePath: _model.carImagePath!,
+        odometerImagePath: _model.odometerImagePath!,
+        odometerValue: _model.odometerReading!,
+      );
+      emit(RenterHandoverSuccess());
+    } catch (e) {
+      emit(RenterHandoverFailure('Failed to send handover: \\${e.toString()}'));
+    }
   }
 } 

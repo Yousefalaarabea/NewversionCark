@@ -85,7 +85,7 @@ abstract class RoutesManager {
             builder: (context) => const RentalSearchScreen());
 
 
-        case ScreensName.bookingSummaryScreen:
+      case ScreensName.bookingSummaryScreen:
         final args = routeSettings.arguments as Map<String, dynamic>;
         final car = args['car'] as CarModel;
         
@@ -199,8 +199,18 @@ abstract class RoutesManager {
         return MaterialPageRoute(builder: (context) => const OwnerHomeScreen());
 
       case ScreensName.renterHandoverScreen:
+        if (routeSettings.arguments is Map<String, dynamic>) {
+          final args = routeSettings.arguments as Map<String, dynamic>;
+          final rentalId = args['rentalId'] as int;
+          return MaterialPageRoute(
+            builder: (context) => RenterHandoverScreen(rentalId: rentalId),
+          );
+        }
         return MaterialPageRoute(
-            builder: (context) => const RenterHandoverScreen());
+          builder: (context) => const Scaffold(
+            body: Center(child: Text('Error: Missing rentalId')),
+          ),
+        );
 
       case ScreensName.renterDropOffScreen:
         if (routeSettings.arguments is Map<String, dynamic>) {
@@ -230,15 +240,14 @@ abstract class RoutesManager {
         if (routeSettings.arguments is Map<String, dynamic>) {
           final args = routeSettings.arguments as Map<String, dynamic>;
           final paymentMethod = args['paymentMethod'] as String? ?? 'unknown';
+          final rentalId = args['rentalId'] as int;
           return MaterialPageRoute(
-            builder: (context) => HandoverScreen(paymentMethod: paymentMethod),
+            builder: (context) => HandoverScreen(paymentMethod: paymentMethod, rentalId: rentalId),
           );
         }
         return MaterialPageRoute(
           builder: (context) => const Scaffold(
-            body: Center(
-              child: Text('Error: Missing payment method'),
-            ),
+            body: Center(child: Text('Error: Missing payment method or rentalId')),
           ),
         );
 
@@ -275,7 +284,7 @@ abstract class RoutesManager {
       case ScreensName.paymentMethodsScreen:
         print('RoutesManager: Creating paymentMethodsScreen route');
         if (routeSettings.arguments is Map<String, dynamic>) {
-          final args = routeSettings.arguments as Map<String, dynamic>;
+        final args = routeSettings.arguments as Map<String, dynamic>;
           print('RoutesManager: Payment methods arguments received: $args');
           
           // Handle both old format (car + totalPrice) and new format (bookingRequestId + bookingData)
@@ -289,10 +298,10 @@ abstract class RoutesManager {
           print('RoutesManager: bookingRequestId: $bookingRequestId');
           print('RoutesManager: bookingData: $bookingData');
           
-          return MaterialPageRoute(
-            builder: (context) => PaymentMethodsScreen(
-              totalPrice: totalPrice,
-              car: car,
+        return MaterialPageRoute(
+          builder: (context) => PaymentMethodsScreen(
+            totalPrice: totalPrice,
+            car: car,
               bookingRequestId: bookingRequestId,
               bookingData: bookingData,
             ),
@@ -350,7 +359,7 @@ abstract class RoutesManager {
       case ScreensName.ownerTripRequestScreen:
         print('RoutesManager: Creating ownerTripRequestScreen route');
         if (routeSettings.arguments is Map<String, dynamic>) {
-          final args = routeSettings.arguments as Map<String, dynamic>;
+        final args = routeSettings.arguments as Map<String, dynamic>;
           print('RoutesManager: Arguments received: $args');
           
           final bookingRequestId = args['bookingRequestId'] as String? ?? 'unknown';
@@ -359,10 +368,10 @@ abstract class RoutesManager {
           print('RoutesManager: bookingRequestId: $bookingRequestId');
           print('RoutesManager: bookingData: $bookingData');
           
-          return MaterialPageRoute(
-            builder: (context) => OwnerTripRequestScreen(
-              bookingRequestId: bookingRequestId,
-              bookingData: bookingData,
+        return MaterialPageRoute(
+          builder: (context) => OwnerTripRequestScreen(
+            bookingRequestId: bookingRequestId,
+            bookingData: bookingData,
             ),
           );
         }

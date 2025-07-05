@@ -345,36 +345,36 @@ class _CarDetailsScreenState extends State<CarDetailsScreen> {
     final pricing = _rentalPreview!.pricing;
     final usagePolicy = _rentalPreview!.usagePolicy;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Padding(
-        padding: EdgeInsets.all(20.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              tr("rental_summary"),
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            SizedBox(height: 20.h),
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            child: Padding(
+              padding: EdgeInsets.all(20.r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr("rental_summary"),
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
             _buildSummaryRow(tr("daily_price"), '\$${pricing.dailyPrice.toStringAsFixed(2)}'),
             _buildSummaryRow(tr("base_cost"), '\$${pricing.baseCost.toStringAsFixed(2)}'),
             _buildSummaryRow(tr("service_fee"), '\$${pricing.serviceFee.toStringAsFixed(2)} (${pricing.serviceFeePercentage}%)'),
             _buildSummaryRow(tr("daily_km_limit"), '${usagePolicy.dailyKmLimit.toInt()} ${tr("km")}'),
             _buildSummaryRow(tr("extra_km_cost"), '\$${usagePolicy.extraKmCost.toStringAsFixed(2)} / km'),
             _buildSummaryRow(tr("deposit_amount"), '\$${pricing.depositAmount.toStringAsFixed(2)} (${pricing.depositPercentage}%)'),
-            Divider(color: Colors.grey.shade200, height: 32.h),
+                  Divider(color: Colors.grey.shade200, height: 32.h),
             _buildSummaryRow(tr("total_cost"), '\$${pricing.totalCost.toStringAsFixed(2)}', isTotal: true),
             _buildSummaryRow(tr("remaining_amount"), '\$${pricing.remainingAmount.toStringAsFixed(2)}', isRemaining: true),
-          ],
-        ),
-      ),
+                ],
+              ),
+            ),
     );
   }
 

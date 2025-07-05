@@ -12,9 +12,21 @@ import '../widgets/contract_upload_widget.dart';
 import '../widgets/deposit_status_widget.dart';
 import '../widgets/confirmation_checkboxes_widget.dart';
 
-class HandoverScreen extends StatelessWidget {
+class HandoverScreen extends StatefulWidget {
   final String paymentMethod;
-  const HandoverScreen({Key? key, required this.paymentMethod}) : super(key: key);
+  final int rentalId;
+  const HandoverScreen({super.key, required this.paymentMethod, required this.rentalId});
+
+  @override
+  State<HandoverScreen> createState() => _HandoverScreenState();
+}
+
+class _HandoverScreenState extends State<HandoverScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<HandoverCubit>().setRentalId(widget.rentalId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +35,7 @@ class HandoverScreen extends StatelessWidget {
         BlocProvider(create: (context) => ContractUploadCubit()),
         BlocProvider(create: (context) => HandoverCubit()),
       ],
-      child: HandoverScreenContent(paymentMethod: paymentMethod),
+      child: HandoverScreenContent(paymentMethod: widget.paymentMethod),
     );
   }
 }
@@ -65,7 +77,7 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
 
             Navigator.pushReplacementNamed(
               context,
-              ScreensName.renterHandoverScreen,
+              ScreensName.ownerHomeScreen,
             );
           } else if (state is HandoverCancelled) {
             _showSuccessSnackBar(context, state.message);
@@ -216,11 +228,13 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
           builder: (context, contractState) {
             var canSendHandover;
             if (widget.paymentMethod == 'Cash') {
+              print("ANAAAAAAAAAAAAA CUbiiiiiiiiiiiiiiiiiit   CASSSSSSSSSSSSSSH");
               canSendHandover = handoverState is HandoverConfirmationsUpdated &&
                 handoverState.isContractSigned &&
                 handoverState.isRemainingAmountReceived &&
                 contractState is ContractUploadSuccess;
             } else {
+              print("ANAAAAAAAAAAAAA CUbiiiiiiiiiiiiiiiiiit  MSHHHHHHHHHHHHH   CASSSSSSSSSSSSSSH");
               canSendHandover = handoverState is HandoverConfirmationsUpdated &&
                 handoverState.isContractSigned &&
                 contractState is ContractUploadSuccess;
@@ -263,40 +277,6 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
                 ),
                 const SizedBox(height: 12),
 
-                // // Cancel Button
-                // SizedBox(
-                //   width: double.infinity,
-                //   height: 50,
-                //   child: OutlinedButton(
-                //     onPressed: handoverState is HandoverCancelling
-                //         ? null
-                //         : () => _showCancelDialog(context),
-                //     style: OutlinedButton.styleFrom(
-                //       foregroundColor: AppColors.red,
-                //       side: const BorderSide(color: AppColors.red),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(8),
-                //       ),
-                //     ),
-                //     child: handoverState is HandoverCancelling
-                //         ? const SizedBox(
-                //             height: 20,
-                //             width: 20,
-                //             child: CircularProgressIndicator(
-                //               strokeWidth: 2,
-                //               valueColor: AlwaysStoppedAnimation<Color>(AppColors.red),
-                //             ),
-                //           )
-                //         : const Text(
-                //             'Cancel Handover',
-                //             style: TextStyle(
-                //               fontWeight: FontWeight.bold,
-                //               fontSize: 16,
-                //             ),
-                //
-                //           ),
-                //   ),
-                // ),
               ],
             );
           },
@@ -315,14 +295,19 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
     if (handoverState is HandoverConfirmationsUpdated) {
       if (paymentMethod == 'cash') {
         canSend = handoverState.isContractSigned && handoverState.isRemainingAmountReceived;
+        print("ANAAAAAAAAAAAAA CASSSSSSSSSSSSSSH");
       } else {
         canSend = handoverState.isContractSigned;
+        print("ANAAAAAAAAAAAAA MESSSHHHHHHHHHHHHHHHHH     CASSSSSSSSSSSSSSH");
       }
     }
     if (contractUploadCubit.hasContractImage && canSend) {
+      print("ANAAAAAAAAAAAAA BA3333333333t   mn screeeeeeeeeeeen");
+
       handoverCubit.sendHandover(
         contractImagePath: contractUploadCubit.contractImagePath!,
         paymentMethod: paymentMethod,
+
       );
     }
   }
