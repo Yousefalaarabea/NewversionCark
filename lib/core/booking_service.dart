@@ -47,11 +47,11 @@ class BookingService {
         'start_date': startDate.toIso8601String().split('T')[0], // YYYY-MM-DD format
         'end_date': endDate.toIso8601String().split('T')[0],
         'rental_type': rentalType,
-        'pickup_lat': pickupLocation.lat ?? 0.0,
-        'pickup_lng': pickupLocation.lng ?? 0.0,
+        'pickup_latitude': pickupLocation.lat ?? 0.0,
+        'pickup_longitude': pickupLocation.lng ?? 0.0,
         'pickup_address': pickupLocation.name,
-        'dropoff_lat': dropoffLocation.lat ?? 0.0,
-        'dropoff_lng': dropoffLocation.lng ?? 0.0,
+        'dropoff_latitude': dropoffLocation.lat ?? 0.0,
+        'dropoff_longitude': dropoffLocation.lng ?? 0.0,
         'dropoff_address': dropoffLocation.name,
         'payment_method': paymentMethod,
         'stops': stopsData,
@@ -185,7 +185,7 @@ class BookingService {
       print('Confirming booking for rental ID: $rentalId');
 
       final response = await _apiService.postWithToken(
-        'rentals/$rentalId/confirm_booking/',
+        '/selfdrive-rentals/$rentalId/confirm_by_owner/',
         {},
       );
 
@@ -324,6 +324,74 @@ class BookingService {
       }
     } catch (e) {
       print('❌ Error canceling rental: $e');
+      rethrow;
+    }
+  }
+
+  // Pay deposit for selfdrive rental with saved card
+  Future<Map<String, dynamic>> paySelfDriveDepositWithSavedCard({
+    required String rentalId,
+    required String savedCardId,
+    required String amountCents,
+    required String paymentMethod, // should be 'saved_card'
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      if (token == null) {
+        throw Exception('User access token not found');
+      }
+      final url = '/selfdrive-rentals/$rentalId/deposit_payment/';
+      final body = {
+        "saved_card_id": savedCardId,
+        "amount_cents": amountCents,
+        "payment_method": paymentMethod,
+      };
+      print('POST $url');
+      print('Body: $body');
+      final response = await _apiService.postWithToken(url, body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Deposit payment successful');
+        return response.data;
+      } else {
+        print('❌ Failed to pay deposit: \\${response.statusCode}');
+        throw Exception('Failed to pay deposit: \\${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error paying deposit: $e');
+      rethrow;
+    }
+  }
+
+  // Pay deposit for selfdrive rental with new card
+  Future<Map<String, dynamic>> paySelfDriveDepositWithNewCard({
+    required String rentalId,
+    required String amountCents,
+    required String paymentMethod, // should be 'new_card'
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      if (token == null) {
+        throw Exception('User access token not found');
+      }
+      final url = '/selfdrive-rentals/$rentalId/new_card_deposit_payment/';
+      final body = {
+        "amount_cents": amountCents,
+        "payment_method": paymentMethod,
+      };
+      print('POST $url');
+      print('Body: $body');
+      final response = await _apiService.postWithToken(url, body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ New card deposit payment successful');
+        return response.data;
+      } else {
+        print('❌ Failed to pay deposit with new card: \\${response.statusCode}');
+        throw Exception('Failed to pay deposit with new card: \\${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error paying deposit with new card: $e');
       rethrow;
     }
   }

@@ -192,24 +192,17 @@ class RenterNotificationScreen extends StatelessWidget {
   Future<void> _navigateToDepositPayment(BuildContext context,
       Map<String, dynamic> data, String notificationId) async {
     try {
-      // Extract totalPrice and rentalId from the notification
-      final totalPrice = (data['totalPrice'] ?? 0.0) as num;
-      final rentalId = (data['requestId'] ?? 'test_id').toString();
-      if (totalPrice == null || rentalId == null) {
-        throw Exception('Missing totalPrice or rentalId in notification');
-      }
-
       // Mark notification as read
       context.read<NotificationCubit>().markAsRead(notificationId);
 
-      // Navigate to deposit payment screen
+      // Navigate to deposit payment screen with new format
       if (context.mounted) {
         Navigator.pushNamed(
           context,
           ScreensName.paymentMethodsScreen,
           arguments: {
-            'totalPrice': totalPrice.toDouble(),
-            'requestId': rentalId,
+            'bookingRequestId': notificationId,
+            'bookingData': data,
           },
         );
       }

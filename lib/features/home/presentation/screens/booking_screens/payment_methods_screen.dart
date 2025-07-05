@@ -5,18 +5,24 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:test_cark/features/home/presentation/screens/booking_screens/saved_trips_screen.dart';
 import '../../cubit/trip_cubit.dart';
+import 'package:test_cark/core/booking_service.dart';
+import 'package:test_cark/config/routes/screens_name.dart';
 
 import '../../model/car_model.dart';
 import '../../model/trip_details_model.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
-  final CarModel car;
-  final double totalPrice;
+  final CarModel? car;
+  final double? totalPrice;
+  final String? bookingRequestId;
+  final Map<String, dynamic>? bookingData;
 
   const PaymentMethodsScreen({
     super.key,
-    required this.car,
-    required this.totalPrice,
+    this.car,
+    this.totalPrice,
+    this.bookingRequestId,
+    this.bookingData,
   });
 
   @override
@@ -27,9 +33,54 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   bool _agreedToTerms = false;
   String? _selectedMethod; // 'card' or 'saving_card'
 
+  // Helper methods to extract data from notification
+  double get depositAmount {
+    if (widget.bookingData != null && widget.bookingData!['depositAmount'] != null) {
+      return double.tryParse(widget.bookingData!['depositAmount'].toString()) ?? 0.0;
+    }
+    if (widget.totalPrice != null) {
+      return (widget.totalPrice! * 0.2);
+    }
+    return 0.0;
+  }
+
+  String get carName {
+    if (widget.bookingData != null && widget.bookingData!['carName'] != null) {
+      return widget.bookingData!['carName'];
+    }
+    if (widget.car != null) {
+      return '${widget.car!.brand} ${widget.car!.model}';
+    }
+    return 'Car';
+  }
+
+  double get totalAmount {
+    if (widget.bookingData != null && widget.bookingData!['totalAmount'] != null) {
+      return double.tryParse(widget.bookingData!['totalAmount'].toString()) ?? 0.0;
+    }
+    if (widget.totalPrice != null) {
+      return widget.totalPrice!;
+    }
+    return 0.0;
+  }
+
+  double get remainingAmount {
+    if (widget.bookingData != null && widget.bookingData!['remainingAmount'] != null) {
+      return double.tryParse(widget.bookingData!['remainingAmount'].toString()) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  List<Map<String, dynamic>> get paymentMethods {
+    if (widget.bookingData != null && widget.bookingData!['paymentMethods'] != null) {
+      final methods = widget.bookingData!['paymentMethods'] as List;
+      return methods.map((method) => Map<String, dynamic>.from(method)).toList();
+    }
+    return [];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double deposit = (widget.totalPrice * 0.2);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pay Deposit'),
@@ -47,8 +98,60 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Section 1: Default Deposit Amount
-                      Text('Default Deposit Amount', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                      // Section 1: Car Information
+                      if (widget.bookingData != null) ...[
+                        Text('Car Information', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 8.h),
+                        Material(
+                          elevation: 3,
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.directions_car, color: AppColors.primary, size: 22.sp),
+                                    SizedBox(width: 6.w),
+                                    Expanded(
+                                      child: Text(
+                                        carName,
+                                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 8.h),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Total Amount:', style: TextStyle(fontSize: 14.sp, color: Colors.grey[700])),
+                                    Text('${totalAmount.toStringAsFixed(2)} EGP', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                SizedBox(height: 4.h),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Remaining Amount:', style: TextStyle(fontSize: 14.sp, color: Colors.grey[700])),
+                                    Text('${remainingAmount.toStringAsFixed(2)} EGP', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 24.h),
+                      ],
+
+                      // Section 2: Deposit Amount
+                      Text('Deposit Amount', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
                       SizedBox(height: 8.h),
                       Material(
                         elevation: 3,
@@ -75,7 +178,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                   ),
                                   Row(
                                     children: [
-                                      Text(deposit.toStringAsFixed(2), style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                      Text(depositAmount.toStringAsFixed(2), style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
                                       SizedBox(width: 4.w),
                                       Text('EGP', style: TextStyle(fontSize: 16.sp, color: Colors.grey[700], fontWeight: FontWeight.bold)),
                                     ],
@@ -89,89 +192,117 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                         ),
                       ),
                       SizedBox(height: 24.h),
-                      // Section 2: Saved
-                      Text('Saved', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+
+                      // Section 3: Available Payment Methods
+                      Text('Available Payment Methods', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
                       SizedBox(height: 10.h),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() { _selectedMethod = 'card'; });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: _selectedMethod == 'card' ? Colors.blue : Colors.grey[300]!,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(10.r),
-                            color: Colors.white,
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          child: Row(
+
+                      // سكشن واحد فقط: saved card ثم new card
+                      if (paymentMethods.isNotEmpty) ...[
+                        ...paymentMethods.map((method) {
+                          final type = method['type'] ?? '';
+                          final last4 = method['last4'] ?? '';
+                          final brand = method['brand'] ?? '';
+                          final id = method['id']?.toString() ?? '';
+                          return Column(
                             children: [
-                              FaIcon(FontAwesomeIcons.ccMastercard, color: Colors.red[700], size: 28.sp),
-                              SizedBox(width: 14.w),
-                              Text('•••• 7492', style: TextStyle(fontSize: 18.sp, letterSpacing: 2)),
-                              Spacer(),
-                              Text('View more', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500, fontSize: 15.sp)),
-                              Icon(Icons.arrow_forward_ios, color: Colors.blue, size: 16.sp),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() { _selectedMethod = 'saved_card'; });
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: 8.h),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: _selectedMethod == 'saved_card' ? Colors.blue : Colors.grey[300]!,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    color: Colors.white,
+                                  ),
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                                  child: Row(
+                                    children: [
+                                      _getPaymentIcon(type, brand),
+                                      SizedBox(width: 14.w),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('$brand', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                                          Text('•••• $last4', style: TextStyle(fontSize: 14.sp, letterSpacing: 2, color: Colors.grey[600])),
+                                        ],
+                                      ),
+                                      Spacer(),
+                                      if (_selectedMethod == 'saved_card')
+                                        Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // New card option مباشرة بعد saved card
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() { _selectedMethod = 'new_card'; });
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: 8.h),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    color: Colors.white,
+                                  ),
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                                  child: Row(
+                                    children: [
+                                      FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
+                                      SizedBox(width: 14.w),
+                                      Text('New card', style: TextStyle(fontSize: 16.sp)),
+                                      Spacer(),
+                                      if (_selectedMethod == 'new_card')
+                                        Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ],
+                          );
+                        }).toList(),
+                      ] else ...[
+                        // إذا لم يوجد saved card، فقط new card
+                        GestureDetector(
+                          onTap: () {
+                            setState(() { _selectedMethod = 'new_card'; });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.only(bottom: 8.h),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(10.r),
+                              color: Colors.white,
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                            child: Row(
+                              children: [
+                                FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
+                                SizedBox(width: 14.w),
+                                Text('New card', style: TextStyle(fontSize: 16.sp)),
+                                Spacer(),
+                                if (_selectedMethod == 'new_card')
+                                  Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
+
                       SizedBox(height: 24.h),
-                      // Section 3: New payment method
-                      Text('New payment method', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 10.h),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() { _selectedMethod = 'new_card'; });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(
-                              color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
-                              width: 2,
-                            ),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          child: Row(
-                            children: [
-                              FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
-                              SizedBox(width: 14.w),
-                              Text('New card', style: TextStyle(fontSize: 16.sp)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 12.h),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() { _selectedMethod = 'saving_card'; });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(
-                              color: _selectedMethod == 'saving_card' ? Colors.blue : Colors.grey[300]!,
-                              width: 2,
-                            ),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          child: Row(
-                            children: [
-                              FaIcon(FontAwesomeIcons.solidCreditCard, color: AppColors.primary, size: 24.sp),
-                              SizedBox(width: 14.w),
-                              Text('Saving Card', style: TextStyle(fontSize: 16.sp)),
-                              SizedBox(width: 8.w),
-                              Text('•••• 5678', style: TextStyle(fontSize: 16.sp, letterSpacing: 2)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 24.h),
+
                       // Section 4: Unavailable Methods
                       Padding(
                         padding: EdgeInsets.only(left: 4.w, bottom: 6.h, top: 12.h),
@@ -263,25 +394,146 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 child: ElevatedButton(
                   onPressed: (_agreedToTerms && _selectedMethod != null)
                       ? () async {
-                          // TODO: Implement payment logic
-                          // Simulate payment success and save trip
-                          final tripCubit = context.read<TripCubit>();
-                          final trip = TripDetailsModel(
-                            car: widget.car,
-                            pickupLocation: 'Pickup Location', // Replace with actual
-                            dropoffLocation: 'Dropoff Location', // Replace with actual
-                            startDate: DateTime.now(),
-                            endDate: DateTime.now().add(const Duration(days: 3)),
-                            totalPrice: widget.totalPrice,
-                            paymentMethod: _selectedMethod ?? '',
-                            renterName: 'Renter Name', // Replace with actual
-                            ownerName: 'Owner Name', // Replace with actual
-                          );
-                          await tripCubit.saveTrip(trip);
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SavedTripsScreen()),
-                          );
+                          if (_selectedMethod == 'saved_card' && paymentMethods.isNotEmpty) {
+                            final method = paymentMethods.first;
+                            final rentalId = widget.bookingData?['rentalId']?.toString() ?? '';
+                            final savedCardId = method['id']?.toString() ?? '';
+                            final amountCents = (depositAmount * 100).toInt().toString();
+                            final paymentMethod = 'saved_card';
+                            try {
+                              final bookingService = BookingService();
+                              final result = await bookingService.paySelfDriveDepositWithSavedCard(
+                                rentalId: rentalId,
+                                savedCardId: savedCardId,
+                                amountCents: amountCents,
+                                paymentMethod: paymentMethod,
+                              );
+                              if (context.mounted) {
+                                await showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) => Dialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.green[100],
+                                              shape: BoxShape.circle,
+                                            ),
+                                            padding: const EdgeInsets.all(18),
+                                            child: Icon(Icons.check_circle, color: Colors.green, size: 64),
+                                          ),
+                                          SizedBox(height: 24),
+                                          Text('Deposit Paid Successfully!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                          SizedBox(height: 12),
+                                          Text('Your deposit has been paid and your booking is now confirmed.', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                                          SizedBox(height: 24),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: AppColors.primary,
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                Navigator.pushNamedAndRemoveUntil(
+                                                  context,
+                                                  ScreensName.homeScreen,
+                                                  (route) => false,
+                                                );
+                                              },
+                                              child: Text('Go to Home', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          } else if (_selectedMethod == 'new_card') {
+                            final rentalId = widget.bookingData?['rentalId']?.toString() ?? '';
+                            final amountCents = (depositAmount * 100).toInt().toString();
+                            final paymentMethod = 'new_card';
+                            try {
+                              final bookingService = BookingService();
+                              final result = await bookingService.paySelfDriveDepositWithNewCard(
+                                rentalId: rentalId,
+                                amountCents: amountCents,
+                                paymentMethod: paymentMethod,
+                              );
+                              if (context.mounted) {
+                                await showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) => Dialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.green[100],
+                                              shape: BoxShape.circle,
+                                            ),
+                                            padding: const EdgeInsets.all(18),
+                                            child: Icon(Icons.check_circle, color: Colors.green, size: 64),
+                                          ),
+                                          SizedBox(height: 24),
+                                          Text('Deposit Paid Successfully!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                          SizedBox(height: 12),
+                                          Text('Your deposit has been paid and your booking is now confirmed.', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                                          SizedBox(height: 24),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: AppColors.primary,
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                Navigator.pushNamedAndRemoveUntil(
+                                                  context,
+                                                  ScreensName.homeScreen,
+                                                  (route) => false,
+                                                );
+                                              },
+                                              child: Text('Go to Home', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          }
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
@@ -294,7 +546,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                     ),
                   ),
                   child: Text(
-                    'Pay Deposit ${deposit.toStringAsFixed(2)} EGP',
+                    'Pay Deposit ${depositAmount.toStringAsFixed(2)} EGP',
                     style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -304,5 +556,20 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _getPaymentIcon(String type, String brand) {
+    switch (type.toLowerCase()) {
+      case 'card':
+        if (brand.toLowerCase().contains('mastercard')) {
+          return FaIcon(FontAwesomeIcons.ccMastercard, color: Colors.red[700], size: 28.sp);
+        } else if (brand.toLowerCase().contains('visa')) {
+          return FaIcon(FontAwesomeIcons.ccVisa, color: Colors.blue[700], size: 28.sp);
+        } else {
+          return FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.grey[700], size: 28.sp);
+        }
+      default:
+        return FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.grey[700], size: 28.sp);
+    }
   }
 }

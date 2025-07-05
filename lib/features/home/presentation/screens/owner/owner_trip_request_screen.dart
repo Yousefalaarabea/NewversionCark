@@ -41,6 +41,7 @@ import '../../../../../config/routes/screens_name.dart';
 import '../../../../../config/themes/app_colors.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../../notifications/presentation/cubits/notification_cubit.dart';
+import 'package:test_cark/core/booking_service.dart';
 
 class OwnerTripRequestScreen extends StatefulWidget {
   final String bookingRequestId;
@@ -101,30 +102,14 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
       _isLoading = true;
     });
     try {
-      final authCubit = context.read<AuthCubit>();
-      final currentUser = authCubit.userModel;
-      if (currentUser == null) throw Exception('User not found');
-
-      // Send notification to renter (in-app only)
-      final renterId = widget.bookingData['renterId']?.toString();
-      final renterName = widget.bookingData['renterName'] as String? ?? 'A renter';
-      final carName = widget.bookingData['carName'] as String? ?? '';
-      
-      if (renterId != null) {
-        context.read<NotificationCubit>().sendBookingNotification(
-          renterName: renterName,
-          carBrand: carName,
-          carModel: '', // We'll use carName as carBrand
-          ownerId: currentUser.id.toString(),
-          renterId: renterId,
-          type: 'booking_accepted',
-        );
-      }
-      
+      final rentalId = widget.bookingData['rentalId'];
+      if (rentalId == null) throw Exception('rentalId not found in bookingData');
+      final bookingService = BookingService();
+      final result = await bookingService.confirmBooking(int.parse(rentalId.toString()));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Booking request accepted! Notification sent to renter.'),
+            content: Text('Booking confirmed successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -134,7 +119,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error accepting request: $e'),
+            content: Text('Error confirming booking: $e'),
             backgroundColor: Colors.red,
           ),
         );

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../features/notifications/presentation/models/notification_model.dart';
 
 class NotificationService {
-  static const String baseUrl = 'https://tight-probe-galaxy-criteria.trycloudflare.com/api/'; // غير للـ URL بتاعك
+  static const String baseUrl = 'https://salt-claire-trek-book.trycloudflare.com/api/'; // غير للـ URL بتاعك
   
   // دالة للحصول على الـ token
   Future<String?> _getToken() async {

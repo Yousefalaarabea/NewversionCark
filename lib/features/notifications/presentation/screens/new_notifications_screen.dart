@@ -478,7 +478,20 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         break;
       case 'ACC_RENTER':
         // TODO: Replace with accept deposit/payment screen if exists
-        Navigator.pushNamed(context, ScreensName.bookingSummaryScreen, arguments: notification.data);
+      // Debug logs
+        print('Navigating to ownerTripRequestScreen');
+        print('Notification ID: ${notification.id}');
+        print('Notification Data: ${notification.data}');
+
+        // Pass both bookingRequestId and bookingData
+        Navigator.pushNamed(
+            context,
+            ScreensName.paymentMethodsScreen,
+            arguments: {
+              'bookingRequestId': notification.id ?? 'unknown',
+              'bookingData': notification.data ?? {},
+            }
+        );
         break;
       case 'REJ_RENTER':
         // TODO: Replace with confirmation/cancellation screen if exists

@@ -17,7 +17,7 @@ class AppNotification extends Equatable {
   final bool isRead;
   final String type;
   final Map<String, dynamic>? data;
-  
+
   // NEW FIELDS FROM API
   final String? notificationType;
   final String? priority;
@@ -29,7 +29,7 @@ class AppNotification extends Equatable {
   final int? receiver;
   final String? receiverEmail;
   final DateTime? readAt;
-  final int? navigationId;
+  final String? navigationId;
 
   const AppNotification({
     required this.id,
@@ -62,26 +62,26 @@ class AppNotification extends Equatable {
     String? type,
     Map<String, dynamic>? data,
   }) => AppNotification(
-        id: id,
-        title: title ?? this.title,
-        message: message ?? this.message,
-        date: date ?? this.date,
-        isRead: isRead ?? this.isRead,
-        type: type ?? this.type,
-        data: data ?? this.data,
-        // NEW FIELDS
-        notificationType: this.notificationType,
-        priority: this.priority,
-        priorityDisplay: this.priorityDisplay,
-        typeDisplay: this.typeDisplay,
-        timeAgo: this.timeAgo,
-        sender: this.sender,
-        senderEmail: this.senderEmail,
-        receiver: this.receiver,
-        receiverEmail: this.receiverEmail,
-        readAt: this.readAt,
-        navigationId: this.navigationId,
-      );
+    id: id,
+    title: title ?? this.title,
+    message: message ?? this.message,
+    date: date ?? this.date,
+    isRead: isRead ?? this.isRead,
+    type: type ?? this.type,
+    data: data ?? this.data,
+    // NEW FIELDS
+    notificationType: this.notificationType,
+    priority: this.priority,
+    priorityDisplay: this.priorityDisplay,
+    typeDisplay: this.typeDisplay,
+    timeAgo: this.timeAgo,
+    sender: this.sender,
+    senderEmail: this.senderEmail,
+    receiver: this.receiver,
+    receiverEmail: this.receiverEmail,
+    readAt: this.readAt,
+    navigationId: this.navigationId,
+  );
 
   // NEW copyWith method with all fields
   AppNotification copyWithAll({
@@ -101,67 +101,68 @@ class AppNotification extends Equatable {
     int? receiver,
     String? receiverEmail,
     DateTime? readAt,
-    int? navigationId,
+    String? navigationId,
   }) => AppNotification(
-        id: id,
-        title: title ?? this.title,
-        message: message ?? this.message,
-        date: date ?? this.date,
-        isRead: isRead ?? this.isRead,
-        type: type ?? this.type,
-        data: data ?? this.data,
-        notificationType: notificationType ?? this.notificationType,
-        priority: priority ?? this.priority,
-        priorityDisplay: priorityDisplay ?? this.priorityDisplay,
-        typeDisplay: typeDisplay ?? this.typeDisplay,
-        timeAgo: timeAgo ?? this.timeAgo,
-        sender: sender ?? this.sender,
-        senderEmail: senderEmail ?? this.senderEmail,
-        receiver: receiver ?? this.receiver,
-        receiverEmail: receiverEmail ?? this.receiverEmail,
-        readAt: readAt ?? this.readAt,
-        navigationId: navigationId ?? this.navigationId,
-      );
+    id: id,
+    title: title ?? this.title,
+    message: message ?? this.message,
+    date: date ?? this.date,
+    isRead: isRead ?? this.isRead,
+    type: type ?? this.type,
+    data: data ?? this.data,
+    notificationType: notificationType ?? this.notificationType,
+    priority: priority ?? this.priority,
+    priorityDisplay: priorityDisplay ?? this.priorityDisplay,
+    typeDisplay: typeDisplay ?? this.typeDisplay,
+    timeAgo: timeAgo ?? this.timeAgo,
+    sender: sender ?? this.sender,
+    senderEmail: senderEmail ?? this.senderEmail,
+    receiver: receiver ?? this.receiver,
+    receiverEmail: receiverEmail ?? this.receiverEmail,
+    readAt: readAt ?? this.readAt,
+    navigationId: navigationId ?? this.navigationId,
+  );
 
   // NEW: Factory method to create from API JSON
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     // Debug logging for navigation_id
     print('[AppNotification.fromJson] Raw navigation_id: ${json['navigation_id']} (type: ${json['navigation_id']?.runtimeType})');
-    
+
     // Handle navigation_id conversion safely
-    int? navigationId;
+    String? navigationId;
     if (json['navigation_id'] != null) {
-      if (json['navigation_id'] is int) {
+      if (json['navigation_id'] is String) {
         navigationId = json['navigation_id'];
-      } else if (json['navigation_id'] is String) {
-        navigationId = int.tryParse(json['navigation_id']);
-        print('[AppNotification.fromJson] Converted navigation_id from string: $navigationId');
+        print('[AppNotification.fromJson] Using navigation_id as string: $navigationId');
+      } else if (json['navigation_id'] is int) {
+        navigationId = json['navigation_id'].toString();
+        print('[AppNotification.fromJson] Converted navigation_id from int: $navigationId');
       } else {
         print('[AppNotification.fromJson] Unknown navigation_id type: ${json['navigation_id'].runtimeType}');
       }
     }
 
     // Debug logging for other fields
-    print('[AppNotification.fromJson] Raw sender_id: ${json['sender_id']} (type: ${json['sender_id']?.runtimeType})');
-    print('[AppNotification.fromJson] Raw receiver_id: ${json['receiver_id']} (type: ${json['receiver_id']?.runtimeType})');
-    
-    // Handle sender_id conversion safely
+    print('[AppNotification.fromJson] Raw sender: ${json['sender']} (type: ${json['sender']?.runtimeType})');
+    print('[AppNotification.fromJson] Raw receiver: ${json['receiver']} (type: ${json['receiver']?.runtimeType})');
+
+    // Handle sender conversion safely
     int? senderId;
-    if (json['sender_id'] != null) {
-      if (json['sender_id'] is int) {
-        senderId = json['sender_id'];
-      } else if (json['sender_id'] is String) {
-        senderId = int.tryParse(json['sender_id']);
+    if (json['sender'] != null) {
+      if (json['sender'] is int) {
+        senderId = json['sender'];
+      } else if (json['sender'] is String) {
+        senderId = int.tryParse(json['sender']);
       }
     }
 
-    // Handle receiver_id conversion safely
+    // Handle receiver conversion safely
     int? receiverId;
-    if (json['receiver_id'] != null) {
-      if (json['receiver_id'] is int) {
-        receiverId = json['receiver_id'];
-      } else if (json['receiver_id'] is String) {
-        receiverId = int.tryParse(json['receiver_id']);
+    if (json['receiver'] != null) {
+      if (json['receiver'] is int) {
+        receiverId = json['receiver'];
+      } else if (json['receiver'] is String) {
+        receiverId = int.tryParse(json['receiver']);
       }
     }
 
@@ -169,8 +170,8 @@ class AppNotification extends Equatable {
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? '',
       message: json['message'] ?? '',
-      date: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      date: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
       isRead: json['is_read'] ?? false,
       type: json['notification_type'] ?? 'SYSTEM',
@@ -185,8 +186,8 @@ class AppNotification extends Equatable {
       senderEmail: json['sender_email'],
       receiver: receiverId, // Use converted value
       receiverEmail: json['receiver_email'],
-      readAt: json['read_at'] != null 
-          ? DateTime.parse(json['read_at']) 
+      readAt: json['read_at'] != null
+          ? DateTime.parse(json['read_at'])
           : null,
       navigationId: navigationId, // Use converted value
     );
@@ -229,10 +230,10 @@ class NotificationError extends NotificationState {
 class NotificationCubit extends Cubit<NotificationState> {
   NotificationCubit() : super(NotificationInitial());
   static NotificationCubit get(context) => BlocProvider.of(context);
-  
+
   // Local storage for in-app notifications
   List<AppNotification> _localNotifications = [];
-  
+
   // Get all notifications (both from API and local)
   Future<void> getAllNotifications() async {
     emit(NotificationLoading());
@@ -244,25 +245,25 @@ class NotificationCubit extends Cubit<NotificationState> {
       if (token != null) {
         // OLD: Using notifications/ endpoint
         // final response = await ApiService().getWithToken("notifications/", token);
-        
+
         // NEW: Using the correct API endpoint
         final response = await ApiService().getWithToken("notifications/notifications/", token);
-        
+
         if (response.statusCode == 200) {
           // OLD: Using NotificationResponse.fromJson
           // final notificationResponse = NotificationResponse.fromJson(response.data);
-          
+
           // NEW: Direct parsing from API response
           final data = response.data;
           final List<dynamic> results = data['results'] ?? [];
-          
+
           // Debug: Print first notification data structure
           if (results.isNotEmpty) {
             print('[getAllNotifications] First notification raw data:');
             print(results.first);
             print('[getAllNotifications] First notification keys: ${results.first.keys.toList()}');
           }
-          
+
           // Convert API notifications to AppNotification format using fromJson
           final apiNotifications = results.map((json) {
             try {
@@ -273,10 +274,10 @@ class NotificationCubit extends Cubit<NotificationState> {
               rethrow;
             }
           }).toList();
-          
+
           // Combine API notifications with local notifications
           _localNotifications = [...apiNotifications, ..._localNotifications];
-          
+
           print('✅ Successfully loaded ${apiNotifications.length} notifications from API');
           print('[getAllNotifications] Sample notification navigation_id: ${apiNotifications.isNotEmpty ? apiNotifications.first.navigationId : 'N/A'}');
         } else {
@@ -285,7 +286,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       } else {
         print('❌ No access token found');
       }
-      
+
       emit(NotificationLoaded(_localNotifications));
     } catch (e) {
       print('❌ Error fetching notifications: $e');
@@ -311,9 +312,9 @@ class NotificationCubit extends Cubit<NotificationState> {
       type: type,
       data: data,
     );
-    
+
     _localNotifications.insert(0, notification);
-    
+
     if (state is NotificationLoaded) {
       emit(NotificationLoaded(_localNotifications));
     } else {
@@ -331,7 +332,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       //   }
       //   return notification;
       // }).toList();
-      
+
       // NEW: Update via API first, then locally
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('access_token');
@@ -339,17 +340,17 @@ class NotificationCubit extends Cubit<NotificationState> {
       if (token != null) {
         // Call API to mark as read
         final response = await ApiService().postWithToken(
-          "notifications/notifications/$notificationId/mark_as_read/",
-          {}
+            "notifications/notifications/$notificationId/mark_as_read/",
+            {}
         );
-        
+
         if (response.statusCode == 200) {
           print('✅ Successfully marked notification $notificationId as read via API');
         } else {
           print('❌ Failed to mark notification as read via API: ${response.statusCode}');
         }
       }
-      
+
       // Update locally regardless of API result
       _localNotifications = _localNotifications.map((notification) {
         if (notification.id == notificationId) {
@@ -357,7 +358,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         }
         return notification;
       }).toList();
-      
+
       if (state is NotificationLoaded) {
         emit(NotificationLoaded(_localNotifications));
       }
@@ -370,7 +371,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         }
         return notification;
       }).toList();
-      
+
       if (state is NotificationLoaded) {
         emit(NotificationLoaded(_localNotifications));
       }
@@ -384,7 +385,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       // _localNotifications = _localNotifications.map((notification) {
       //   return notification.copyWith(isRead: true);
       // }).toList();
-      
+
       // NEW: Update via API first, then locally
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('access_token');
@@ -392,22 +393,22 @@ class NotificationCubit extends Cubit<NotificationState> {
       if (token != null) {
         // Call API to mark all as read
         final response = await ApiService().postWithToken(
-          "notifications/notifications/mark_all_as_read/",
-          {}
+            "notifications/notifications/mark_all_as_read/",
+            {}
         );
-        
+
         if (response.statusCode == 200) {
           print('✅ Successfully marked all notifications as read via API');
         } else {
           print('❌ Failed to mark all notifications as read via API: ${response.statusCode}');
         }
       }
-      
+
       // Update locally regardless of API result
       _localNotifications = _localNotifications.map((notification) {
         return notification.copyWith(isRead: true);
       }).toList();
-      
+
       if (state is NotificationLoaded) {
         emit(NotificationLoaded(_localNotifications));
       }
@@ -417,7 +418,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       _localNotifications = _localNotifications.map((notification) {
         return notification.copyWith(isRead: true);
       }).toList();
-      
+
       if (state is NotificationLoaded) {
         emit(NotificationLoaded(_localNotifications));
       }
@@ -471,11 +472,11 @@ class NotificationCubit extends Cubit<NotificationState> {
         if (response.statusCode == 200) {
           final data = response.data;
           final List<dynamic> results = data['results'] ?? [];
-          
-          final unreadNotifications = results.map((json) => 
-            AppNotification.fromJson(json)
+
+          final unreadNotifications = results.map((json) =>
+              AppNotification.fromJson(json)
           ).toList();
-          
+
           emit(NotificationLoaded(unreadNotifications));
           print('✅ Successfully loaded ${unreadNotifications.length} unread notifications');
         } else {
@@ -510,7 +511,7 @@ class NotificationCubit extends Cubit<NotificationState> {
   }) {
     String title;
     String message;
-    
+
     switch (type) {
       case 'booking_request':
         title = 'New Booking Request';
@@ -528,7 +529,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         title = 'Booking Update';
         message = 'Your booking for $carBrand $carModel has been updated';
     }
-    
+
     final Map<String, dynamic> notificationData = {
       'renterName': renterName,
       'carBrand': carBrand,
@@ -540,7 +541,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       notificationData['totalPrice'] = totalPrice ?? 0.0;
       notificationData['rentalId'] = rentalId ?? 'unknown';
     }
-    
+
     addNotification(
       title: title,
       message: message,
@@ -558,7 +559,7 @@ class NotificationCubit extends Cubit<NotificationState> {
   }) {
     String title;
     String message;
-    
+
     switch (type) {
       case 'deposit_paid':
         title = 'Deposit Paid';
@@ -576,7 +577,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         title = 'Payment Update';
         message = 'Payment update for $carBrand $carModel';
     }
-    
+
     addNotification(
       title: title,
       message: message,
@@ -598,7 +599,7 @@ class NotificationCubit extends Cubit<NotificationState> {
   }) {
     String title;
     String message;
-    
+
     switch (type) {
       case 'handover_started':
         title = 'Handover Started';
@@ -616,7 +617,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         title = 'Handover Update';
         message = 'Handover update for $carBrand $carModel';
     }
-    
+
     addNotification(
       title: title,
       message: message,
@@ -637,7 +638,7 @@ class NotificationCubit extends Cubit<NotificationState> {
   }) {
     String title;
     String message;
-    
+
     switch (type) {
       case 'trip_started':
         title = 'Trip Started';
@@ -655,7 +656,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         title = 'Trip Update';
         message = 'Trip update for $carBrand $carModel';
     }
-    
+
     addNotification(
       title: title,
       message: message,
@@ -679,14 +680,14 @@ class NotificationCubit extends Cubit<NotificationState> {
         if (response.statusCode == 200) {
           final data = response.data;
           final List<dynamic> results = data['results'] ?? [];
-          
+
           // Debug: Print first notification data structure
           if (results.isNotEmpty) {
             print('[fetchNewNotifications] First notification raw data:');
             print(results.first);
             print('[fetchNewNotifications] First notification keys: ${results.first.keys.toList()}');
           }
-          
+
           final newNotifications = results.map((json) {
             try {
               return AppNotification.fromJson(json);
@@ -732,39 +733,50 @@ class NotificationCubit extends Cubit<NotificationState> {
     }
 
     print('[navigateBasedOnNotification] Navigating with navigation_id: ${notification.navigationId}');
-    
+
     // Mark notification as read when navigating
     markAsRead(notification.id);
 
-    // Navigate based on navigation_id
+    // Navigate based on navigation_id string values
     switch (notification.navigationId) {
-      case 1: // Booking details
-        Navigator.pushNamed(context, ScreensName.bookingHistoryScreen);
+      case 'REQ_OWNER':
+        Navigator.pushNamed(context, ScreensName.ownerTripRequestScreen, arguments: {
+          'bookingRequestId': notification.id,
+          'bookingData': notification.data ?? {},
+        });
         break;
-      case 2: // Trip details
-        Navigator.pushNamed(context, ScreensName.tripDetailsScreen);
+      case 'ACC_RENTER':
+        Navigator.pushNamed(context, ScreensName.bookingSummaryScreen, arguments: notification.data);
         break;
-      case 3: // Payment details
-        Navigator.pushNamed(context, ScreensName.paymentScreen);
+      case 'REJ_RENTER':
+        Navigator.pushNamed(context, ScreensName.bookingHistoryScreen, arguments: notification.data);
         break;
-      case 4: // Car details
-        // You might need to pass car data here
-        Navigator.pushNamed(context, ScreensName.showCarDetailsScreen);
+      case 'DEP_OWNER':
+        Navigator.pushNamed(context, ScreensName.handoverScreen, arguments: notification.data);
         break;
-      case 5: // Profile
-        Navigator.pushNamed(context, ScreensName.profile);
+      case 'OWN_RENT_HND':
+        Navigator.pushNamed(context, ScreensName.renterHandoverScreen, arguments: notification.data);
         break;
-      case 6: // Notifications
-        Navigator.pushNamed(context, ScreensName.newnotifytest);
+      case 'REN_ONT_TRP':
+        Navigator.pushNamed(context, ScreensName.renterOngoingTripScreen, arguments: notification.data);
         break;
-      case 7: // Home
-        Navigator.pushNamed(context, ScreensName.homeScreen);
+      case 'OWN_ONT_TRP':
+        Navigator.pushNamed(context, ScreensName.ownerOngoingTripScreen, arguments: notification.data);
         break;
-      case 8: // Owner notifications
-        Navigator.pushNamed(context, ScreensName.newnotifytest);
+      case 'LOC_GET':
+        Navigator.pushNamed(context, ScreensName.liveLocationMapScreen, arguments: notification.data);
         break;
-      case 9: // Owner home
-        Navigator.pushNamed(context, ScreensName.ownerHomeScreen);
+      case 'REN_DRP_HND':
+        Navigator.pushNamed(context, ScreensName.renterDropOffScreen, arguments: notification.data);
+        break;
+      case 'OWN_DRP_HND':
+        Navigator.pushNamed(context, ScreensName.ownerDropOffScreen, arguments: notification.data);
+        break;
+      case 'SUM_VIEW':
+        Navigator.pushNamed(context, ScreensName.bookingHistoryScreen, arguments: notification.data);
+        break;
+      case 'NAV_HOME':
+        Navigator.pushNamedAndRemoveUntil(context, ScreensName.homeScreen, (route) => false);
         break;
       default:
         print('[navigateBasedOnNotification] Unknown navigation_id: ${notification.navigationId}');
@@ -786,29 +798,29 @@ class NotificationCubit extends Cubit<NotificationState> {
 
   // NEW: Get notifications by priority
   List<AppNotification> getNotificationsByPriority(String priority) {
-    return _localNotifications.where((notification) => 
-      notification.priority == priority
+    return _localNotifications.where((notification) =>
+    notification.priority == priority
     ).toList();
   }
 
   // NEW: Get high priority notifications
   List<AppNotification> getHighPriorityNotifications() {
-    return _localNotifications.where((notification) => 
-      notification.priority == 'HIGH' || notification.priority == 'URGENT'
+    return _localNotifications.where((notification) =>
+    notification.priority == 'HIGH' || notification.priority == 'URGENT'
     ).toList();
   }
 
   // NEW: Get notifications by sender
   List<AppNotification> getNotificationsBySender(int senderId) {
-    return _localNotifications.where((notification) => 
-      notification.sender == senderId
+    return _localNotifications.where((notification) =>
+    notification.sender == senderId
     ).toList();
   }
 
   // NEW: Get notifications by receiver
   List<AppNotification> getNotificationsByReceiver(int receiverId) {
-    return _localNotifications.where((notification) => 
-      notification.receiver == receiverId
+    return _localNotifications.where((notification) =>
+    notification.receiver == receiverId
     ).toList();
   }
 
@@ -821,20 +833,20 @@ class NotificationCubit extends Cubit<NotificationState> {
       if (token != null) {
         // Call API to delete notification
         final response = await ApiService().deleteWithToken(
-          "notifications/notifications/$notificationId/",
-          token
+            "notifications/notifications/$notificationId/",
+            token
         );
-        
+
         if (response.statusCode == 204 || response.statusCode == 200) {
           print('✅ Successfully deleted notification $notificationId via API');
         } else {
           print('❌ Failed to delete notification via API: ${response.statusCode}');
         }
       }
-      
+
       // Remove from local list
       _localNotifications.removeWhere((notification) => notification.id == notificationId);
-      
+
       if (state is NotificationLoaded) {
         emit(NotificationLoaded(_localNotifications));
       }
@@ -842,7 +854,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       print('❌ Error deleting notification: $e');
       // Still remove locally even if API fails
       _localNotifications.removeWhere((notification) => notification.id == notificationId);
-      
+
       if (state is NotificationLoaded) {
         emit(NotificationLoaded(_localNotifications));
       }
@@ -854,8 +866,8 @@ class NotificationCubit extends Cubit<NotificationState> {
     final total = _localNotifications.length;
     final unread = _localNotifications.where((n) => !n.isRead).length;
     final read = total - unread;
-    final highPriority = _localNotifications.where((n) => 
-      n.priority == 'HIGH' || n.priority == 'URGENT'
+    final highPriority = _localNotifications.where((n) =>
+    n.priority == 'HIGH' || n.priority == 'URGENT'
     ).length;
 
     return {
@@ -865,4 +877,4 @@ class NotificationCubit extends Cubit<NotificationState> {
       'highPriority': highPriority,
     };
   }
-} 
+}

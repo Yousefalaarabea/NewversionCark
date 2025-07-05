@@ -82,10 +82,10 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                                      builder: (_) => PaymentMethodsScreen(
-                      car: widget.car,
-                      totalPrice: widget.rentalPreview?.totalPrice ?? 0.0,
-                    ),
+                  builder: (_) => PaymentMethodsScreen(
+                    car: widget.car,
+                    totalPrice: widget.rentalPreview?.totalPrice ?? 0.0,
+                  ),
                 ),
               );
             } else {

@@ -273,13 +273,37 @@ abstract class RoutesManager {
             builder: (context) => const BookingHistoryScreen());
 
       case ScreensName.paymentMethodsScreen:
-        final args = routeSettings.arguments as Map<String, dynamic>;
-        final totalPrice = args['totalPrice'] as double;
-        final car = args['car'] as CarModel;
+        print('RoutesManager: Creating paymentMethodsScreen route');
+        if (routeSettings.arguments is Map<String, dynamic>) {
+          final args = routeSettings.arguments as Map<String, dynamic>;
+          print('RoutesManager: Payment methods arguments received: $args');
+          
+          // Handle both old format (car + totalPrice) and new format (bookingRequestId + bookingData)
+          final totalPrice = args['totalPrice'] as double?;
+          final car = args['car'] as CarModel?;
+          final bookingRequestId = args['bookingRequestId'] as String?;
+          final bookingData = args['bookingData'] as Map<String, dynamic>?;
+          
+          print('RoutesManager: totalPrice: $totalPrice');
+          print('RoutesManager: car: $car');
+          print('RoutesManager: bookingRequestId: $bookingRequestId');
+          print('RoutesManager: bookingData: $bookingData');
+          
+          return MaterialPageRoute(
+            builder: (context) => PaymentMethodsScreen(
+              totalPrice: totalPrice,
+              car: car,
+              bookingRequestId: bookingRequestId,
+              bookingData: bookingData,
+            ),
+          );
+        }
+        print('RoutesManager: Invalid arguments for paymentMethodsScreen');
         return MaterialPageRoute(
-          builder: (context) => PaymentMethodsScreen(
-            totalPrice: totalPrice,
-            car: car,
+          builder: (context) => const Scaffold(
+            body: Center(
+              child: Text('Error: Invalid arguments for payment methods screen'),
+            ),
           ),
         );
 
