@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     Timer? _timer;
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) => print("#####New Refresh####"));
+    _timer = Timer.periodic(const Duration(minutes:5), (timer) => print("#####New Refresh####"));
     super.initState();
   }
 

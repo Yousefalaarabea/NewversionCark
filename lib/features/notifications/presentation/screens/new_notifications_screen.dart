@@ -92,8 +92,10 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<NotificationCubit>().getAllNotifications();
     });
-    // تحديث تلقائي كل ثانية
-    _autoRefreshTimer = Timer.periodic(Duration(seconds: 1), (_) {
+    // تحديث تلقائي كل دقيقتين
+    print('[NotificationScreen] Starting auto-refresh timer with interval: ${NotificationCubit.defaultPollingInterval}');
+    _autoRefreshTimer = Timer.periodic(NotificationCubit.defaultPollingInterval, (_) {
+      print('[NotificationScreen] Auto-refresh triggered at ${DateTime.now()}');
       context.read<NotificationCubit>().fetchNewNotifications();
     });
   }
@@ -569,39 +571,32 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         Navigator.pushNamed(context, ScreensName.bookingHistoryScreen, arguments: notification.data);
         break;
       case 'DEP_OWNER':
-      // تحويل البيانات من الإشعار إلى TripDetailsModel
-        try {
-          _printNotificationDetails(notification, 'DEP_OWNER');
-          
           final tripDetails = TripDetailsModel.fromNotificationData(notification.data ?? {});
           
           // التحقق من وجود rentalId قبل الانتقال
           if (tripDetails.rentalId == null) {
-            print('❌ [DEP_OWNER] rentalId is null! Cannot proceed.');
+            print('❌ rentalId is null! aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
             _showErrorSnackBar('خطأ: رقم الرحلة غير متوفر في الإشعار');
             // عرض تفاصيل الإشعار كبديل
             _showNotificationDetails(context, notification);
             return;
           }
           
-          print('✅ [DEP_OWNER] Successfully created TripDetailsModel with rentalId: ${tripDetails.rentalId}');
-          
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => TripDetailsConfirmationScreen(tripDetails: tripDetails),
-            ),
-          );
+                     print('✅ [DEP_OWNER] Successfully created TripDetailsModel with rentalId: ${tripDetails.rentalId}');
+           print('✅ [DEP_OWNER] About to navigate with rentalId: ${tripDetails.rentalId}');
 
-        } catch (e) {
-          print('❌ [DEP_OWNER] Error converting notification data to TripDetailsModel: $e');
-          print('❌ [DEP_OWNER] Stack trace: ${StackTrace.current}');
-          _showErrorSnackBar('خطأ في معالجة بيانات الإشعار');
-          // Fallback: show notification details
-          _showNotificationDetails(context, notification);
-        }
+                     Navigator.push(
+             context,
+             MaterialPageRoute(
+               builder: (_) => TripDetailsConfirmationScreen(
+                 tripDetails: tripDetails,
+                 rentalId: tripDetails.rentalId,
+               ),
+             ),
+           );
+
         break;
-      case 'RENTER_PICKUP':
+      case 'REN_PICKUP_HND':
         try {
           _printNotificationDetails(notification, 'RENTER_PICKUP');
           
@@ -613,7 +608,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => RenterHandoverScreen(rentalId: rentalId),
+                builder: (_) => RenterHandoverScreen(rentalId: rentalId, notification: notification,),
               ),
             );
           } else {
@@ -628,19 +623,19 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
           _showNotificationDetails(context, notification);
         }
         break;
-      case 'OWN_PICKUP_COMPLETE':
-        Navigator.pushNamed(context, ScreensName.renterHandoverScreen, arguments: notification.data);
-        break;
-      case 'REN_ONT_TRP':
+      // case 'OWN_PICKUP_COMPLETE':
+      //   Navigator.pushNamed(context, ScreensName.renterHandoverScreen, arguments: notification.data);
+      //   break;
+      case 'REN_ONGOING':
         Navigator.pushNamed(context, ScreensName.renterOngoingTripScreen, arguments: notification.data);
         break;
-      case 'OWN_ONT_TRP':
+      case 'OWN_ONGOING':
         Navigator.pushNamed(context, ScreensName.ownerOngoingTripScreen, arguments: notification.data);
         break;
-      case 'GET_LOC_SCR':
-        // TODO: Replace with get location screen if exists
-        Navigator.pushNamed(context, ScreensName.liveLocationMapScreen, arguments: notification.data);
-        break;
+      // case 'GET_LOC_SCR':
+      //   // TODO: Replace with get location screen if exists
+      //   Navigator.pushNamed(context, ScreensName.liveLocationMapScreen, arguments: notification.data);
+      //   break;
       case 'REN_DRP_HND':
         Navigator.pushNamed(context, ScreensName.renterDropOffScreen, arguments: notification.data);
         break;

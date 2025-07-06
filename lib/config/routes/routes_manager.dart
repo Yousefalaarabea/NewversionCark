@@ -53,6 +53,7 @@ import '../../features/home/presentation/screens/booking_screens/rental_flow_tes
 import 'package:test_cark/features/cars/presentation/cubits/add_car_state.dart';
 import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
 import '../../features/home/model/car_rental_preview_model.dart';
+import '../../features/notifications/presentation/cubits/notification_cubit.dart';
 
 abstract class RoutesManager {
   static Route<dynamic>? onGenerateRoute(RouteSettings routeSettings) {
@@ -202,13 +203,14 @@ abstract class RoutesManager {
         if (routeSettings.arguments is Map<String, dynamic>) {
           final args = routeSettings.arguments as Map<String, dynamic>;
           final rentalId = args['rentalId'] as int;
+          final notification = args['notification'] as AppNotification;
           return MaterialPageRoute(
-            builder: (context) => RenterHandoverScreen(rentalId: rentalId),
+            builder: (context) => RenterHandoverScreen(rentalId: rentalId, notification: notification),
           );
         }
         return MaterialPageRoute(
           builder: (context) => const Scaffold(
-            body: Center(child: Text('Error: Missing rentalId')),
+            body: Center(child: Text('Error: Missing rentalId or notification')),
           ),
         );
 
@@ -237,14 +239,55 @@ abstract class RoutesManager {
       //   return MaterialPageRoute(builder: (context) => const HandoverScreen());
 
       case ScreensName.handoverScreen:
+        print('🔍 [RoutesManager] Creating handoverScreen route');
         if (routeSettings.arguments is Map<String, dynamic>) {
           final args = routeSettings.arguments as Map<String, dynamic>;
+          print('🔍 [RoutesManager] handoverScreen arguments: $args');
+          
           final paymentMethod = args['paymentMethod'] as String? ?? 'unknown';
-          final rentalId = args['rentalId'] as int;
-          return MaterialPageRoute(
-            builder: (context) => HandoverScreen(paymentMethod: paymentMethod, rentalId: rentalId),
-          );
+          final dynamic rawRentalId = args['rentalId'];
+          
+          print('🔍 [RoutesManager] paymentMethod: $paymentMethod');
+          print('🔍 [RoutesManager] rawRentalId: $rawRentalId (type: ${rawRentalId.runtimeType})');
+          
+          int? rentalId;
+          if (rawRentalId is int) {
+            rentalId = rawRentalId;
+          } else if (rawRentalId is String) {
+            rentalId = int.tryParse(rawRentalId);
+          } else if (rawRentalId != null) {
+            rentalId = int.tryParse(rawRentalId.toString());
+          }
+          
+          print('🔍 [RoutesManager] processed rentalId: $rentalId');
+          
+          if (rentalId != null) {
+            return MaterialPageRoute(
+              builder: (context) => HandoverScreen(paymentMethod: paymentMethod, rentalId: rentalId!),
+            );
+          } else {
+            print('❌ [RoutesManager] Invalid rentalId: $rawRentalId');
+            return MaterialPageRoute(
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: Text('Error')),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Error: Invalid rentalId'),
+                      Text('Received: $rawRentalId'),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Go Back'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
         }
+        print('❌ [RoutesManager] Invalid arguments for handoverScreen');
         return MaterialPageRoute(
           builder: (context) => const Scaffold(
             body: Center(child: Text('Error: Missing payment method or rentalId')),
@@ -384,10 +427,19 @@ abstract class RoutesManager {
           ),
         );
       case ScreensName.renterOngoingTripScreen:
-        final args = routeSettings.arguments as TripDetailsModel;
+        if (routeSettings.arguments is AppNotification) {
+          final notification = routeSettings.arguments as AppNotification;
+          return MaterialPageRoute(
+            builder: (context) => RenterOngoingTripScreen(
+              notification: notification,
+            ),
+          );
+        }
         return MaterialPageRoute(
-          builder: (context) => RenterOngoingTripScreen(
-            tripDetails: args,
+          builder: (context) => const Scaffold(
+            body: Center(
+              child: Text('Error: Invalid arguments for renter ongoing trip screen'),
+            ),
           ),
         );
       case ScreensName.ownerOngoingTripScreen:

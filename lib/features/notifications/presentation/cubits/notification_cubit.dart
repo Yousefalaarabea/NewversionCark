@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_cark/features/auth/presentation/models/user_model.dart';
 import '../../../../core/api_service.dart';
+import '../../../../core/config/notification_config.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../models/notification_model.dart';
 import '../../../../config/routes/screens_name.dart';
@@ -245,6 +246,9 @@ class NotificationError extends NotificationState {
 
 // Cubit
 class NotificationCubit extends Cubit<NotificationState> {
+  // Use configurable polling interval
+  static Duration get defaultPollingInterval => NotificationConfig.defaultPollingInterval;
+  
   NotificationCubit() : super(NotificationInitial());
   static NotificationCubit get(context) => BlocProvider.of(context);
 

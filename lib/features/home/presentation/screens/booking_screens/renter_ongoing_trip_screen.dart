@@ -5,13 +5,14 @@ import '../../../../../config/themes/app_colors.dart';
 import '../../../../auth/presentation/models/user_model.dart';
 import '../../model/car_model.dart';
 import '../../model/trip_details_model.dart';
+import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 
 class RenterOngoingTripScreen extends StatefulWidget {
-  final TripDetailsModel tripDetails;
+  final AppNotification notification;
 
   const RenterOngoingTripScreen({
     super.key,
-    required this.tripDetails,
+    required this.notification,
   });
 
   @override
@@ -19,6 +20,14 @@ class RenterOngoingTripScreen extends StatefulWidget {
 }
 
 class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
+  late final TripDetailsModel tripDetails;
+
+  @override
+  void initState() {
+    super.initState();
+    tripDetails = TripDetailsModel.fromNotificationData(widget.notification.data ?? {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -56,11 +65,11 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
   }
 
   Widget _buildTripOverviewCard(ThemeData theme) {
-    final car = widget.tripDetails.car;
-    final startDate = widget.tripDetails.startDate;
-    final endDate = widget.tripDetails.endDate;
-    final totalPrice = widget.tripDetails.totalPrice;
-    final paymentMethod = widget.tripDetails.paymentMethod;
+    final car = tripDetails.car;
+    final startDate = tripDetails.startDate;
+    final endDate = tripDetails.endDate;
+    final totalPrice = tripDetails.totalPrice;
+    final paymentMethod = tripDetails.paymentMethod;
 
     return Card(
       elevation: 3,
@@ -158,8 +167,8 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
   }
 
   Widget _buildLocationInfoCard(ThemeData theme) {
-    final pickupLocation = widget.tripDetails.pickupLocation;
-    final dropoffLocation = widget.tripDetails.dropoffLocation;
+    final pickupLocation = tripDetails.pickupLocation;
+    final dropoffLocation = tripDetails.dropoffLocation;
 
     return Card(
       elevation: 3,
@@ -302,7 +311,7 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
   }
 
   Widget _buildOwnerInfoCard(ThemeData theme) {
-    final ownerName = widget.tripDetails.ownerName;
+    final ownerName = tripDetails.ownerName;
 
     return Card(
       elevation: 3,
@@ -499,24 +508,19 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
 
   String _calculateRemainingTime() {
     final now = DateTime.now();
-    final endDate = widget.tripDetails.endDate;
+    final endDate = tripDetails.endDate;
     final difference = endDate.difference(now);
     
     if (difference.isNegative) {
-      return '0 hours';
-    }
-    
-    final hours = difference.inHours;
-    final minutes = difference.inMinutes % 60;
-    
-    if (hours > 24) {
-      final days = hours ~/ 24;
-      final remainingHours = hours % 24;
-      return '$days days, $remainingHours hours';
-    } else if (hours > 0) {
-      return '$hours hours, $minutes minutes';
+      return 'Trip ended';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays} days';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hours';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minutes';
     } else {
-      return '$minutes minutes';
+      return 'Less than a minute';
     }
   }
 
@@ -618,10 +622,10 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
       ScreensName.renterDropOffScreen,
       arguments: {
         'tripId': 'trip_${DateTime.now().millisecondsSinceEpoch}', // Generate trip ID
-        'carId': widget.tripDetails.car.id.toString(),
+        'carId': tripDetails.car.id.toString(),
         'renterId': 'renter_001', // TODO: Get from auth
         'ownerId': 'owner_001', // TODO: Get from car data
-        'paymentMethod': widget.tripDetails.paymentMethod,
+        'paymentMethod': tripDetails.paymentMethod,
       },
     );
   }

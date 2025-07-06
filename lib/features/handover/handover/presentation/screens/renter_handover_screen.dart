@@ -7,10 +7,12 @@ import '../../../../../config/routes/screens_name.dart';
 import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../../notifications/presentation/cubits/notification_cubit.dart';
 import '../cubits/renter_handover_cubit.dart';
+import '../../../../home/presentation/model/trip_details_model.dart';
 
 class RenterHandoverScreen extends StatefulWidget {
   final int rentalId;
-  const RenterHandoverScreen({super.key, required this.rentalId});
+  final AppNotification notification;
+  const RenterHandoverScreen({super.key, required this.rentalId, required this.notification} );
 
   @override
   State<RenterHandoverScreen> createState() => _RenterHandoverScreenState();
@@ -43,55 +45,11 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
             SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
         } else if (state is RenterHandoverSuccess) {
-          // Send notification to owner that renter handover is completed
-          _notifyOwnerRenterHandoverCompleted();
-          
-          // 🆕 NEW: Navigate to Renter Ongoing Trip Screen
-          // This shows the ongoing trip information for the renter
-          // Original navigation to renter ongoing trip screen
-          // Navigator.pushReplacementNamed(
-          //   context,
-          //   ScreensName.renterOngoingTripScreen,
-          //   arguments: TripDetailsModel(
-          //     car: CarModel.mock(),
-          //     pickupLocation: 'Downtown Station',
-          //     dropoffLocation: 'Airport Terminal',
-          //     startDate: DateTime.now(),
-          //     endDate: DateTime.now().add(const Duration(days: 2)),
-          //     totalPrice: 1000.0,
-          //     paymentMethod: 'visa',
-          //     renterName: 'John Doe',
-          //     ownerName: 'Jane Smith',
-          //   ),
-          // );
-
-          // New navigation to owner ongoing trip screen for testing
           Navigator.pushReplacementNamed(
             context,
-            ScreensName.ownerOngoingTripScreen,
-            arguments: {
-              'tripId': 'trip_handover_${DateTime.now().millisecondsSinceEpoch}',
-              'carId': '1',
-              'renterId': 'renter_handover_${DateTime.now().millisecondsSinceEpoch}',
-            },
+            ScreensName.renterOngoingTripScreen,
+            arguments: widget.notification,
           );
-          
-          // 🗂️ ORIGINAL: Navigate to Trip Management Screen (commented for testing)
-          /*
-          Navigator.pushReplacementNamed(
-            context,
-            ScreensName.tripManagementScreen,
-            arguments: {
-              'car': CarModel.mock(),
-              'totalPrice': 1000.0,
-              'stops': const [],
-              'tripId': 'trip_001',
-              'renterId': 'renter_001',
-              'ownerId': 'owner_001',
-              'paymentMethod': 'visa',
-            },
-          );
-          */
         }
       },
       child: Scaffold(
@@ -258,68 +216,6 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
     );
   }
 
-  Future<void> _notifyOwnerRenterHandoverCompleted() async {
-    try {
-      // Get current user (renter)
-      final authCubit = context.read<AuthCubit>();
-      final currentUser = authCubit.userModel;
-      
-      if (currentUser == null) {
-        throw Exception('User not found');
-      }
-
-      // Get the latest booking request for this renter
-      final bookingRequestsQuery = await FirebaseFirestore.instance
-          .collection('booking_requests')
-          .where('renterId', isEqualTo: currentUser.id)
-          .where('status', isEqualTo: 'owner_handover_completed')
-          .orderBy('createdAt', descending: true)
-          .limit(1)
-          .get();
-
-      if (bookingRequestsQuery.docs.isNotEmpty) {
-        final bookingData = bookingRequestsQuery.docs.first.data();
-        final ownerId = bookingData['ownerId'] as String?;
-        final carBrand = bookingData['carBrand'] as String? ?? '';
-        final carModel = bookingData['carModel'] as String? ?? '';
-        final renterName = '${currentUser.firstName} ${currentUser.lastName}';
-
-        if (ownerId != null) {
-          // Send in-app notification to owner that renter has completed handover
-          context.read<NotificationCubit>().sendHandoverNotification(
-            carBrand: carBrand,
-            carModel: carModel,
-            type: 'handover_completed',
-            userName: renterName,
-          );
-
-          // Send trip started notification
-          context.read<NotificationCubit>().sendTripNotification(
-            carBrand: carBrand,
-            carModel: carModel,
-            type: 'trip_started',
-          );
-
-          // Update booking status to 'trip_started'
-          await FirebaseFirestore.instance
-              .collection('booking_requests')
-              .doc(bookingRequestsQuery.docs.first.id)
-              .update({
-            'status': 'trip_started',
-            'renterHandoverCompletedAt': DateTime.now().toIso8601String(),
-            'tripStartedAt': DateTime.now().toIso8601String(),
-          });
-          
-          print('Renter handover notification sent to owner: $ownerId');
-        }
-      } else {
-        print('No booking request found for renter: ${currentUser.id}');
-      }
-    } catch (e) {
-      print('Error notifying owner: $e');
-      // Don't throw the error to avoid crashing the app
-    }
-  }
 }
 
 class RenterHandoverConfirmationScreen extends StatelessWidget {
@@ -363,4 +259,4 @@ class RenterHandoverConfirmationScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../config/themes/app_colors.dart';
 
 ///DONE
 class AuthOptionsText extends StatelessWidget {
@@ -18,29 +19,37 @@ class AuthOptionsText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: "${text1.tr()} ",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 0.04.sw,
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 16.h),
+      child: Center(
+        child: RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: "${text1.tr()} ",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
-            TextSpan(
-              recognizer: TapGestureRecognizer()
-                ..onTap = () {
-                  Navigator.pushNamed(context, screenName);
-                },
-              text: text2.tr(),
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
+              TextSpan(
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    Navigator.pushNamed(context, screenName);
+                  },
+                text: text2.tr(),
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.primary,
+                  decorationThickness: 1,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

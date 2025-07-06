@@ -29,35 +29,35 @@ class RentalSearchScreen extends StatelessWidget {
             // Background Image - showing completely without zoom
             Positioned.fill(
               child: Image.asset(
-                'assets/images/home/Car_in_rental_screen.jpg',
+                'assets/images/img/img.png',
                 fit: BoxFit.contain,
                 alignment: Alignment.topCenter,
               ),
             ),
 
-            // Back button only
-            Positioned(
-              top: 20.h,
-              left: 20.w,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(25.r),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.arrow_back_ios,
-                    color: Colors.white,
-                    size: 20.sp,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
+            // // Back button only
+            // Positioned(
+            //   top: 30.h,
+            //   left: 20.w,
+            //   child: Container(
+            //     decoration: BoxDecoration(
+            //       color: Colors.black.withOpacity(0.3),
+            //       borderRadius: BorderRadius.circular(25.r),
+            //     ),
+            //     child: IconButton(
+            //       icon: Icon(
+            //         Icons.arrow_back_ios,
+            //         color: Colors.white,
+            //         size: 20.sp,
+            //       ),
+            //       onPressed: () => Navigator.pop(context),
+            //     ),
+            //   ),
+            // ),
 
             // Main Content Container
             Positioned(
-              top: 280.h,
+              top: 350.h,
               left: 0,
               right: 0,
               bottom: 0,

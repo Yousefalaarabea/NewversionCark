@@ -25,7 +25,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<HandoverCubit>().setRentalId(widget.rentalId);
+    print("🔍 [HandoverScreen] Initializing with rentalId: ${widget.rentalId}");
   }
 
   @override
@@ -33,7 +33,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => ContractUploadCubit()),
-        BlocProvider(create: (context) => HandoverCubit()),
+        BlocProvider(create: (context) => HandoverCubit()..setRentalId(widget.rentalId)),
       ],
       child: HandoverScreenContent(paymentMethod: widget.paymentMethod),
     );
@@ -66,6 +66,21 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: () => _showHelpDialog(context),
+          ),
+          // Debug button to check rentalId status
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: () {
+              final cubit = context.read<HandoverCubit>();
+              print('🔍 [HandoverScreen] Debug - Current rentalId: ${cubit.rentalId}');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('rentalId: ${cubit.rentalId}'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            tooltip: 'Check rentalId status',
           ),
         ],
       ),
@@ -307,7 +322,6 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
       handoverCubit.sendHandover(
         contractImagePath: contractUploadCubit.contractImagePath!,
         paymentMethod: paymentMethod,
-
       );
     }
   }

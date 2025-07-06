@@ -19,6 +19,7 @@ class HandoverCubit extends Cubit<HandoverState> {
   ContractModel? get contract => _contract;
   bool get isContractSigned => _isContractSigned;
   bool get isRemainingAmountReceived => _isRemainingAmountReceived;
+  int? get rentalId => _rentalId;
 
   // Load contract data (mock implementation)
   Future<void> loadContractData() async {
@@ -51,45 +52,91 @@ class HandoverCubit extends Cubit<HandoverState> {
 
   // Check if handover can be sent (based on payment method)
   bool canSendHandover(String paymentMethod) {
-    if (_contract == null) return false;
-    if (!_contract!.isDepositPaid) return false;
-    if (!_isContractSigned) return false;
-    if (paymentMethod.toLowerCase() == 'Cash' && !_isRemainingAmountReceived) return false;
+    print('🔍 [HandoverCubit] canSendHandover called');
+    print('🔍 [HandoverCubit] Current rentalId: $_rentalId');
+    print('🔍 [HandoverCubit] paymentMethod: $paymentMethod');
+    print('🔍 [HandoverCubit] contract: $_contract');
+    print('🔍 [HandoverCubit] isContractSigned: $_isContractSigned');
+    print('🔍 [HandoverCubit] isRemainingAmountReceived: $_isRemainingAmountReceived');
+    
+    if (_contract == null) {
+      print('❌ [HandoverCubit] Contract is null');
+      return false;
+    }
+    if (!_contract!.isDepositPaid) {
+      print('❌ [HandoverCubit] Deposit not paid');
+      return false;
+    }
+    if (!_isContractSigned) {
+      print('❌ [HandoverCubit] Contract not signed');
+      return false;
+    }
+    if (_rentalId == null) {
+      print('❌ [HandoverCubit] rentalId is null');
+      return false;
+    }
+    if (paymentMethod.toLowerCase() == 'cash' && !_isRemainingAmountReceived) {
+      print('❌ [HandoverCubit] Cash payment but remaining amount not received');
+      return false;
+    }
+    
+    print('✅ [HandoverCubit] All conditions met, can send handover');
     return true;
   }
 
-  void setRentalId(int id) => _rentalId = id;
+  void setRentalId(int id) {
+    print('🔍 [HandoverCubit] Setting rentalId: $id');
+    _rentalId = id;
+    print('🔍 [HandoverCubit] rentalId set successfully: $_rentalId');
+  }
 
   // Send handover request
   Future<void> sendHandover({required String contractImagePath, required String paymentMethod}) async {
+    print('🔍 [HandoverCubit] sendHandover called');
+    print('🔍 [HandoverCubit] Current rentalId: $_rentalId');
+    print('🔍 [HandoverCubit] contractImagePath: $contractImagePath');
+    print('🔍 [HandoverCubit] paymentMethod: $paymentMethod');
+    
     if (!canSendHandover(paymentMethod)) {
       emit(HandoverFailure('Please complete all requirements before sending handover'));
       return;
     }
 
     try {
-      print("ANAAAAAAAAAAAAA CUbiiiiiiiiiiiiiiiiiit   SENDDDDDDDDDDDDDDDDDDDD");
+      print("🔍 [HandoverCubit] Starting handover process...");
 
       emit(HandoverSending());
       final bookingService = BookingService();
       final rentalId = _rentalId;
+      print('🔍 [HandoverCubit] Extracted rentalId: $rentalId');
+      
       if (rentalId == null) {
-        emit(HandoverFailure('Invalid rental ID'));
+        print('❌ [HandoverCubit] rentalId is null! Cannot proceed with handover.');
+        emit(HandoverFailure('Invalid rental ID - rentalId is null'));
         return;
       }
+      
+      print('✅ [HandoverCubit] Proceeding with handover for rentalId: $rentalId');
+      
       Map<String, dynamic> response;
-      if (paymentMethod == 'cash') {
+      if (paymentMethod.toLowerCase() == 'cash') {
+        print('🔍 [HandoverCubit] Using cash payment method');
         response = await bookingService.ownerPickupHandover(
           rentalId: rentalId,
           contractImagePath: contractImagePath,
           confirmRemainingCash: _isRemainingAmountReceived,
         );
       } else {
+        print('🔍 [HandoverCubit] Using non-cash payment method');
         response = await bookingService.ownerPickupHandover(
           rentalId: rentalId,
           contractImagePath: contractImagePath,
         );
       }
+      
+      print('✅ [HandoverCubit] Handover API call successful');
+      print('🔍 [HandoverCubit] API Response: $response');
+      
       // Success
       _contract = _contract!.copyWith(
         contractImagePath: contractImagePath,
@@ -102,7 +149,8 @@ class HandoverCubit extends Cubit<HandoverState> {
         contractId: response['contractId'] ?? _contract!.id,
       ));
     } catch (e) {
-      emit(HandoverFailure('Failed to send handover: \\${e.toString()}'));
+      print('❌ [HandoverCubit] Error in sendHandover: $e');
+      emit(HandoverFailure('Failed to send handover: ${e.toString()}'));
     }
   }
 

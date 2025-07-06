@@ -9,8 +9,13 @@ import '../../model/car_model.dart';
 class TripDetailsConfirmationScreen extends StatefulWidget {
   static const routeName = ScreensName.tripDetailsConfirmationScreen;
   final TripDetailsModel tripDetails;
+  final int? rentalId;
 
-  const TripDetailsConfirmationScreen({super.key, required this.tripDetails});
+  const TripDetailsConfirmationScreen({
+    super.key, 
+    required this.tripDetails,
+    this.rentalId,
+  });
 
   @override
   State<TripDetailsConfirmationScreen> createState() => _TripDetailsConfirmationScreenState();
@@ -352,19 +357,25 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                             Expanded(
                               child: ElevatedButton(
                                 onPressed: () {
-                                  final rentalId = tripDetails.rentalId;
+                                  final rentalId = widget.rentalId ?? tripDetails.rentalId;
                                   print('🔍 [TripDetailsConfirmationScreen] Continue button pressed');
-                                  print('🔍 [TripDetailsConfirmationScreen] tripDetails.rentalId: $rentalId (type: ${rentalId.runtimeType})');
+                                  print('🔍 [TripDetailsConfirmationScreen] widget.rentalId: ${widget.rentalId}');
+                                  print('🔍 [TripDetailsConfirmationScreen] tripDetails.rentalId: ${tripDetails.rentalId}');
+                                  print('🔍 [TripDetailsConfirmationScreen] Final rentalId: $rentalId (type: ${rentalId.runtimeType})');
                                   
                                   if (rentalId != null && rentalId is int) {
                                     print('✅ [TripDetailsConfirmationScreen] Valid rentalId found: $rentalId');
+                                    
+                                    final arguments = {
+                                      'paymentMethod': tripDetails.paymentMethod,
+                                      'rentalId': rentalId,
+                                    };
+                                    print('🔍 [TripDetailsConfirmationScreen] Navigation arguments: $arguments');
+                                    
                                     Navigator.pushNamed(
                                       context,
                                       ScreensName.handoverScreen,
-                                      arguments: {
-                                        'paymentMethod': tripDetails.paymentMethod,
-                                        'rentalId': rentalId,
-                                      },
+                                      arguments: arguments,
                                     );
                                   } else {
                                     print('❌ [TripDetailsConfirmationScreen] Invalid or missing rentalId: $rentalId');

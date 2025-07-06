@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../notification_service.dart';
+import '../config/notification_config.dart';
 import '../../features/notifications/presentation/models/notification_model.dart';
 
 class NotificationProvider with ChangeNotifier {
   final NotificationService _service = NotificationService();
+  
+  // Use configurable polling interval
+  static Duration get defaultPollingInterval => NotificationConfig.providerPollingInterval;
   
   List<NotificationModel> _notifications = [];
   int _totalCount = 0;
@@ -22,8 +26,8 @@ class NotificationProvider with ChangeNotifier {
   NotificationStats? get stats => _stats;
   bool get isLoading => _isLoading;
 
-  // بدء الـ polling كل ثانية
-  void startPolling() {
+  // بدء الـ polling كل دقيقة
+  void startPolling({Duration? interval}) {
     // إيقاف الـ timer القديم إذا كان موجود
     stopPolling();
     
@@ -31,7 +35,10 @@ class NotificationProvider with ChangeNotifier {
     fetchNotifications();
     
     // بدء الـ timer الجديد
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    final pollingInterval = interval ?? defaultPollingInterval;
+    print('[NotificationProvider] Starting polling with interval: $pollingInterval');
+    _timer = Timer.periodic(pollingInterval, (timer) {
+      print('[NotificationProvider] Polling triggered at ${DateTime.now()}');
       fetchNotifications();
     });
   }
