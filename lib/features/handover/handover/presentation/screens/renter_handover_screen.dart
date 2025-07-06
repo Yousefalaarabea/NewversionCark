@@ -45,10 +45,27 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
             SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
         } else if (state is RenterHandoverSuccess) {
-          Navigator.pushReplacementNamed(
-            context,
-            ScreensName.renterOngoingTripScreen,
-            arguments: widget.notification,
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('🎉 Trip Started'),
+              content: const Text(
+                'Congratulations! Your trip has officially started.\n\nYou will receive a notification with trip details shortly.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the dialog
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      ScreensName.homeScreen,
+                      (route) => false,
+                    );
+                  },
+                  child: const Text('Back to Home'),
+                ),
+              ],
+            ),
           );
         }
       },

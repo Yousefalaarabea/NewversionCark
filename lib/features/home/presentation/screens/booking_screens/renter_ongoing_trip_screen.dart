@@ -25,6 +25,7 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
   @override
   void initState() {
     super.initState();
+    print('🔥 Incoming Notification Data: ${widget.notification.data}');
     tripDetails = TripDetailsModel.fromNotificationData(widget.notification.data ?? {});
   }
 
@@ -66,7 +67,12 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
 
   Widget _buildTripOverviewCard(ThemeData theme) {
     final car = tripDetails.car;
+    final temp =  tripDetails.car;
+    print("""""""""""""""""""""""""""""""""""""""""""""""""""""""seif""""""""""""""""""""""""""""""""""""""""""""""""""""""");
+    print(tripDetails.car);
+    print("""""""""""""""""""""""""""""""""""""""""""""""""""""""seif""""""""""""""""""""""""""""""""""""""""""""""""""""""");
     final startDate = tripDetails.startDate;
+
     final endDate = tripDetails.endDate;
     final totalPrice = tripDetails.totalPrice;
     final paymentMethod = tripDetails.paymentMethod;
@@ -507,7 +513,7 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
   }
 
   String _calculateRemainingTime() {
-    final now = DateTime.now();
+    final now = tripDetails.startDate;
     final endDate = tripDetails.endDate;
     final difference = endDate.difference(now);
     

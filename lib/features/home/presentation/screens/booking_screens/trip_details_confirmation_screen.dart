@@ -1,7 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../config/routes/screens_name.dart';
 import '../../../../../config/themes/app_colors.dart';
+import '../../../../../main.dart';
+import '../../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../model/trip_details_model.dart';
 import 'package:dio/dio.dart';
 import '../../model/car_model.dart';
@@ -45,8 +48,8 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
     setState(() { _loadingCar = true; _error = null; });
     try {
       final dio = Dio();
-      // عدّل baseUrl حسب مشروعك
-      final response = await dio.get('https://salt-claire-trek-book.trycloudflare.com/api/cars/$carId');
+
+      final response = await dio.get('https://reject-guests-creek-friday.trycloudflare.com/api/cars/$carId');
       if (response.statusCode == 200 && response.data != null) {
         final car = CarModel.fromJson(response.data);
         setState(() {

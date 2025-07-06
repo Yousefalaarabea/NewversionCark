@@ -53,7 +53,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         backgroundColor: Colors.red,
         duration: Duration(seconds: 3),
         action: SnackBarAction(
-          label: 'إغلاق',
+          label: 'Close',
           textColor: Colors.white,
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -118,7 +118,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('الإشعارات'),
+        title: Text('Notifications'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         leading: IconButton(
@@ -185,13 +185,13 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('جاري تحميل الإشعارات...'),
+                  Text('Loading notifications...'),
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: Text('العودة'),
+                    child: Text('Back'),
                   ),
                 ],
               ),
@@ -210,7 +210,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                   children: [
                     Icon(Icons.notifications_none, size: 64, color: Colors.grey),
                     SizedBox(height: 16),
-                    Text('لا توجد إشعارات', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                    Text('No notifications', style: TextStyle(fontSize: 18, color: Colors.grey)),
                     SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -219,14 +219,14 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                           onPressed: () {
                             context.read<NotificationCubit>().getAllNotifications();
                           },
-                          child: Text('تحديث'),
+                          child: Text('Refresh'),
                         ),
                         SizedBox(width: 16),
                         ElevatedButton(
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          child: Text('العودة'),
+                          child: Text('Back'),
                         ),
                       ],
                     ),
@@ -244,9 +244,9 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatCard('الإجمالي', notifications.length, Colors.blue),
-                      _buildStatCard('غير مقروءة', unreadCount, Colors.red),
-                      _buildStatCard('مقروءة', readCount, Colors.green),
+                      _buildStatCard('Total', notifications.length, Colors.blue),
+                      _buildStatCard('Unread', unreadCount, Colors.red),
+                      _buildStatCard('Read', readCount, Colors.green),
                     ],
                   ),
                 ),
@@ -263,7 +263,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                               onPressed: unreadCount > 0 ? () {
                                 context.read<NotificationCubit>().markAllAsRead();
                               } : null,
-                              child: Text('تمييز الكل كمقروء'),
+                              child: Text('Mark all as read'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
@@ -276,7 +276,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                               onPressed: () {
                                 context.read<NotificationCubit>().getAllNotifications();
                               },
-                              child: Text('تحديث'),
+                              child: Text('Refresh'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
@@ -293,7 +293,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                               onPressed: () {
                                 context.read<NotificationCubit>().getUnreadNotifications();
                               },
-                              child: Text('غير المقروءة فقط'),
+                              child: Text('Unread only'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orange,
                                 foregroundColor: Colors.white,
@@ -307,7 +307,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                                 final counts = await context.read<NotificationCubit>().getNotificationsCount();
                                 _showCountsDialog(context, counts);
                               },
-                              child: Text('الإحصائيات'),
+                              child: Text('Statistics'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.purple,
                                 foregroundColor: Colors.white,
@@ -382,7 +382,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                 children: [
                   Icon(Icons.error, size: 64, color: Colors.red),
                   SizedBox(height: 16),
-                  Text('خطأ في تحميل الإشعارات', style: TextStyle(fontSize: 18, color: Colors.red)),
+                  Text('Error loading notifications', style: TextStyle(fontSize: 18, color: Colors.red)),
                   SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -391,14 +391,14 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                         onPressed: () {
                           context.read<NotificationCubit>().getAllNotifications();
                         },
-                        child: Text('إعادة المحاولة'),
+                        child: Text('Retry'),
                       ),
                       SizedBox(width: 16),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
-                        child: Text('العودة'),
+                        child: Text('Back'),
                       ),
                     ],
                   ),
@@ -413,13 +413,13 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('جاري التحميل...'),
+                Text('Loading...'),
                 SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('العودة'),
+                  child: Text('Back'),
                 ),
               ],
             ),
@@ -464,18 +464,18 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
               children: [
                 Text(notification.message),
                 SizedBox(height: 16),
-                Text('النوع: ${notification.notificationType ?? notification.type}'),
+                Text('Type: ${notification.notificationType ?? notification.type}'),
                 if (notification.priority != null) ...[
                   SizedBox(height: 8),
-                  Text('الأولوية: ${notification.priorityDisplay ?? notification.priority}'),
+                  Text('Priority: ${notification.priorityDisplay ?? notification.priority}'),
                 ],
                 if (notification.timeAgo != null) ...[
                   SizedBox(height: 8),
-                  Text('الوقت: ${notification.timeAgo}'),
+                  Text('Time: ${notification.timeAgo}'),
                 ],
                 if (notification.data != null && notification.data!.isNotEmpty) ...[
                   SizedBox(height: 16),
-                  Text('البيانات الإضافية:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Additional Data:', style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
                   ...notification.data!.entries.map((entry) => 
                     Padding(
@@ -490,7 +490,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('إغلاق'),
+              child: Text('Close'),
             ),
           ],
         );
@@ -503,21 +503,21 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('إحصائيات الإشعارات'),
+          title: Text('Notification statistics'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildCountRow('الإجمالي', counts['total'] ?? 0, Colors.blue),
+              _buildCountRow('Total', counts['total'] ?? 0, Colors.blue),
               SizedBox(height: 8),
-              _buildCountRow('غير مقروءة', counts['unread'] ?? 0, Colors.red),
+              _buildCountRow('Unread', counts['unread'] ?? 0, Colors.red),
               SizedBox(height: 8),
-              _buildCountRow('مقروءة', counts['read'] ?? 0, Colors.green),
+              _buildCountRow('Read', counts['read'] ?? 0, Colors.green),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('إغلاق'),
+              child: Text('Close'),
             ),
           ],
         );
@@ -530,8 +530,6 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
     if (!notification.isRead) {
       context.read<NotificationCubit>().markAsRead(notification.id);
     }
-
-    // Navigation logic based on navigationId (string)
     switch (notification.navigationId) {
       case 'REQ_OWNER':
         // Debug logs
@@ -539,7 +537,6 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         print('Notification ID: ${notification.id}');
         print('Notification Data: ${notification.data}');
         
-        // Pass both bookingRequestId and bookingData
         Navigator.pushNamed(
           context, 
           ScreensName.ownerTripRequestScreen, 
@@ -550,13 +547,10 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         );
         break;
       case 'ACC_RENTER':
-        // TODO: Replace with accept deposit/payment screen if exists
-      // Debug logs
         print('Navigating to ownerTripRequestScreen');
         print('Notification ID: ${notification.id}');
         print('Notification Data: ${notification.data}');
 
-        // Pass both bookingRequestId and bookingData
         Navigator.pushNamed(
             context,
             ScreensName.paymentMethodsScreen,
@@ -567,17 +561,14 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         );
         break;
       case 'REJ_RENTER':
-        // TODO: Replace with confirmation/cancellation screen if exists
         Navigator.pushNamed(context, ScreensName.bookingHistoryScreen, arguments: notification.data);
         break;
       case 'DEP_OWNER':
           final tripDetails = TripDetailsModel.fromNotificationData(notification.data ?? {});
           
-          // التحقق من وجود rentalId قبل الانتقال
           if (tripDetails.rentalId == null) {
-            print('❌ rentalId is null! aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-            _showErrorSnackBar('خطأ: رقم الرحلة غير متوفر في الإشعار');
-            // عرض تفاصيل الإشعار كبديل
+            print('❌ rentalId is null! ');
+            _showErrorSnackBar('Error: rentalId is missing in notification');
             _showNotificationDetails(context, notification);
             return;
           }
@@ -600,7 +591,6 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         try {
           _printNotificationDetails(notification, 'RENTER_PICKUP');
           
-          // استخدام الدالة المساعدة لاستخراج rentalId
           final rentalId = _extractRentalId(notification.data);
           
           if (rentalId != null) {
@@ -613,13 +603,13 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
             );
           } else {
             print('❌ [RENTER_PICKUP] rentalId is null! Cannot proceed.');
-            _showErrorSnackBar('خطأ: رقم الرحلة غير متوفر في الإشعار');
+            _showErrorSnackBar('Error: rentalId is missing in notification');
             _showNotificationDetails(context, notification);
           }
         } catch (e) {
           print('❌ [RENTER_PICKUP] Error navigating to RenterHandoverScreen: $e');
           print('❌ [RENTER_PICKUP] Stack trace: ${StackTrace.current}');
-          _showErrorSnackBar('خطأ في معالجة بيانات الإشعار');
+          _showErrorSnackBar('Error processing notification data');
           _showNotificationDetails(context, notification);
         }
         break;
@@ -627,7 +617,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
       //   Navigator.pushNamed(context, ScreensName.renterHandoverScreen, arguments: notification.data);
       //   break;
       case 'REN_ONGOING':
-        Navigator.pushNamed(context, ScreensName.renterOngoingTripScreen, arguments: notification.data);
+        Navigator.pushNamed(context, ScreensName.renterOngoingTripScreen, arguments: notification);
         break;
       case 'OWN_ONGOING':
         Navigator.pushNamed(context, ScreensName.ownerOngoingTripScreen, arguments: notification.data);
