@@ -181,6 +181,7 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
           ),
         ],
       ),
+      backgroundColor: AppColors.primary,
       body: BlocBuilder<NotificationCubit, NotificationState>(
         builder: (context, state) {
           if (state is NotificationLoading) {
@@ -190,7 +191,17 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Loading notifications...'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications, color: Colors.white, size: 35),
+                      SizedBox(width: 10),
+                      Text(
+                        'Loading notifications...',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 25),
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
@@ -246,150 +257,23 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
 
             return Column(
               children: [
-                // شريط الإحصائيات
-                Container(
-                  padding: EdgeInsets.all(16),
-                  color: Colors.grey[100],
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatCard(
-                          'Total', notifications.length, Colors.blue),
-                      _buildStatCard('Unread', unreadCount, Colors.red),
-                      _buildStatCard('Read', readCount, Colors.green),
-                    ],
-                  ),
-                ),
-
-                // أزرار التحكم
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: unreadCount > 0
-                                  ? () {
-                                      context
-                                          .read<NotificationCubit>()
-                                          .markAllAsRead();
-                                    }
-                                  : null,
-                              child: Text('Mark all as read'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                context
-                                    .read<NotificationCubit>()
-                                    .getAllNotifications();
-                              },
-                              child: Text('Refresh'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                context
-                                    .read<NotificationCubit>()
-                                    .getUnreadNotifications();
-                              },
-                              child: Text('Unread only'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final counts = await context
-                                    .read<NotificationCubit>()
-                                    .getNotificationsCount();
-                                _showCountsDialog(context, counts);
-                              },
-                              child: Text('Statistics'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      // OLD: Test buttons for adding dummy notifications
-                      // Row(
-                      //   children: [
-                      //     Expanded(
-                      //       child: ElevatedButton(
-                      //         onPressed: () {
-                      //           // إضافة إشعار تجريبي جديد
-                      //           context.read<NotificationCubit>().addNotification(
-                      //             title: 'إشعار تجريبي جديد',
-                      //             message: 'هذا إشعار تجريبي تم إضافته للاختبار',
-                      //             type: 'SYSTEM',
-                      //             data: {'test': true},
-                      //           );
-                      //         },
-                      //         child: Text('إضافة إشعار تجريبي'),
-                      //         style: ElevatedButton.styleFrom(
-                      //           backgroundColor: Colors.orange,
-                      //           foregroundColor: Colors.white,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //     SizedBox(width: 16),
-                      //     Expanded(
-                      //       child: ElevatedButton(
-                      //         onPressed: () {
-                      //           // حذف جميع الإشعارات
-                      //           context.read<NotificationCubit>().clearAllNotifications();
-                      //         },
-                      //         child: Text('حذف الكل'),
-                      //         style: ElevatedButton.styleFrom(
-                      //           backgroundColor: Colors.red,
-                      //           foregroundColor: Colors.white,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
-                    ],
-                  ),
-                ),
-
                 // قائمة الإشعارات
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final notification = notifications[index];
-                      return NotificationCard(
-                        notification: notification,
-                        onTap: () =>
-                            _handleNotificationTap(context, notification),
-                      );
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      await context.read<NotificationCubit>().getAllNotifications();
                     },
+                    child: ListView.builder(
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = notifications[index];
+                        return NotificationCard(
+                          notification: notification,
+                          onTap: () =>
+                              _handleNotificationTap(context, notification),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],

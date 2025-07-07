@@ -342,13 +342,13 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                             ScaffoldMessenger.of(this.context).showSnackBar(
                               const SnackBar(content: Text('Ratings sent successfully!')),
                             );
-                            // Navigator.pushReplacementNamed(
-                            //   this.context,
-                            //   ScreensName.ownerDropOffScreen,
-                            // );
+                            Navigator.pushReplacementNamed(
+                              this.context,
+                              ScreensName.homeScreen,
+                            );
                           }
                         },
-                        child: const Text('Submit'),
+                        child: const Text('Submit',style: TextStyle(color: Colors.white),),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -603,13 +603,13 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                 if (_canCompleteHandover(state))
                   Container(
                     width: double.infinity,
-                    margin: const EdgeInsets.only(top: 8),
+                    margin: const EdgeInsets.only(top: 5,left: 5,bottom: 5,right: 5),
                     child: ElevatedButton(
                       onPressed: _completeHandover,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.green,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -623,7 +623,7 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                           const Text(
                             'Complete Drop-Off',
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                                fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),

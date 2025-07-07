@@ -35,9 +35,9 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ongoing Trip'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        title: const Text('Ongoing Trip', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 1,
         centerTitle: true,
       ),
@@ -104,17 +104,32 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
             Row(
               children: [
                 Container(
-                  width: 80.w,
-                  height: 80.h,
+                  width: 200.w,
+                  height: 200.h,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12.r),
                     color: Colors.grey[200],
                   ),
-                  child: Icon(
-                    Icons.directions_car,
-                    size: 40.sp,
-                    color: Colors.grey[400],
-                  ),
+                  child: (car.imageUrl != null && car.imageUrl!.isNotEmpty)
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: Image.network(
+                            car.imageUrl!,
+                            fit: BoxFit.fill,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.directions_car,
+                                size: 40.sp,
+                                color: Colors.grey[400],
+                              );
+                            },
+                          ),
+                        )
+                      : Icon(
+                          Icons.directions_car,
+                          size: 40.sp,
+                          color: Colors.grey[400],
+                        ),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
@@ -425,7 +440,7 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[100],
                   foregroundColor: Colors.grey[700],
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  padding: EdgeInsets.symmetric(vertical: 10.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -452,15 +467,15 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  padding: EdgeInsets.symmetric(vertical: 10.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
                 child: Text(
-                  'Confirm Drop-Off',
+                  'Drop-Off',
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

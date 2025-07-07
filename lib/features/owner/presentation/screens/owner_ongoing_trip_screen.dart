@@ -48,7 +48,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
       final renterDetails = notificationData['renterDetails'] ?? {};
       final tripDetails = notificationData['tripDetails'] ?? {};
       final paymentDetails = notificationData['paymentDetails'] ?? {};
-      
+
       // Create CarModel from notification data
       carData = CarModel(
         ownerId: notificationData['ownerDetails']?['id']?.toString() ?? '',
@@ -75,14 +75,18 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
       // Create BookingModel from notification data
       bookingData = BookingModel(
         car: carData!,
-        startDate: DateTime.tryParse(tripDetails['startDate']?.toString() ?? '') ?? DateTime.now(),
-        endDate: DateTime.tryParse(tripDetails['endDate']?.toString() ?? '') ?? DateTime.now().add(const Duration(days: 1)),
+        startDate:
+            DateTime.tryParse(tripDetails['startDate']?.toString() ?? '') ??
+                DateTime.now(),
+        endDate: DateTime.tryParse(tripDetails['endDate']?.toString() ?? '') ??
+            DateTime.now().add(const Duration(days: 1)),
         totalPrice: (paymentDetails['totalAmount'] as num?)?.toDouble() ?? 0.0,
         status: 'ongoing',
       );
 
       // Create UserModel from notification data
-      final renterName = renterDetails['name']?.toString().split(' ') ?? ['غير متوفر', ''];
+      final renterName =
+          renterDetails['name']?.toString().split(' ') ?? ['غير متوفر', ''];
       renterData = UserModel(
         id: renterDetails['id']?.toString() ?? '',
         firstName: renterName.first,
@@ -92,7 +96,6 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
         national_id: 'غير متوفر',
         role: 'renter',
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading trip data: $e')),
@@ -270,7 +273,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.directions_car, color: AppColors.primary, size: 20),
+                child: const Icon(Icons.directions_car,
+                    color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -298,12 +302,13 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
-                    'assets/images/placeholder_car.png',
+                    carData!.imageUrl ?? '',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: Colors.grey[300],
-                        child: const Icon(Icons.directions_car, size: 40, color: Colors.grey),
+                        child: const Icon(Icons.directions_car,
+                            size: 40, color: Colors.grey),
                       );
                     },
                   ),
@@ -345,15 +350,16 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
           const SizedBox(height: 20),
 
           // Rental Period
-          _buildInfoRow('Rental Period', 
-            '${_formatDate(bookingData!.startDate)} - ${_formatDate(bookingData!.endDate)}'),
-          
+          _buildInfoRow('Rental Period',
+              '${_formatDate(bookingData!.startDate)} - ${_formatDate(bookingData!.endDate)}'),
+
           // Total Price
-          _buildInfoRow('Total Price', '${bookingData!.totalPrice.toStringAsFixed(2)} EGP'),
-          
+          _buildInfoRow('Total Price',
+              '${bookingData!.totalPrice.toStringAsFixed(2)} EGP'),
+
           // Payment Method
           _buildInfoRow('Payment Method', 'Visa'),
-          
+
           // Trip Status
           _buildInfoRow('Status', 'Ongoing', valueColor: AppColors.green),
         ],
@@ -388,7 +394,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.person, color: AppColors.primary, size: 20),
+                child: const Icon(Icons.person,
+                    color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -409,7 +416,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: AppColors.primary.withOpacity(0.1),
-                child: const Icon(Icons.person, size: 30, color: AppColors.primary),
+                child: const Icon(Icons.person,
+                    size: 30, color: AppColors.primary),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -665,7 +673,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.star, color: AppColors.primary, size: 20),
+                child:
+                    const Icon(Icons.star, color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -698,15 +707,16 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
               borderRadius: BorderRadius.circular(16),
               child: Stack(
                 children: [
-                  Image.asset(
-                    'assets/images/placeholder_car.png',
+                  Image.network(
+                    carData!.imageUrl ?? '',
                     width: double.infinity,
                     height: 200,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: Colors.grey[300],
-                        child: const Icon(Icons.directions_car, size: 80, color: Colors.grey),
+                        child: const Icon(Icons.directions_car,
+                            size: 80, color: Colors.grey),
                       );
                     },
                   ),
@@ -820,7 +830,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.schedule, color: AppColors.primary, size: 20),
+                child: const Icon(Icons.schedule,
+                    color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -840,7 +851,10 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue.withOpacity(0.1), Colors.purple.withOpacity(0.1)],
+                colors: [
+                  Colors.blue.withOpacity(0.1),
+                  Colors.purple.withOpacity(0.1)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -892,7 +906,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.attach_money, color: Colors.green, size: 24),
+                      const Icon(Icons.attach_money,
+                          color: Colors.green, size: 24),
                       const SizedBox(height: 8),
                       const Text(
                         'Total Price',
@@ -959,9 +974,12 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
   Widget _buildEarningsSection() {
     final earningsDetails = notificationData['earningsDetails'] ?? {};
     final finalCost = (earningsDetails['finalCost'] as num?)?.toDouble() ?? 0.0;
-    final platformCommission = (earningsDetails['platformCommission'] as num?)?.toDouble() ?? 0.0;
-    final driverEarnings = (earningsDetails['driverEarnings'] as num?)?.toDouble() ?? 0.0;
-    final commissionRate = (earningsDetails['commissionRate'] as num?)?.toDouble() ?? 0.0;
+    final platformCommission =
+        (earningsDetails['platformCommission'] as num?)?.toDouble() ?? 0.0;
+    final driverEarnings =
+        (earningsDetails['driverEarnings'] as num?)?.toDouble() ?? 0.0;
+    final commissionRate =
+        (earningsDetails['commissionRate'] as num?)?.toDouble() ?? 0.0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -988,7 +1006,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.attach_money, color: Colors.green, size: 20),
+                child: const Icon(Icons.attach_money,
+                    color: Colors.green, size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -1008,7 +1027,10 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.green.withOpacity(0.1), Colors.green.withOpacity(0.05)],
+                colors: [
+                  Colors.green.withOpacity(0.1),
+                  Colors.green.withOpacity(0.05)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1017,7 +1039,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.account_balance_wallet, color: Colors.green, size: 24),
+                const Icon(Icons.account_balance_wallet,
+                    color: Colors.green, size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -1061,7 +1084,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.trending_up, color: Colors.blue, size: 24),
+                      const Icon(Icons.trending_up,
+                          color: Colors.blue, size: 24),
                       const SizedBox(height: 8),
                       const Text(
                         'Your Earnings',
@@ -1187,7 +1211,10 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+                    colors: [
+                      AppColors.primary.withOpacity(0.1),
+                      AppColors.primary.withOpacity(0.05)
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -1225,7 +1252,8 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -1431,4 +1459,4 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
       ],
     );
   }
-} 
+}

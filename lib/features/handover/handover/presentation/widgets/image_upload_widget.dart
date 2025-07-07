@@ -59,21 +59,6 @@ class ImageUploadWidget extends StatelessWidget {
               ),
             ),
             SizedBox(width: 12),
-            // Expanded(
-            //   child: ElevatedButton.icon(
-            //     onPressed: () => _showImageSourceDialog(context, ImageSource.gallery),
-            //     icon: Icon(Icons.photo_library, color: Colors.white),
-            //     label: Text('المعرض'),
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: AppColors.primary,
-            //       foregroundColor: Colors.white,
-            //       padding: EdgeInsets.symmetric(vertical: 12),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(8),
-            //       ),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       ],
@@ -90,14 +75,14 @@ class ImageUploadWidget extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              child: Text('Cancel',style: TextStyle(color: AppColors.primary,fontSize: 20,fontWeight: FontWeight.bold),),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 onImagePicked(source);
               },
-              child: Text('Confirm'),
+              child: Text('Confirm',style: TextStyle(color: Colors.white), ),
             ),
           ],
         );
