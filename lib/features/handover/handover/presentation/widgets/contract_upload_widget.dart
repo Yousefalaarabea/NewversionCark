@@ -103,7 +103,10 @@ class ContractUploadWidget extends StatelessWidget {
       child: state is ContractUploadLoading
           ? const Center(child: CircularProgressIndicator())
           : InkWell(
-              onTap: () => _showImageSourceDialog(context),
+              onTap: () {
+                final contractUploadCubit = context.read<ContractUploadCubit>();
+                contractUploadCubit.takeContractImageFromCamera();
+              },
               borderRadius: BorderRadius.circular(12),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -115,7 +118,7 @@ class ContractUploadWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Tap to upload contract image',
+                    'Tap to capture contract image',
                     style: TextStyle(
                       color: AppColors.gray,
                       fontSize: 14,
@@ -124,95 +127,6 @@ class ContractUploadWidget extends StatelessWidget {
                 ],
               ),
             ),
-    );
-  }
-
-  void _showImageSourceDialog(BuildContext context) {
-    final contractUploadCubit = context.read<ContractUploadCubit>();
-    
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Choose Image Source',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSourceOption(
-                    context,
-                    icon: Icons.camera_alt,
-                    title: 'Camera',
-                    onTap: () {
-                      Navigator.pop(context);
-                      contractUploadCubit.takeContractImageFromCamera();
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildSourceOption(
-                    context,
-                    icon: Icons.photo_library,
-                    title: 'Gallery',
-                    onTap: () {
-                      Navigator.pop(context);
-                      contractUploadCubit.pickContractImageFromGallery();
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSourceOption(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gray.withOpacity(0.3)),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 } 

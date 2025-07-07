@@ -1,8 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:test_cark/config/routes/screens_name.dart';
 import '../models/post_trip_handover_model.dart';
 import '../models/excess_charges_model.dart';
 import '../models/handover_log_model.dart';
+import 'package:dio/dio.dart';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../../core/api_service.dart';
 
 part 'owner_drop_off_state.dart';
 
@@ -156,6 +162,111 @@ class OwnerDropOffCubit extends Cubit<OwnerDropOffState> {
     }
   }
 
+  // Complete owner dropoff handover (multipart, like renter)
+  Future<void> completeOwnerDropoffHandover({
+    required File carImageFile,
+    required File odometerImageFile,
+    required double odometerValue,
+    required String notes,
+    bool? confirmExcessCash,
+    required String rentalId,
+  }) async {
+    emit(OwnerDropOffLoading());
+    try {
+      final apiService = ApiService();
+      MultipartFile odometerFile;
+      MultipartFile carFile;
+      try {
+        odometerFile = await MultipartFile.fromFile(
+          odometerImageFile.path,
+          filename: odometerImageFile.path.split(Platform.pathSeparator).last,
+        );
+      } catch (e) {
+        emit(OwnerDropOffError(message: 'Error preparing odometer image: $e'));
+        return;
+      }
+      try {
+        carFile = await MultipartFile.fromFile(
+          carImageFile.path,
+          filename: carImageFile.path.split(Platform.pathSeparator).last,
+        );
+      } catch (e) {
+        emit(OwnerDropOffError(message: 'Error preparing car image: $e'));
+        return;
+      }
+      final Map<String, dynamic> formDataMap = {
+        'odometer_image': odometerFile,
+        'car_image': carFile,
+        'odometer_value': odometerValue.toString(),
+        'notes': notes,
+      };
+      if (confirmExcessCash != null) {
+        formDataMap['confirm_excess_cash'] = confirmExcessCash.toString();
+      }
+      final endpoint = 'selfdrive-rentals/$rentalId/owner_dropoff_handover/';
+      final response = await apiService.postMultipartWithToken(endpoint, formDataMap);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("KHALLLLLLLAAAAAAAAAAAAAAAAAAAS");
+        emit(OwnerDropOffCompletedGeneric()); // حالة عامة للنجاح، الشاشة تظهر bottom sheet بعدها
+      } else {
+        emit(OwnerDropOffError(message: 'Failed to complete owner dropoff: ${response.statusCode} - ${response.data}'));
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to complete owner dropoff: ${e.message}';
+      if (e.response != null) {
+        errorMessage += ' (Status: ${e.response?.statusCode}, Data: ${e.response?.data})';
+      }
+      emit(OwnerDropOffError(message: errorMessage));
+    } catch (e) {
+      emit(OwnerDropOffError(message: 'Failed to complete owner dropoff: $e'));
+    }
+  }
+
+  // --- Rating APIs ---
+  Future<bool> sendRenterRating({
+    required String rentalId,
+    required int rating,
+    required String notes,
+  }) async {
+    try {
+      final apiService = ApiService();
+      final res = await apiService.postWithToken(
+        '/feedback/rate/renter/',
+        {
+          'rental_type': 'selfdriverental',
+          'rental_id': int.tryParse(rentalId) ?? rentalId,
+          'rating': rating,
+          'notes': notes,
+        },
+      );
+      return res.statusCode == 200 || res.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> sendCarRating({
+    required String rentalId,
+    required int rating,
+    required String notes,
+  }) async {
+    try {
+      final apiService = ApiService();
+      final res = await apiService.postWithToken(
+        '/feedback/rate/car/',
+        {
+          'rental_type': 'selfdriverental',
+          'rental_id': int.tryParse(rentalId) ?? rentalId,
+          'rating': rating,
+          'notes': notes,
+        },
+      );
+      return res.statusCode == 200 || res.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Get current handover data
   PostTripHandoverModel? get handoverData => _handoverData;
 
@@ -173,4 +284,7 @@ class OwnerDropOffCubit extends Cubit<OwnerDropOffState> {
     _logs.clear();
     emit(OwnerDropOffInitial());
   }
-} 
+}
+
+// --- State for generic completion (for bottom sheet trigger) ---
+class OwnerDropOffCompletedGeneric extends OwnerDropOffState {} 

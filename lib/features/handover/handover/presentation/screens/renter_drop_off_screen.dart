@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../../config/routes/screens_name.dart';
@@ -9,6 +10,8 @@ import '../cubits/renter_drop_off_cubit.dart';
 import '../widgets/excess_charges_widget.dart';
 import '../widgets/handover_notes_widget.dart';
 import '../widgets/image_upload_widget.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import '../../../../../core/api_service.dart';
 
 class RenterDropOffScreen extends StatefulWidget {
   // final String tripId;
@@ -35,11 +38,16 @@ class RenterDropOffScreen extends StatefulWidget {
 class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
   final TextEditingController _odometerController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  double _ownerRating = 5;
+  double _carRating = 5;
+  final TextEditingController _ownerNotesController = TextEditingController();
+  final TextEditingController _carNotesController = TextEditingController();
 
   String? _carImagePath;
   String? _odometerImagePath;
   int? _finalOdometerReading;
   String? _renterNotes;
+  bool? _isPaymentConfirmedExcessCharges = false;
 
   @override
   void initState() {
@@ -51,6 +59,8 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
   void dispose() {
     _odometerController.dispose();
     _notesController.dispose();
+    _ownerNotesController.dispose();
+    _carNotesController.dispose();
     super.dispose();
   }
 
@@ -65,25 +75,74 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
         );
   }
 
+  // Future<void> _pickImage(bool isCarImage) async {
+  //   try {
+  //     final ImagePicker picker = ImagePicker();
+  //     final XFile? image = await picker.pickImage(source: ImageSource.camera);
+  //
+  //     if (image != null) {
+  //       if (isCarImage) {
+  //         await context
+  //             .read<RenterDropOffCubit>()
+  //             .uploadCarImage(File(image.path));
+  //       } else {
+  //         await context
+  //             .read<RenterDropOffCubit>()
+  //             .uploadOdometerImage(File(image.path));
+  //       }
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Failed to capture image: $e')),
+  //     );
+  //   }
+  // }
   Future<void> _pickImage(bool isCarImage) async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.camera);
 
       if (image != null) {
-        if (isCarImage) {
-          await context
-              .read<RenterDropOffCubit>()
-              .uploadCarImage(File(image.path));
+        // ✅ خطوة الضغط وتقليل الحجم
+        // يمكنك تعديل الجودة (quality) والأبعاد (minWidth, minHeight) حسب حاجتك
+        final filePath = image.path;
+        final targetPath = '${image.path}_compressed.jpg'; // مسار جديد للملف المضغوط
+
+        File? compressedImageFile;
+
+        // ضغط الصورة
+        final result = await FlutterImageCompress.compressAndGetFile(
+          filePath,
+          targetPath,
+          quality: 70, // جودة الصورة من 0-100. جرب 70 أو 80.
+          minWidth: 1024, // أقصى عرض (بالبكسل). جرب 1024 أو 800.
+          minHeight: 768, // أقصى ارتفاع (بالبكسل).
+          format: CompressFormat.jpeg,
+        );
+
+        if (result != null) {
+          compressedImageFile = File(result.path);
         } else {
-          await context
-              .read<RenterDropOffCubit>()
-              .uploadOdometerImage(File(image.path));
+          // لو الضغط فشل، ممكن تستخدم الصورة الأصلية أو تدي رسالة خطأ
+          print('Image compression failed, using original image.');
+          compressedImageFile = File(image.path);
+        }
+
+        if (compressedImageFile != null) {
+          if (isCarImage) {
+            await context
+                .read<RenterDropOffCubit>()
+                .uploadCarImage(compressedImageFile); // استخدم الملف المضغوط
+          } else {
+            await context
+                .read<RenterDropOffCubit>()
+                .uploadOdometerImage(compressedImageFile); // استخدم الملف المضغوط
+          }
         }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to capture image: $e')),
+        SnackBar(content: Text('Failed to capture or compress image: $e')),
       );
     }
   }
@@ -108,10 +167,199 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
 
   void _processPayment() {
     context.read<RenterDropOffCubit>().processPayment();
+
   }
 
   void _completeHandover() {
-    context.read<RenterDropOffCubit>().completeRenterHandover();
+    // Check all required steps before submission
+    if (_carImagePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please capture a photo of the car after the trip.')),
+      );
+      return;
+    }
+    if (_odometerImagePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please capture a photo of the final odometer.')),
+      );
+      return;
+    }
+    if (_finalOdometerReading == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the final odometer reading.')),
+      );
+      return;
+    }
+    final cubit = context.read<RenterDropOffCubit>();
+    final state = cubit.state;
+    if (!(state is RenterDropOffExcessCalculated ||
+        state is RenterDropOffPaymentProcessed ||
+        state is RenterDropOffCompleted)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please calculate excess charges before submitting.')),
+      );
+      return;
+    }
+    // If everything is fine, submit the drop-off
+    cubit.completeRenterHandover();
+  }
+
+  // --- New: Separate API calls for rating ---
+  Future<bool> _sendOwnerRating(String rentalId) async {
+    try {
+      final apiService = ApiService();
+      final ownerRes = await apiService.postWithToken(
+        '/feedback/rate/owner/',
+        {
+          'rental_type': 'selfdriverental',
+          'rental_id': int.tryParse(rentalId) ?? rentalId,
+          'rating': _ownerRating.round(),
+          'notes': _ownerNotesController.text,
+        },
+      );
+      if (ownerRes.statusCode != 200 && ownerRes.statusCode != 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to rate owner:  ${ownerRes.statusCode}')),
+        );
+        return false;
+      }
+      return true;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error while sending owner rating: $e')),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> _sendCarRating(String rentalId) async {
+    try {
+      final apiService = ApiService();
+      final carRes = await apiService.postWithToken(
+        '/feedback/rate/car/',
+        {
+          'rental_type': 'selfdriverental',
+          'rental_id': int.tryParse(rentalId) ?? rentalId,
+          'rating': _carRating.round(),
+          'notes': _carNotesController.text,
+        },
+      );
+      if (carRes.statusCode != 200 && carRes.statusCode != 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to rate car:  ${carRes.statusCode}')),
+        );
+        return false;
+      }
+      return true;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error while sending car rating: $e')),
+      );
+      return false;
+    }
+  }
+
+  // --- Remove old _showRatingDialog and _sendRatings ---
+
+  // --- New: Show rating bottom sheet after drop-off ---
+  void _showRatingBottomSheet(BuildContext context, String rentalId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 24,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Congratulations! The trip is finished', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                    const SizedBox(height: 16),
+                    const Text('Please rate the owner and the car'),
+                    const SizedBox(height: 16),
+                    const Text('Owner Rating'),
+                    RatingBar.builder(
+                      initialRating: _ownerRating,
+                      minRating: 1,
+                      direction: Axis.horizontal,
+                      allowHalfRating: false,
+                      itemCount: 5,
+                      itemBuilder: (context, _) => const Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                      ),
+                      onRatingUpdate: (rating) {
+                        setModalState(() => _ownerRating = rating);
+                      },
+                    ),
+                    TextField(
+                      controller: _ownerNotesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes about the owner',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text('Car Rating'),
+                    RatingBar.builder(
+                      initialRating: _carRating,
+                      minRating: 1,
+                      direction: Axis.horizontal,
+                      allowHalfRating: false,
+                      itemCount: 5,
+                      itemBuilder: (context, _) => const Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                      ),
+                      onRatingUpdate: (rating) {
+                        setModalState(() => _carRating = rating);
+                      },
+                    ),
+                    TextField(
+                      controller: _carNotesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes about the car',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final ownerSuccess = await _sendOwnerRating(rentalId);
+                          final carSuccess = await _sendCarRating(rentalId);
+                          if (ownerSuccess && carSuccess) {
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              const SnackBar(content: Text('Ratings sent successfully!')),
+                            );
+                            // Navigator.pushReplacementNamed(
+                            //   this.context,
+                            //   ScreensName.ownerDropOffScreen,
+                            // );
+                          }
+                        },
+                        child: const Text('Submit'),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -156,19 +404,7 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
               _renterNotes = state.notes;
             });
           } else if (state is RenterDropOffCompleted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Car drop-off completed successfully')),
-            );
-            // Navigate to owner drop-off screen
-            Navigator.pushReplacementNamed(
-              context,
-              ScreensName.ownerDropOffScreen,
-              arguments: {
-                'handoverData': state.handoverData,
-                'logs': state.logs,
-              },
-            );
+            _showRatingBottomSheet(context, widget.rentalId);
           }
         },
         builder: (context, state) {
@@ -293,35 +529,56 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                 const SizedBox(height: 16),
 
                 // Step 4: Calculate excess charges
-                if (_finalOdometerReading != null)
-                  _buildStepCard(
-                    title: '4. Calculate Excess Charges',
-                    subtitle: 'Calculate any additional charges if applicable',
-                    icon: Icons.calculate,
-                    isCompleted: state is RenterDropOffExcessCalculated ||
-                        state is RenterDropOffPaymentProcessed ||
-                        state is RenterDropOffCompleted,
-                    child: Column(
-                      children: [
-                        CustomElevatedButton(
-                          onPressed: _calculateExcessCharges,
-                          text: 'Calculate Excess Charges',
-                        ),
-                        if (state is RenterDropOffExcessCalculated) ...[
-                          const SizedBox(height: 16),
-                          ExcessChargesWidget(
-                            excessCharges: state.excessCharges,
-                            paymentMethod: widget.paymentMethod,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomElevatedButton(
-                            onPressed: _processPayment,
-                            text: 'Process Payment',
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                _buildStepCard(
+                  title: '4. Calculate Excess Charges',
+                  subtitle: 'Calculate any additional charges if applicable',
+                  icon: Icons.calculate,
+                  isCompleted: state is RenterDropOffExcessCalculated ||
+                      state is RenterDropOffPaymentProcessed ||
+                      state is RenterDropOffCompleted,
+                  child: (_finalOdometerReading != null)
+                      ? Column(
+                          children: [
+                            CustomElevatedButton(
+                              onPressed: _calculateExcessCharges,
+                              text: 'Calculate Excess Charges',
+                            ),
+                            if (state is RenterDropOffExcessCalculated) ...[
+                              const SizedBox(height: 16),
+                              ExcessChargesWidget(
+                                excessCharges: state.excessCharges,
+                                paymentMethod: widget.paymentMethod,
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  StatefulBuilder(
+                                    builder: (context, setState) {
+                                      return Checkbox(
+                                        value: _isPaymentConfirmedExcessCharges ?? false,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _isPaymentConfirmedExcessCharges = val ?? false;
+                                          });
+                                        },
+                                      );
+                                    },
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      'I confirm and sign to agree to withdraw the remaining amount for the trip once I click Send handover',
+                                      style: TextStyle(fontSize: 15),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        )
+                      : const Text('Please enter the odometer reading first.'),
+                ),
                 const SizedBox(height: 16),
 
                 // Step 5: Add notes

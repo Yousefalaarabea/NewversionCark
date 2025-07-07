@@ -7,7 +7,7 @@ import 'package:test_cark/features/home/presentation/screens/booking_screens/sav
 import '../../cubit/trip_cubit.dart';
 import 'package:test_cark/core/booking_service.dart';
 import 'package:test_cark/config/routes/screens_name.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../../model/car_model.dart';
 import '../../model/trip_details_model.dart';
@@ -506,13 +506,12 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 child: ElevatedButton(
                   onPressed: (_agreedToTerms && _selectedMethod != null)
                       ? () async {
+                          // تحقق إذا كان _selectedMethod يطابق أحد الكروت المحفوظة
                           if (_selectedMethod != null &&
-                              _selectedMethod!.startsWith('saved_card') &&
-                              paymentMethods.isNotEmpty) {
-                            final method = paymentMethods.first;
+                              paymentMethods.any((m) => m['id'].toString() == _selectedMethod)) {
+                            final method = paymentMethods.firstWhere((m) => m['id'].toString() == _selectedMethod);
                             final rentalId =
-                                widget.bookingData?['rentalId']?.toString() ??
-                                    '';
+                                widget.bookingData?['rentalId']?.toString() ?? '';
                             final savedCardId = method['id']?.toString() ?? '';
                             final amountCents =
                                 (depositAmount * 100).toInt().toString();
@@ -756,10 +755,16 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   }
 }
 
-class PaymentWebViewScreen extends StatelessWidget {
+class PaymentWebViewScreen extends StatefulWidget {
   final String url;
-
   const PaymentWebViewScreen({super.key, required this.url});
+
+  @override
+  State<PaymentWebViewScreen> createState() => _PaymentWebViewScreenState();
+}
+
+class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
+  late InAppWebViewController _webViewController;
 
   @override
   Widget build(BuildContext context) {
@@ -768,11 +773,23 @@ class PaymentWebViewScreen extends StatelessWidget {
         title: const Text('Complete Payment'),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context, false), // رجوع بدون نجاح
+          onPressed: () => Navigator.pop(context, false),
         ),
       ),
-      body: WebViewWidget(
-        controller: WebViewController()..loadRequest(Uri.parse(url)),
+      body: InAppWebView(
+        initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+        onWebViewCreated: (controller) {
+          _webViewController = controller;
+        },
+        shouldOverrideUrlLoading: (controller, navigationAction) async {
+          final uri = navigationAction.request.url.toString();
+          // إذا الرابط فيه get_acs_page أو أي شرط خاص بالرد الجديد
+          if (uri.contains('get_acs_page')) {
+            await controller.loadUrl(urlRequest: URLRequest(url: WebUri(uri)));
+            return NavigationActionPolicy.CANCEL;
+          }
+          return NavigationActionPolicy.ALLOW;
+        },
       ),
     );
   }

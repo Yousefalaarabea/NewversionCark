@@ -745,15 +745,15 @@ class NotificationCubit extends Cubit<NotificationState> {
     switch (type) {
       case 'deposit_paid':
         title = 'Deposit Paid';
-        message = 'Deposit of \$$amount has been paid for $carBrand $carModel';
+        message = 'Deposit of $amount EGP has been paid for $carBrand $carModel';
         break;
       case 'payment_completed':
         title = 'Payment Completed';
-        message = 'Payment of \$$amount has been completed for $carBrand $carModel';
+        message = 'Payment of $amount EGP has been completed for $carBrand $carModel';
         break;
       case 'refund_processed':
         title = 'Refund Processed';
-        message = 'Refund of \$$amount has been processed for $carBrand $carModel';
+        message = 'Refund of $amount EGP has been processed for $carBrand $carModel';
         break;
       default:
         title = 'Payment Update';

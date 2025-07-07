@@ -112,60 +112,50 @@ class RentalSearchScreen extends StatelessWidget {
 
                       const DriverFilterSelector(),
                       //
-                      // SizedBox(height: 20.h),
-                      //
-                      // const StationInput(isPickup: true),
-                      //
-                      // SizedBox(height: 20.h),
-                      //
-                      // // Return Station (Optional)
-                      // const StationInput(isPickup: false),
-                      //
-                      // SizedBox(height: 16.h),
-                      //
-                      // // Stops Section (only with driver)
-                      // if (withDriver == true) ...[
-                      //   const StopsStationInput(),
-                      //   SizedBox(height: 16.h),
-                      // ],
+                      SizedBox(height: 20.h),
 
+                      const StationInput(isPickup: true),
 
-                      // Pick-up
-                      // const StationInput(isPickup: true),
-                      //
-                      // SizedBox(height: 20.h),
+                      SizedBox(height: 20.h),
 
                       // Return Station (Optional)
-                      // const StationInput(isPickup: false),
-                      //
-                      // SizedBox(height: 16.h),
+                      const StationInput(isPickup: false),
 
-                      // // ✅ Manual Pickup TextField
-                      TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Enter Pickup Location',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
-                          prefixIcon: Icon(Icons.location_on),
-                        ),
-                        onChanged: (value) {
-                          context.read<CarCubit>().setPickupText(value);
-                        },
-                      ),
+                      SizedBox(height: 16.h),
 
-                      SizedBox(height: 20.h),
+                      // Stops Section (only with driver)
+                      if (withDriver == true) ...[
+                        const StopsStationInput(),
+                        SizedBox(height: 16.h),
+                      ],
+
+
+                      // // // ✅ Manual Pickup TextField
+                      // TextFormField(
+                      //   decoration: InputDecoration(
+                      //     labelText: 'Enter Pickup Location',
+                      //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                      //     prefixIcon: Icon(Icons.location_on),
+                      //   ),
+                      //   onChanged: (value) {
+                      //     context.read<CarCubit>().setPickupText(value);
+                      //   },
+                      // ),
                       //
-                      // // ✅ Manual Dropoff TextField
-                      TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Enter Dropoff Location',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
-                          prefixIcon: Icon(Icons.location_on_outlined),
-                        ),
-                        onChanged: (value) {
-                          context.read<CarCubit>().setDropoffText(value);
-                        },
-                      ),
-                      SizedBox(height: 20.h),
+                      // SizedBox(height: 20.h),
+                      // //
+                      // // // ✅ Manual Dropoff TextField
+                      // TextFormField(
+                      //   decoration: InputDecoration(
+                      //     labelText: 'Enter Dropoff Location',
+                      //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                      //     prefixIcon: Icon(Icons.location_on_outlined),
+                      //   ),
+                      //   onChanged: (value) {
+                      //     context.read<CarCubit>().setDropoffText(value);
+                      //   },
+                      // ),
+                      // SizedBox(height: 20.h),
 
                       // Stops Section (only with driver)
                       if (withDriver == true) ...[
@@ -319,42 +309,76 @@ class RentalSearchScreen extends StatelessWidget {
                                   return;
                                 }
 
-                                // // Different flow based on driver selection
-                                // if (withDriver == true || withDriver == false) {
-                                //   // Check if payment method is selected
-                                //   if (selectedPaymentMethod == null) {
-                                //     ScaffoldMessenger.of(context).showSnackBar(
-                                //       SnackBar(
-                                //         content: Row(
-                                //           children: [
-                                //             Icon(
-                                //               Icons.warning,
-                                //               color: Colors.white,
-                                //               size: 20.sp,
-                                //             ),
-                                //             SizedBox(width: 10.w),
-                                //             Expanded(
-                                //               child: Text(
-                                //                 'Please select a payment method',
-                                //                 style: TextStyle(
-                                //                   fontSize: 14.sp,
-                                //                   fontWeight: FontWeight.w500,
-                                //                 ),
-                                //               ),
-                                //             ),
-                                //           ],
-                                //         ),
-                                //         backgroundColor: Colors.orange,
-                                //         duration: Duration(seconds: 3),
-                                //         behavior: SnackBarBehavior.floating,
-                                //         shape: RoundedRectangleBorder(
-                                //           borderRadius: BorderRadius.circular(10.r),
-                                //         ),
-                                //       ),
-                                //     );
-                                //     return;
-                                //   }
-                                //
+                                // تحقق من اختيار السائق
+                                if (withDriver == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.warning,
+                                            color: Colors.white,
+                                            size: 20.sp,
+                                          ),
+                                          SizedBox(width: 10.w),
+                                          Expanded(
+                                            child: Text(
+                                              'Please select a driver option',
+                                              style: TextStyle(
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      backgroundColor: Colors.orange,
+                                      duration: Duration(seconds: 3),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10.r),
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                // Different flow based on driver selection
+                                if (withDriver == true || withDriver == false) {
+                                  // Check if payment method is selected
+                                  // if (selectedPaymentMethod == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.warning,
+                                              color: Colors.white,
+                                              size: 20.sp,
+                                            ),
+                                            SizedBox(width: 10.w),
+                                            Expanded(
+                                              child: Text(
+                                                'Please select a payment method',
+                                                style: TextStyle(
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        backgroundColor: Colors.orange,
+                                        duration: Duration(seconds: 3),
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10.r),
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
                                   // Navigate to offers/home screen
                                   Navigator.pushNamedAndRemoveUntil(
                                     context,
@@ -375,23 +399,23 @@ class RentalSearchScreen extends StatelessWidget {
                                             size: 20.sp,
                                           ),
                                           SizedBox(width: 10.w),
-                                          // Expanded(
-                                          //   // child: Text(
-                                          //   //   // 'Please select a driver option',
-                                          //   //   style: TextStyle(
-                                          //   //     fontSize: 14.sp,
-                                          //   //     fontWeight: FontWeight.w500,
-                                          //   //   ),
-                                          //   // ),
-                                          // ),
+                                          Expanded(
+                                            child: Text(
+                                              'Please select a driver option',
+                                              style: TextStyle(
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                      // backgroundColor: Colors.orange,
-                                      // duration: Duration(seconds: 3),
-                                      // behavior: SnackBarBehavior.floating,
-                                      // shape: RoundedRectangleBorder(
-                                      //   borderRadius: BorderRadius.circular(10.r),
-                                      // ),
+                                      backgroundColor: Colors.orange,
+                                      duration: Duration(seconds: 3),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10.r),
+                                      ),
                                     ),
                                   );
                                 // }

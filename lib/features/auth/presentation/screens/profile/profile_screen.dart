@@ -40,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   Center(child: Column(
                     children: [
-                      const ProfilePicture(),
+                  const ProfilePicture(),
                       const SizedBox(height: 18),
                     ],
                   )),
@@ -79,7 +79,7 @@ class ProfileScreen extends StatelessWidget {
                   _ProfileInfoCard(
                     icon: Icons.phone,
                     value: userModel?.phoneNumber ?? '',
-                  ),
+                    ),
                   const Spacer(),
                   Center(
                     child: ElevatedButton(

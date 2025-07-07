@@ -254,7 +254,7 @@ class BookingHistoryScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '\$${booking['totalPrice'].toStringAsFixed(2)}',
+                      '${booking['totalPrice'].toStringAsFixed(2)} EGP',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
@@ -274,7 +274,7 @@ class BookingHistoryScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '\$${booking['depositPaid'].toStringAsFixed(2)}',
+                      '${booking['depositPaid'].toStringAsFixed(2)} EGP',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,

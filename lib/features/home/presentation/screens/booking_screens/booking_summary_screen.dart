@@ -590,7 +590,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
               ),
               _buildOverviewItem(
                 Icons.attach_money,
-                '\$${widget.rentalPreview!.extraKmCost.toStringAsFixed(2)} per extra km',
+                '${widget.rentalPreview!.extraKmCost.toStringAsFixed(2)} EGP per extra km',
                 Colors.red,
               ),
             ] else ...[
@@ -677,7 +677,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
               Expanded(
                 child: _buildRentalDetailItem(
                   'Daily Price',
-                  '\$${rental.dailyPrice.toStringAsFixed(2)}',
+                  '${rental.dailyPrice.toStringAsFixed(2)} EGP',
                   Icons.attach_money,
                 ),
               ),
@@ -878,7 +878,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '\$${(widget.rentalPreview?.totalPrice ?? 0.0).toStringAsFixed(2)}',
+                      '${(widget.rentalPreview?.totalPrice ?? 0.0).toStringAsFixed(2)} EGP',
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
@@ -928,12 +928,12 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
       ),
       child: Column(
         children: [
-          _buildPricingRow('Daily Price', '\$${pricing.dailyPrice.toStringAsFixed(2)}'),
-          _buildPricingRow('Base Cost', '\$${pricing.baseCost.toStringAsFixed(2)}'),
-          _buildPricingRow('Service Fee (${pricing.serviceFeePercentage}%)', '\$${pricing.serviceFee.toStringAsFixed(2)}'),
+          _buildPricingRow('Daily Price', '${pricing.dailyPrice.toStringAsFixed(2)} EGP'),
+          _buildPricingRow('Base Cost', '${pricing.baseCost.toStringAsFixed(2)} EGP'),
+          _buildPricingRow('Service Fee (${pricing.serviceFeePercentage}%)', '${pricing.serviceFee.toStringAsFixed(2)} EGP'),
           Divider(color: Colors.grey[200], height: 24.h),
-          _buildPricingRow('Deposit (${pricing.depositPercentage}%)', '\$${pricing.depositAmount.toStringAsFixed(2)}', isHighlighted: true),
-          _buildPricingRow('Remaining Amount', '\$${pricing.remainingAmount.toStringAsFixed(2)}', isHighlighted: true),
+          _buildPricingRow('Deposit (${pricing.depositPercentage}%)', '${pricing.depositAmount.toStringAsFixed(2)} EGP ', isHighlighted: true),
+          _buildPricingRow('Remaining Amount', '${pricing.remainingAmount.toStringAsFixed(2)} EGP', isHighlighted: true),
         ],
       ),
     );

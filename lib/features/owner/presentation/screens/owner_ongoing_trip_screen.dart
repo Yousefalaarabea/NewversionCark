@@ -349,7 +349,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
             '${_formatDate(bookingData!.startDate)} - ${_formatDate(bookingData!.endDate)}'),
           
           // Total Price
-          _buildInfoRow('Total Price', '\$${bookingData!.totalPrice.toStringAsFixed(2)}'),
+          _buildInfoRow('Total Price', '${bookingData!.totalPrice.toStringAsFixed(2)} EGP'),
           
           // Payment Method
           _buildInfoRow('Payment Method', 'Visa'),
@@ -904,7 +904,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '\$${bookingData!.totalPrice.toStringAsFixed(2)}',
+                        '${bookingData!.totalPrice.toStringAsFixed(2)} EGP',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1033,7 +1033,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '\$${finalCost.toStringAsFixed(2)}',
+                        '${finalCost.toStringAsFixed(2)} EGP',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1073,7 +1073,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '\$${driverEarnings.toStringAsFixed(2)}',
+                        '${driverEarnings.toStringAsFixed(2)} EGP',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1107,7 +1107,7 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '\$${platformCommission.toStringAsFixed(2)}',
+                        '${platformCommission.toStringAsFixed(2)} EGP',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

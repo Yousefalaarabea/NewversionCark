@@ -184,7 +184,7 @@ class CarCardWidget extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '\$${(price ?? 0).toStringAsFixed(0)}/day',
+                                  '${(price ?? 0).toStringAsFixed(0)} EGP/day',
                                   style: TextStyle(
                                     fontSize: 20.sp,
                                     fontWeight: FontWeight.bold,

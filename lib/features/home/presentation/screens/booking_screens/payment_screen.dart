@@ -248,7 +248,7 @@ class _PaymentScreenState extends material.State<PaymentScreen> {
             material.Text('Total Amount',
                 style: material.TextStyle(fontSize: 18.sp, color: material.Colors.grey[700])),
             material.Text(
-              '\$${widget.totalPrice.toStringAsFixed(2)}',
+              '${widget.totalPrice.toStringAsFixed(2)} EGP',
               style: material.TextStyle(
                   fontSize: 22.sp,
                   fontWeight: material.FontWeight.bold,

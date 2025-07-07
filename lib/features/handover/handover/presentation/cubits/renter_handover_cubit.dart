@@ -75,10 +75,10 @@ class RenterHandoverCubit extends Cubit<RenterHandoverState> {
       emit(RenterHandoverFailure('Please confirm contract signing.'));
       return;
     }
-    if (!_model.isPaymentCompleted) {
-      emit(RenterHandoverFailure('Please complete payment.'));
-      return;
-    }
+    // if (!_model.isPaymentCompleted) {
+    //   emit(RenterHandoverFailure('Please complete payment.'));
+    //   return;
+    // }
     emit(RenterHandoverSending());
     try {
       final bookingService = BookingService();

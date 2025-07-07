@@ -405,8 +405,8 @@ class _LiveLocationMapScreenState extends State<LiveLocationMapScreen> {
   bool _isRefreshing = false;
   String? _errorMessage;
 
-  // Default location (Riyadh, Saudi Arabia) as fallback
-  static const LatLng _defaultLocation = LatLng(24.7136, 46.6753);
+  // Default location (Ramsis, Cairo) as fallback
+  static const LatLng _defaultLocation = LatLng(30.06263, 31.24967);
 
   @override
   void initState() {

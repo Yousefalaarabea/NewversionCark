@@ -45,13 +45,7 @@ class DriverFilterSelector extends StatelessWidget {
           selected: withDriver == true,
           // onSelected: (_) => context.read<CarCubit>().toggleDriver(true),
           onSelected: (_) {
-            // If already selected, deselect it
-            if (withDriver == true) {
-              cubit.setFilters(
-                withDriver: null,
-                withoutDriver: null,
-              );
-            } else {
+            if (withDriver != true) {
               cubit.setFilters(
                 withDriver: true,
                 withoutDriver: false,
@@ -108,13 +102,7 @@ class DriverFilterSelector extends StatelessWidget {
           selected: withDriver == false,
           // onSelected: (_) => context.read<CarCubit>().toggleDriver(false),
           onSelected: (_) {
-            // If already selected, deselect it
-            if (withDriver == false) {
-              cubit.setFilters(
-                withDriver: null,
-                withoutDriver: null,
-              );
-            } else {
+            if (withDriver != false) {
               cubit.setFilters(
                 withDriver: false,
                 withoutDriver: true,

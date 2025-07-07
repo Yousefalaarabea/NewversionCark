@@ -28,21 +28,21 @@ class ExcessChargesModel {
   });
 
   // Mock data for testing
-  factory ExcessChargesModel.mock() {
-    return ExcessChargesModel(
-      agreedKilometers: 200,
-      actualKilometers: 250,
-      extraKilometers: 50,
-      extraKmRate: 0.5,
-      extraKmCost: 25.0,
-      agreedHours: 24,
-      actualHours: 28,
-      extraHours: 4,
-      extraHourRate: 10.0,
-      extraHourCost: 40.0,
-      totalExcessCost: 65.0,
-    );
-  }
+  // factory ExcessChargesModel.mock() {
+  //   return ExcessChargesModel(
+  //     agreedKilometers: 200,
+  //     actualKilometers: 250,
+  //     extraKilometers: 50,
+  //     extraKmRate: 0.5,
+  //     extraKmCost: 25.0,
+  //     agreedHours: 24,
+  //     actualHours: 28,
+  //     extraHours: 4,
+  //     extraHourRate: 10.0,
+  //     extraHourCost: 40.0,
+  //     totalExcessCost: 65.0,
+  //   );
+  // }
 
   // Calculate excess charges based on agreed and actual values
   factory ExcessChargesModel.calculate({

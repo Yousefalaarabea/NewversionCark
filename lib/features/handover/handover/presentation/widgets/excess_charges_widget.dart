@@ -78,12 +78,12 @@ class ExcessChargesWidget extends StatelessWidget {
               if (excessCharges.extraKilometers > 0)
                 _buildItem(
                   'Extra km rate',
-                  '\$${excessCharges.extraKmRate}',
+                  '${excessCharges.extraKmRate} EGP',
                 ),
               if (excessCharges.extraKilometers > 0)
                 _buildItem(
                   'Extra km cost',
-                  '\$${excessCharges.extraKmCost.toStringAsFixed(2)}',
+                  '${excessCharges.extraKmCost.toStringAsFixed(2)} EGP',
                   isTotal: true,
                 ),
             ],
@@ -96,8 +96,8 @@ class ExcessChargesWidget extends StatelessWidget {
             title: 'Time',
             icon: Icons.access_time,
             items: [
-              _buildItem('Agreed', '${excessCharges.agreedHours} hours'),
-              _buildItem('Actual', '${excessCharges.actualHours} hours'),
+              _buildItem('Agreed', '${excessCharges.agreedHours} Days'),
+              _buildItem('Actual', '${excessCharges.actualHours} Days'),
               if (excessCharges.extraHours > 0)
                 _buildItem(
                   'Extra',
@@ -107,12 +107,12 @@ class ExcessChargesWidget extends StatelessWidget {
               if (excessCharges.extraHours > 0)
                 _buildItem(
                   'Extra hour rate',
-                  '\$${excessCharges.extraHourRate}',
+                  '${excessCharges.extraHourRate} EGP',
                 ),
               if (excessCharges.extraHours > 0)
                 _buildItem(
                   'Extra hours cost',
-                  '\$${excessCharges.extraHourCost.toStringAsFixed(2)}',
+                  '${excessCharges.extraHourCost.toStringAsFixed(2)} EGP',
                   isTotal: true,
                 ),
             ],
@@ -150,7 +150,7 @@ class ExcessChargesWidget extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  '\$${excessCharges.totalExcessCost.toStringAsFixed(2)}',
+                  '${excessCharges.totalExcessCost.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -228,20 +228,32 @@ class ExcessChargesWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: isExtra ? Colors.red[600] : Colors.grey[700],
-              fontWeight: isExtra || isTotal ? FontWeight.w600 : FontWeight.normal,
+          Flexible(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: isExtra ? Colors.red[600] : Colors.grey[700],
+                fontWeight: isExtra || isTotal ? FontWeight.w600 : FontWeight.normal,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              color: isExtra ? Colors.red[600] : Colors.grey[700],
-              fontWeight: isExtra || isTotal ? FontWeight.w600 : FontWeight.normal,
+          const SizedBox(width: 8),
+          Flexible(
+            flex: 1,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: isExtra ? Colors.red[600] : Colors.grey[700],
+                fontWeight: isExtra || isTotal ? FontWeight.w600 : FontWeight.normal,
+              ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],

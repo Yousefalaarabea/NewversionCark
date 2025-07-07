@@ -22,6 +22,7 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
   final TextEditingController _odometerController = TextEditingController();
   final bool _contractConfirmed = false;
   final ImagePicker _picker = ImagePicker();
+  bool _isPaymentConfirmed = false;
 
   @override
   void initState() {
@@ -169,17 +170,38 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
                     if (!model.isPaymentCompleted) ...[
                       Text('Pay Remaining Amount', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: state is RenterHandoverPaymentProcessing
-                            ? null
-                            : () => context.read<RenterHandoverCubit>().payRemainingAmount(),
-                        child: state is RenterHandoverPaymentProcessing
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text('Pay with Card (Paymob Test)'),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Checkbox(
+                            value: _isPaymentConfirmed,
+                            onChanged: (val) {
+                              setState(() {
+                                _isPaymentConfirmed = val ?? false;
+                              });
+                            },
+                          ),
+                          Expanded(
+                            child: Text(
+                              (widget.notification.data?['paymentMethod'] == 'cash')
+                                  ? 'I confirm that I have paid the remaining amount of the trip to the owner.'
+                                  : 'I confirm and sign to agree to withdraw the remaining amount for the trip once I click Send handover',
+                              style: TextStyle(fontSize: 15),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${widget.notification.data?['remainingAmount']?.toStringAsFixed(2) ?? '--'} EGP',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                          ),
+                        ],
                       ),
                     ] else ...[
                       const Row(
@@ -208,7 +230,7 @@ class _RenterHandoverScreenState extends State<RenterHandoverScreen> {
                         onPressed: (model.carImagePath != null &&
                                 model.odometerReading != null &&
                                 model.isContractConfirmed &&
-                                model.isPaymentCompleted &&
+                                // model.isPaymentCompleted &&
                                 state.ownerHandoverSent &&
                                 state is! RenterHandoverSending)
                             ? () => context.read<RenterHandoverCubit>().sendHandover()

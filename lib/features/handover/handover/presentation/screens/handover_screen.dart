@@ -225,7 +225,7 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Please ensure the deposit of \$${contract.depositAmount.toStringAsFixed(2)} is paid before proceeding with the handover.',
+            'Please ensure the deposit of ${contract.depositAmount.toStringAsFixed(2)} EGP is paid before proceeding with the handover.',
             style: TextStyle(
               color: AppColors.red,
               fontSize: 14,

@@ -50,8 +50,8 @@ class DepositStatusWidget extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         contract.isDepositPaid
-                            ? 'Deposit paid: \$${contract.depositAmount.toStringAsFixed(2)}'
-                            : 'Deposit not paid: \$${contract.depositAmount.toStringAsFixed(2)}',
+                            ? 'Deposit paid: ${contract.depositAmount.toStringAsFixed(2)} EGP'
+                            : 'Deposit not paid: ${contract.depositAmount.toStringAsFixed(2)} EGP',
                         style: TextStyle(
                           color: contract.isDepositPaid 
                               ? AppColors.green

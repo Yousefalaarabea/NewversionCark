@@ -346,7 +346,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
             _buildDetailRow(
               icon: Icons.attach_money,
               title: 'Daily Price',
-              value: '\$${(data['dailyPrice'] as double? ?? 0.0).toStringAsFixed(2)}',
+              value: '${(data['dailyPrice'] as double? ?? 0.0).toStringAsFixed(2)} EGP',
               iconColor: Colors.green,
             ),
           ],
@@ -548,7 +548,7 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
             _buildDetailRow(
               icon: Icons.attach_money,
               title: 'Daily Price',
-              value: '\$${dailyPrice.toStringAsFixed(2)}',
+              value: '${dailyPrice.toStringAsFixed(2)} EGP',
               iconColor: Colors.blue,
             ),
             SizedBox(height: 12.h),
@@ -562,14 +562,14 @@ class _OwnerTripRequestScreenState extends State<OwnerTripRequestScreen> {
             _buildDetailRow(
               icon: Icons.account_balance_wallet,
               title: 'Deposit Amount',
-              value: '\$${depositAmount.toStringAsFixed(2)}',
+              value: '${depositAmount.toStringAsFixed(2)} EGP',
               iconColor: Colors.amber,
             ),
             SizedBox(height: 12.h),
             _buildDetailRow(
               icon: Icons.payment,
               title: 'Total Amount',
-              value: '\$${totalAmount.toStringAsFixed(2)}',
+              value: '${totalAmount.toStringAsFixed(2)} EGP',
               iconColor: Colors.green,
             ),
           ],

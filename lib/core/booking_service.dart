@@ -467,4 +467,39 @@ class BookingService {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> ownerdroppoffHandover({
+    required int rentalId,
+    required String carImagePath,
+    required String odometerImagePath,
+    required int odometerValue,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      if (token == null) throw Exception('User access token not found');
+
+      final dio = Dio();
+      dio.options.headers['Authorization'] = 'Bearer $token';
+
+      final formData = FormData.fromMap({
+        'car_image': await MultipartFile.fromFile(carImagePath),
+        'odometer_image': await MultipartFile.fromFile(odometerImagePath),
+        'odometer_value': odometerValue.toString(),
+      });
+
+      final response = await dio.post(
+        '${ApiService().baseUrl}selfdrive-rentals/$rentalId/renter_pickup_handover/',
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data;
+      } else {
+        throw Exception('Failed to send renter handover: \\${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 } 

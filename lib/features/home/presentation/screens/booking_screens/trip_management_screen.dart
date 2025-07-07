@@ -125,7 +125,7 @@ class _TripManagementScreenState extends State<TripManagementScreen>
           children: [
             Text('Total Trip Duration: ${_formatDuration(tripDuration)}'),
             const SizedBox(height: 16),
-            Text('Total Price: \$${widget.totalPrice.toStringAsFixed(2)}'),
+            Text('Total Price: ${widget.totalPrice.toStringAsFixed(2)} EGP'),
             const SizedBox(height: 16),
             const Text('Proceed to payment?'),
           ],

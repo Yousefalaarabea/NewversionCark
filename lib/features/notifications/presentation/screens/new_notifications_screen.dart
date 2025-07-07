@@ -20,15 +20,15 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
   // دالة مساعدة لاستخراج rentalId من بيانات الإشعار
   int? _extractRentalId(Map<String, dynamic>? notificationData) {
     if (notificationData == null) return null;
-
+    
     final dynamic rawRentalId = notificationData['rentalId'] ??
-        notificationData['rental_id'] ??
-        notificationData['id'] ??
-        notificationData['rental'];
-
+                                notificationData['rental_id'] ??
+                                notificationData['id'] ??
+                                notificationData['rental'];
+    
     print(
         '🔍 [_extractRentalId] Raw rentalId: $rawRentalId (type: ${rawRentalId.runtimeType})');
-
+    
     if (rawRentalId is int) {
       print('✅ [_extractRentalId] rentalId is int: $rawRentalId');
       return rawRentalId;
@@ -507,8 +507,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
                   ...notification.data!.entries.map((entry) => Padding(
-                        padding: EdgeInsets.only(left: 8),
-                        child: Text('${entry.key}: ${entry.value}'),
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text('${entry.key}: ${entry.value}'),
                       )),
                 ],
               ],
@@ -564,11 +564,11 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         print('Navigating to ownerTripRequestScreen');
         print('Notification ID: ${notification.id}');
         print('Notification Data: ${notification.data}');
-
+        
         Navigator.pushNamed(context, ScreensName.ownerTripRequestScreen,
-            arguments: {
-              'bookingRequestId': notification.id ?? 'unknown',
-              'bookingData': notification.data ?? {},
+          arguments: {
+            'bookingRequestId': notification.id ?? 'unknown',
+            'bookingData': notification.data ?? {},
             });
         break;
       case 'ACC_RENTER':
@@ -589,36 +589,36 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
       case 'DEP_OWNER':
         final tripDetails =
             TripDetailsModel.fromNotificationData1(notification.data ?? {});
-
-        if (tripDetails.rentalId == null) {
-          print('❌ rentalId is null! ');
-          _showErrorSnackBar('Error: rentalId is missing in notification');
-          _showNotificationDetails(context, notification);
-          return;
-        }
-
+          
+          if (tripDetails.rentalId == null) {
+            print('❌ rentalId is null! ');
+            _showErrorSnackBar('Error: rentalId is missing in notification');
+            _showNotificationDetails(context, notification);
+            return;
+          }
+          
         print(
             '✅ [DEP_OWNER] Successfully created TripDetailsModel with rentalId: ${tripDetails.rentalId}');
         print(
             '✅ [DEP_OWNER] About to navigate with rentalId: ${tripDetails.rentalId}');
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TripDetailsConfirmationScreen(
-              tripDetails: tripDetails,
-              rentalId: tripDetails.rentalId,
-            ),
-          ),
-        );
+                     Navigator.push(
+             context,
+             MaterialPageRoute(
+               builder: (_) => TripDetailsConfirmationScreen(
+                 tripDetails: tripDetails,
+                 rentalId: tripDetails.rentalId,
+               ),
+             ),
+           );
 
         break;
       case 'REN_PICKUP_HND':
         try {
           _printNotificationDetails(notification, 'RENTER_PICKUP');
-
+          
           final rentalId = _extractRentalId(notification.data);
-
+          
           if (rentalId != null) {
             print(
                 '✅ [RENTER_PICKUP] Successfully extracted rentalId: $rentalId');
@@ -663,9 +663,23 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         Navigator.pushNamed(context, ScreensName.renterDropOffScreen,
             arguments: notification.data);
         break;
-      case 'OWN_DRP_HND':
-        Navigator.pushNamed(context, ScreensName.ownerDropOffScreen,
-            arguments: notification.data);
+      case 'OWNER_DROPOFF_REQUIR':
+        // Try to extract the raw notification map
+        dynamic notifMap;
+        if (notification is Map<String, dynamic>) {
+          notifMap = notification;
+        } else if (notification is AppNotification && notification.data != null) {
+          notifMap = notification.data;
+        } else {
+          notifMap = notification;
+        }
+        if (notifMap is Map<String, dynamic> && notifMap['notification'] is Map<String, dynamic>) {
+          Navigator.pushNamed(context, ScreensName.ownerDropOffScreen,
+              arguments: notifMap['notification'] as Map<String, dynamic>);
+        } else {
+          Navigator.pushNamed(context, ScreensName.ownerDropOffScreen,
+              arguments: notifMap as Map<String, dynamic>);
+        }
         break;
       case 'SUM_VIEW':
         // TODO: Replace with summary screen if exists

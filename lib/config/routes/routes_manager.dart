@@ -298,11 +298,10 @@ abstract class RoutesManager {
 
       case ScreensName.ownerDropOffScreen:
         if (routeSettings.arguments is Map<String, dynamic>) {
-          final args = routeSettings.arguments as Map<String, dynamic>;
+          final notification = routeSettings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => OwnerDropOffScreen(
-              handoverData: args['handoverData'] as PostTripHandoverModel,
-              logs: args['logs'] as List<HandoverLogModel>,
+              notificationData: notification,
             ),
           );
         }

@@ -79,7 +79,7 @@ class _DepositInputScreenState extends State<DepositInputScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Deposit of \$$deposit submitted! Booking request sent.'),
+          content: Text('Deposit of $deposit EGP submitted! Booking request sent.'),
           backgroundColor: Colors.green,
         ),
       );
@@ -198,7 +198,7 @@ class _DepositInputScreenState extends State<DepositInputScreen> {
               decoration: const InputDecoration(
                 labelText: 'Deposit Amount',
                 border: OutlineInputBorder(),
-                prefixText: '\$',
+                prefixText: 'EGP',
               ),
             ),
             const SizedBox(height: 16),

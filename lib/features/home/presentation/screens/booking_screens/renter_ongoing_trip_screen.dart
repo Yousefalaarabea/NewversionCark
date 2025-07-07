@@ -163,7 +163,7 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
             _buildDetailRow(
               icon: Icons.attach_money,
               title: 'Total Price',
-              value: '\$${totalPrice.toStringAsFixed(2)}',
+              value: '${totalPrice.toStringAsFixed(2)} EGP',
               iconColor: Colors.green,
             ),
           ],
