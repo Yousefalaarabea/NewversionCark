@@ -18,7 +18,7 @@ class CarService {
   final Dio _dio = Dio(
     BaseOptions(
       //baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
-      baseUrl: 'https://charge-consisting-inserted-disaster.trycloudflare.com/api/',
+      baseUrl: 'https://brandon-moderators-thorough-strict.trycloudflare.com/api/',
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       headers: {
@@ -66,14 +66,25 @@ class CarService {
         
         for (final carJson in carsData) {
           final car = CarModel.fromJson(carJson);
-          CarRentalOptions? rentalOptions;
-          CarUsagePolicy? usagePolicy;
-          // يمكن لاحقاً جلب rentalOptions و usagePolicy إذا احتجت
-          result.add({
-            'car': car,
-            'rentalOptions': rentalOptions,
-            'usagePolicy': usagePolicy,
-          });
+          print("🔍 Car owner ID: "+ car.ownerId.toString() + " (this is the user ID who owns the car)");
+          print("🔍 Car availability: "+ car.availability.toString() + ", approval status: "+ car.approvalStatus.toString());
+          print("🔍 Car model: "+ car.model.toString() + ", brand: "+ car.brand.toString());
+          print("🔍 Full carJson: " + carJson.toString());
+          // Include cars that are available (approval status can be false for now)
+          if (car.availability) {
+            print("✅ Car is available, adding to result list");
+            CarRentalOptions? rentalOptions;
+            CarUsagePolicy? usagePolicy;
+            // يمكن لاحقاً جلب rentalOptions و usagePolicy إذا احتجت
+            result.add({
+              'car': car,
+              'carJson': carJson,
+              'rentalOptions': rentalOptions,
+              'usagePolicy': usagePolicy,
+            });
+          } else {
+            print("❌ Car is not available, skipping");
+          }
         }
       } else {
         print('Failed to fetch user cars, status: ${response.statusCode}');
@@ -130,6 +141,7 @@ class CarService {
           print("🔍 Car owner ID: ${car.ownerId} (this is the user ID who owns the car)");
           print("🔍 Car availability: ${car.availability}, approval status: ${car.approvalStatus}");
           print("🔍 Car model: ${car.model}, brand: ${car.brand}");
+          print("🔍 Full carJson: " + carJson.toString());
           // Include cars that are available (approval status can be false for now)
           if (car.availability) {
             print("✅ Car is available, adding to result list");
@@ -138,6 +150,7 @@ class CarService {
             // يمكن لاحقاً جلب rentalOptions و usagePolicy إذا احتجت
             result.add({
               'car': car,
+              'carJson': carJson,
               'rentalOptions': rentalOptions,
               'usagePolicy': usagePolicy,
             });

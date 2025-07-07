@@ -44,7 +44,8 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
       
       for (int i = 0; i < cars.length; i++) {
         final car = cars[i].car;
-        print('   ${i + 1}. ${car.brand} ${car.model} (Owner: ${car.ownerId})');
+        print(car);
+        print('   ${i + 1}. ${car.brand} ${car.model} (Owner: ${car.ownerId}) (img: ${car.imageUrl}');
       }
       
       setState(() {

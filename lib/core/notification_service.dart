@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../features/notifications/presentation/models/notification_model.dart';
 
 class NotificationService {
-  static const String baseUrl = 'https://charge-consisting-inserted-disaster.trycloudflare.com/api/'; // غير للـ URL بتاعك
+  static const String baseUrl = 'https://brandon-moderators-thorough-strict.trycloudflare.com/api/'; // غير للـ URL بتاعك
   
   // دالة للحصول على الـ token
   Future<String?> _getToken() async {

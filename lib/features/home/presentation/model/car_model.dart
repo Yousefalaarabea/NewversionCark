@@ -48,6 +48,12 @@ class CarModel {
   });
 
   factory CarModel.fromJson(Map<String, dynamic> json) {
+    String? imageUrl;
+    if (json['images'] != null && (json['images'] as List).isNotEmpty) {
+      imageUrl = (json['images'] as List).first['url'] as String?;
+    } else {
+      imageUrl = json['image_url'];
+    }
     return CarModel(
       ownerId: json['owner'].toString(),
       id: json['id'],
@@ -69,7 +75,7 @@ class CarModel {
       approvalStatus: json['approval_status'],
       avgRating: (json['avg_rating'] ?? 0).toDouble(),
       totalReviews: json['total_reviews'] ?? 0,
-      imageUrl: json['image_url'],
+      imageUrl: imageUrl,
     );
   }
 

@@ -502,4 +502,35 @@ class BookingService {
       rethrow;
     }
   }
+  Future<Map<String, dynamic>> addNewCard({
+    // required String rentalId,
+    required String amountCents,
+    required String paymentMethod, // should be 'new_card'
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      if (token == null) {
+        throw Exception('User access token not found');
+      }
+      final url = '/payments/start/';
+      final body = {
+        "amount_cents": amountCents,
+        "payment_method": paymentMethod,
+      };
+      print('POST $url');
+      print('Body: $body');
+      final response = await _apiService.postWithToken(url, body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ New card deposit payment successful');
+        return response.data;
+      } else {
+        print('❌ Failed to pay deposit with new card: \\${response.statusCode}');
+        throw Exception('Failed to pay deposit with new card: \\${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error paying deposit with new card: $e');
+      rethrow;
+    }
+  }
 } 

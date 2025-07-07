@@ -63,11 +63,26 @@ class ViewCarDetailsScreen extends StatelessWidget {
                   height: 200.h,
                   width: double.infinity,
                   decoration: StylesManager.carImageDecoration,
-                  child: Icon(
-                    Icons.directions_car,
-                    size: 100.sp,
-                    color: Colors.grey[400],
-                  ),
+                  child: (car.imageUrl != null && car.imageUrl!.isNotEmpty)
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            car.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.directions_car,
+                                size: 100.sp,
+                                color: Colors.grey[400],
+                              );
+                            },
+                          ),
+                        )
+                      : Icon(
+                          Icons.directions_car,
+                          size: 100.sp,
+                          color: Colors.grey[400],
+                        ),
                 ),
                 SizedBox(height: 16.h),
 

@@ -19,6 +19,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'deposit_input_screen.dart';
 import '../../widgets/rental_widgets/payment_method_selector.dart';
 import 'package:test_cark/core/api_service.dart';
+import 'package:test_cark/core/booking_service.dart';
+import 'payment_methods_screen.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
   final CarModel car;
@@ -930,7 +932,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
         children: [
           _buildPricingRow('Daily Price', '${pricing.dailyPrice.toStringAsFixed(2)} EGP'),
           _buildPricingRow('Base Cost', '${pricing.baseCost.toStringAsFixed(2)} EGP'),
-          _buildPricingRow('Service Fee (${pricing.serviceFeePercentage}%)', '${pricing.serviceFee.toStringAsFixed(2)} EGP'),
+       //   _buildPricingRow('Service Fee (${pricing.serviceFeePercentage}%)', '${pricing.serviceFee.toStringAsFixed(2)} EGP'),
           Divider(color: Colors.grey[200], height: 24.h),
           _buildPricingRow('Deposit (${pricing.depositPercentage}%)', '${pricing.depositAmount.toStringAsFixed(2)} EGP ', isHighlighted: true),
           _buildPricingRow('Remaining Amount', '${pricing.remainingAmount.toStringAsFixed(2)} EGP', isHighlighted: true),
@@ -1186,6 +1188,8 @@ class _FullPaymentSelectorState extends State<FullPaymentSelector> {
   List<Map<String, dynamic>> savedCards = [];
   bool _isLoading = false;
   String? _error;
+  // أضف متغير حالة محلي في State
+  bool _addCardInfoChecked = false;
 
   @override
   void initState() {
@@ -1260,6 +1264,91 @@ class _FullPaymentSelectorState extends State<FullPaymentSelector> {
               icon: Icon(Icons.add),
               label: Text('Add New Card'),
             ),
+            // أضف الـ Checkbox التوضيحي أسفل زر إضافة البطاقة الجديدة
+            if (_showAddCard)
+              Padding(
+                padding: EdgeInsets.only(top: 8.h, left: 4.w, right: 4.w),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _addCardInfoChecked,
+                      onChanged: (val) {
+                        setState(() {
+                          _addCardInfoChecked = val ?? false;
+                        });
+                      },
+                    ),
+                    Expanded(
+                      child: Text(
+                        'When adding a card, only 1 EGP will be charged and it will be refunded to your wallet balance.',
+                        style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (_showAddCard)
+              GestureDetector(
+                onTap: () async {
+                  setState(() {
+                    _selectedMethod = 'new_card';
+                  });
+                  // نفذ نفس منطق PaymentMethodsScreen لكن بدفع 1 جنيه فقط
+                  try {
+                    setState(() => _isLoading = true);
+                    // استخدم BookingService كما في PaymentMethodsScreen
+                    final bookingService = BookingService();
+                    // rentalId وهمي أو فارغ لأننا فقط نريد إضافة البطاقة
+                    final result = await bookingService.addNewCard(
+                       // أو أي قيمة مقبولة من السيرفر
+                      amountCents: '100', // 1 جنيه
+                      paymentMethod: 'new_card',
+                    );
+                    final iframeUrl = result['iframe_url'] ?? '';
+                    setState(() => _isLoading = false);
+                    if (iframeUrl.isNotEmpty) {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PaymentWebViewScreen(url: iframeUrl),
+                        ),
+                      );
+                      // بعد رجوع المستخدم من الدفع، حدث الكروت
+                      _fetchSavedCards();
+                    }
+                  } catch (e) {
+                    setState(() => _isLoading = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                },
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 8.h),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _selectedMethod == 'new_card'
+                          ? Colors.blue
+                          : Colors.grey[300]!,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(10.r),
+                    color: Colors.white,
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                  child: Row(
+                    children: [
+                      FaIcon(FontAwesomeIcons.solidCreditCard,
+                          color: Colors.black, size: 24.sp),
+                      SizedBox(width: 14.w),
+                      Text('New card', style: TextStyle(fontSize: 16.sp)),
+                      Spacer(),
+                      if (_selectedMethod == 'new_card')
+                        Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
+                    ],
+                  ),
+                ),
+              ),
             if (_showAddCard)
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.h),

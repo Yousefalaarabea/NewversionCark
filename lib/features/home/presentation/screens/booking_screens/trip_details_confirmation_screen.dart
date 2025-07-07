@@ -41,7 +41,7 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
 
   bool _shouldFetchCarDetails(CarModel car) {
     // إذا كان البراند أو الموديل أو السنة غير متوفرين أو افتراضيين
-    return car.id != 0 && (car.brand == 'غير متوفر' || car.model == 'غير متوفر' || car.year == 0);
+    return car.id != 0 && (car.brand == 'Unavailable' || car.model == 'Unavailable' || car.year == 0);
   }
 
   Future<void> _fetchCarDetails(int carId) async {
@@ -141,7 +141,7 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.calendar_today,
-                                                'السنة',
+                                                'Year',
                                                 '${tripDetails.car.year}',
                                               ),
                                             ),
@@ -149,8 +149,8 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.color_lens,
-                                                'اللون',
-                                                tripDetails.car.color ?? 'غير متوفر',
+                                                'Color',
+                                                tripDetails.car.color ?? 'Unavailable',
                                               ),
                                             ),
                                           ],
@@ -163,16 +163,16 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.directions_car,
-                                                'النوع',
-                                                tripDetails.car.carType ?? 'غير متوفر',
+                                                'Type',
+                                                tripDetails.car.carType ?? 'Unavailable',
                                               ),
                                             ),
                                             const SizedBox(width: 16),
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.category,
-                                                'الفئة',
-                                                tripDetails.car.carCategory ?? 'غير متوفر',
+                                                'Category',
+                                                tripDetails.car.carCategory ?? 'Unavailable',
                                               ),
                                             ),
                                           ],
@@ -185,16 +185,16 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.settings,
-                                                'السرعة',
-                                                tripDetails.car.transmissionType ?? 'غير متوفر',
+                                                'Transmission',
+                                                tripDetails.car.transmissionType ?? 'Unavailable',
                                               ),
                                             ),
                                             const SizedBox(width: 16),
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.local_gas_station,
-                                                'الوقود',
-                                                tripDetails.car.fuelType ?? 'غير متوفر',
+                                                'Fuel',
+                                                tripDetails.car.fuelType ?? 'Unavailable',
                                               ),
                                             ),
                                           ],
@@ -207,7 +207,7 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.event_seat,
-                                                'المقاعد',
+                                                'Seats',
                                                 '${tripDetails.car.seatingCapacity ?? 0}',
                                               ),
                                             ),
@@ -215,8 +215,8 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                             Expanded(
                                               child: _buildCarDetailItem(
                                                 Icons.confirmation_number,
-                                                'رقم اللوحة',
-                                                tripDetails.car.plateNumber ?? 'غير متوفر',
+                                                'Plate Number',
+                                                tripDetails.car.plateNumber ?? 'Unavailable',
                                               ),
                                             ),
                                           ],
@@ -362,7 +362,7 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                 onPressed: () {
                                   final rentalId = widget.rentalId ?? tripDetails.rentalId;
                                   print('🔍 [TripDetailsConfirmationScreen] Continue button pressed');
-                                  print('🔍 [TripDetailsConfirmationScreen] widget.rentalId: ${widget.rentalId}');
+                                  print('🔍 [TripDetailsConfirmationScreen] widget.rentalId: [38;5;5m${widget.rentalId}[0m');
                                   print('🔍 [TripDetailsConfirmationScreen] tripDetails.rentalId: ${tripDetails.rentalId}');
                                   print('🔍 [TripDetailsConfirmationScreen] Final rentalId: $rentalId (type: ${rentalId.runtimeType})');
                                   
@@ -384,11 +384,11 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                     print('❌ [TripDetailsConfirmationScreen] Invalid or missing rentalId: $rentalId');
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('خطأ: رقم الرحلة غير متوفر أو غير صحيح!'),
+                                        content: Text('Error: Rental ID is missing or invalid!'),
                                         backgroundColor: Colors.red,
                                         duration: Duration(seconds: 3),
                                         action: SnackBarAction(
-                                          label: 'إغلاق',
+                                          label: 'Close',
                                           textColor: Colors.white,
                                           onPressed: () {
                                             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -399,11 +399,12 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                  foregroundColor: Colors.white,
                                 ),
-                                child: const Text('Continue'),
+                                child: const Text('Confirm ->'),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -413,7 +414,7 @@ class _TripDetailsConfirmationScreenState extends State<TripDetailsConfirmationS
                                   Navigator.pushNamed(context, '/cancel-rental');
                                 },
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                 ),

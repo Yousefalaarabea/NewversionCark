@@ -14,7 +14,7 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
    ///     baseUrl: 'https://cark-f3fjembga0f6btek.uaenorth-01.azurewebsites.net/api/',
-        baseUrl: 'https://charge-consisting-inserted-disaster.trycloudflare.com/api/',
+        baseUrl: 'https://brandon-moderators-thorough-strict.trycloudflare.com/api/',
         connectTimeout: const Duration(seconds: 120),
         receiveTimeout: const Duration(seconds: 120),
         headers: {

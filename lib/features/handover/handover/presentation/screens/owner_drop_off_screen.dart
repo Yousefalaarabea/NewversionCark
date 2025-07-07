@@ -135,7 +135,7 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Congratulations! Drop-off completed', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                    const Text('Congratulations! Your trip completed 🎉', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                     const SizedBox(height: 16),
                     const Text('Please rate the renter'),
                     const SizedBox(height: 16),
@@ -689,7 +689,7 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: canComplete ? AppColors.green : Colors.grey,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -702,7 +702,7 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
             const SizedBox(width: 8),
             const Text(
               'Complete Drop off',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),

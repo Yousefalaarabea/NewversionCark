@@ -28,10 +28,11 @@ class CarCardWidget extends StatelessWidget {
       price = rentalOptions!.availableWithDriver
           ? rentalOptions!.dailyRentalPriceWithDriver
           : rentalOptions!.dailyRentalPrice;
-    } else {
-      // Default price when rental options are not available
-      price = 150.0; // Default daily price
-    }
+      }
+    // } else {
+    //   // Default price when rental options are not available
+    //   price = 150.0; // Default daily price
+    // }
 
     return GestureDetector(
       onTap: onTap,
@@ -308,7 +309,7 @@ class CarCardWidget extends StatelessWidget {
       }
     } else {
       // Use a default car image based on brand
-      return AssetImage('assets/images/home/car_background.jpeg');
+      return AssetImage('assets/images/home/5.jpg');
     }
   }
 }
