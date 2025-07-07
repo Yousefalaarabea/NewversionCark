@@ -84,70 +84,106 @@ class _HandoverScreenContentState extends State<HandoverScreenContent> {
           ),
         ],
       ),
-      body: BlocListener<HandoverCubit, HandoverState>(
-        listener: (context, state) {
-          if (state is HandoverSuccess) {
-            // Send notification to renter that owner has submitted handover
-            _notifyRenterHandoverSubmitted();
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Warning message
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 12, left: 12, right: 12, top: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.yellow.shade100,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.shade300),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Do not hand over your car until you receive a notification confirming the Renter Handover.',
+                    style: TextStyle(
+                      color: Colors.orange.shade900,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // باقي الصفحة كما هي
+          Expanded(
+            child: BlocListener<HandoverCubit, HandoverState>(
+              listener: (context, state) {
+                if (state is HandoverSuccess) {
+                  // Send notification to renter that owner has submitted handover
+                  _notifyRenterHandoverSubmitted();
 
-            Navigator.pushReplacementNamed(
-              context,
-              ScreensName.ownerHomeScreen,
-            );
-          } else if (state is HandoverCancelled) {
-            _showSuccessSnackBar(context, state.message);
-            // Navigate to owner home after cancellation
-            Future.delayed(const Duration(seconds: 2), () {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                ScreensName.ownerHomeScreen,
-                (route) => false,
-              );
-            });
-          } else if (state is HandoverFailure) {
-            _showErrorSnackBar(context, state.error);
-          }
-        },
-        child: BlocBuilder<HandoverCubit, HandoverState>(
-          builder: (context, handoverState) {
-            if (handoverState is HandoverLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+                  Navigator.pushReplacementNamed(
+                    context,
+                    ScreensName.ownerHomeScreen,
+                  );
+                } else if (state is HandoverCancelled) {
+                  _showSuccessSnackBar(context, state.message);
+                  // Navigate to owner home after cancellation
+                  Future.delayed(const Duration(seconds: 2), () {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      ScreensName.ownerHomeScreen,
+                      (route) => false,
+                    );
+                  });
+                } else if (state is HandoverFailure) {
+                  _showErrorSnackBar(context, state.error);
+                }
+              },
+              child: BlocBuilder<HandoverCubit, HandoverState>(
+                builder: (context, handoverState) {
+                  if (handoverState is HandoverLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  _buildHeader(context),
-                  const SizedBox(height: 24),
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        _buildHeader(context),
+                        const SizedBox(height: 24),
 
-                  // Deposit Status
-                  const DepositStatusWidget(),
-                  const SizedBox(height: 24),
+                        // Deposit Status
+                        const DepositStatusWidget(),
+                        const SizedBox(height: 24),
 
-                  // Check if deposit is paid
-                  if (handoverState is HandoverDataLoaded &&
-                      !handoverState.contract.isDepositPaid)
-                    _buildDepositWarning(context, handoverState.contract)
-                  else ...[
-                    // Contract Upload
-                    const ContractUploadWidget(),
-                    const SizedBox(height: 24),
+                        // Check if deposit is paid
+                        if (handoverState is HandoverDataLoaded &&
+                            !handoverState.contract.isDepositPaid)
+                          _buildDepositWarning(context, handoverState.contract)
+                        else ...[
+                          // Contract Upload
+                          const ContractUploadWidget(),
+                          const SizedBox(height: 24),
 
-                    // Confirmations
-                    ConfirmationCheckboxesWidget(paymentMethod: widget.paymentMethod),
-                    const SizedBox(height: 32),
+                          // Confirmations
+                          ConfirmationCheckboxesWidget(paymentMethod: widget.paymentMethod),
+                          const SizedBox(height: 32),
 
-                    // Action Buttons
-                    _buildActionButtons(context),
-                  ],
-                ],
+                          // Action Buttons
+                          _buildActionButtons(context),
+                        ],
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
