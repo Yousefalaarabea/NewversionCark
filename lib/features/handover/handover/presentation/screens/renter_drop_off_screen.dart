@@ -11,18 +11,20 @@ import '../widgets/handover_notes_widget.dart';
 import '../widgets/image_upload_widget.dart';
 
 class RenterDropOffScreen extends StatefulWidget {
-  final String tripId;
+  // final String tripId;
   final String carId;
-  final String renterId;
+  // final String renterId;
   final String ownerId;
+  final String rentalId;
   final String paymentMethod;
 
   const RenterDropOffScreen({
     super.key,
-    required this.tripId,
+    // required this.tripId,
     required this.carId,
-    required this.renterId,
+    // required this.renterId,
     required this.ownerId,
+    required this.rentalId,
     required this.paymentMethod,
   });
 
@@ -33,7 +35,7 @@ class RenterDropOffScreen extends StatefulWidget {
 class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
   final TextEditingController _odometerController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  
+
   String? _carImagePath;
   String? _odometerImagePath;
   int? _finalOdometerReading;
@@ -54,24 +56,29 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
 
   void _initializeHandover() {
     context.read<RenterDropOffCubit>().initializeHandover(
-      tripId: widget.tripId,
-      carId: widget.carId,
-      renterId: widget.renterId,
-      ownerId: widget.ownerId,
-      paymentMethod: widget.paymentMethod,
-    );
+          // tripId: widget.tripId,
+          carId: widget.carId,
+          // renterId: widget.renterId,
+          ownerId: widget.ownerId,
+          rentalId: widget.rentalId,
+          paymentMethod: widget.paymentMethod,
+        );
   }
 
   Future<void> _pickImage(bool isCarImage) async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.camera);
-      
+
       if (image != null) {
         if (isCarImage) {
-          await context.read<RenterDropOffCubit>().uploadCarImage(File(image.path));
+          await context
+              .read<RenterDropOffCubit>()
+              .uploadCarImage(File(image.path));
         } else {
-          await context.read<RenterDropOffCubit>().uploadOdometerImage(File(image.path));
+          await context
+              .read<RenterDropOffCubit>()
+              .uploadOdometerImage(File(image.path));
         }
       }
     } catch (e) {
@@ -89,12 +96,13 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
       return;
     }
 
-    // Mock values - in real app these would come from trip data
+    print('Triggering calculateExcessCharges');
+    print('rentalId: \\${widget.rentalId}');
+    print('currentOdometer: \\${_finalOdometerReading}');
     context.read<RenterDropOffCubit>().calculateExcessCharges(
-      agreedKilometers: 200,
-      agreedHours: 24,
-      extraKmRate: 0.5,
-      extraHourRate: 10.0,
+      rentalId: widget.rentalId,
+      currentOdometer: _finalOdometerReading!.toDouble(),
+      context: context,
     );
   }
 
@@ -136,7 +144,8 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
             });
           } else if (state is RenterDropOffExcessCalculated) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Excess charges calculated successfully')),
+              const SnackBar(
+                  content: Text('Excess charges calculated successfully')),
             );
           } else if (state is RenterDropOffPaymentProcessed) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +157,8 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
             });
           } else if (state is RenterDropOffCompleted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Car drop-off completed successfully')),
+              const SnackBar(
+                  content: Text('Car drop-off completed successfully')),
             );
             // Navigate to owner drop-off screen
             Navigator.pushReplacementNamed(
@@ -176,12 +186,16 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+                      colors: [
+                        AppColors.primary.withOpacity(0.1),
+                        AppColors.primary.withOpacity(0.05)
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                    border:
+                        Border.all(color: AppColors.primary.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
@@ -191,7 +205,8 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.directions_car, color: AppColors.primary, size: 28),
+                        child: const Icon(Icons.directions_car,
+                            color: AppColors.primary, size: 28),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -268,7 +283,9 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                     onChanged: (value) {
                       final reading = int.tryParse(value);
                       if (reading != null) {
-                        context.read<RenterDropOffCubit>().setFinalOdometerReading(reading);
+                        context
+                            .read<RenterDropOffCubit>()
+                            .setFinalOdometerReading(reading);
                       }
                     },
                   ),
@@ -281,9 +298,9 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                     title: '4. Calculate Excess Charges',
                     subtitle: 'Calculate any additional charges if applicable',
                     icon: Icons.calculate,
-                    isCompleted: state is RenterDropOffExcessCalculated || 
-                                state is RenterDropOffPaymentProcessed ||
-                                state is RenterDropOffCompleted,
+                    isCompleted: state is RenterDropOffExcessCalculated ||
+                        state is RenterDropOffPaymentProcessed ||
+                        state is RenterDropOffCompleted,
                     child: Column(
                       children: [
                         CustomElevatedButton(
@@ -319,7 +336,8 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                     onNotesChanged: (notes) {
                       context.read<RenterDropOffCubit>().addRenterNotes(notes);
                     },
-                    hintText: 'Add your notes about the trip or car condition...',
+                    hintText:
+                        'Add your notes about the trip or car condition...',
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -347,7 +365,8 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                           const SizedBox(width: 8),
                           const Text(
                             'Complete Drop-Off',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -374,7 +393,9 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isCompleted ? AppColors.green : AppColors.primary.withOpacity(0.15),
+          color: isCompleted
+              ? AppColors.green
+              : AppColors.primary.withOpacity(0.15),
           width: isCompleted ? 2 : 1,
         ),
         boxShadow: [
@@ -394,17 +415,19 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isCompleted 
-                      ? AppColors.green 
+                  color: isCompleted
+                      ? AppColors.green
                       : AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: isCompleted ? [
-                    BoxShadow(
-                      color: AppColors.green.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ] : null,
+                  boxShadow: isCompleted
+                      ? [
+                          BoxShadow(
+                            color: AppColors.green.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Icon(
                   isCompleted ? Icons.check : icon,
@@ -422,7 +445,8 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: isCompleted ? AppColors.green : AppColors.primary,
+                        color:
+                            isCompleted ? AppColors.green : AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -448,10 +472,10 @@ class _RenterDropOffScreenState extends State<RenterDropOffScreen> {
 
   bool _canCompleteHandover(RenterDropOffState state) {
     return _carImagePath != null &&
-           _odometerImagePath != null &&
-           _finalOdometerReading != null &&
-           (state is RenterDropOffExcessCalculated ||
+        _odometerImagePath != null &&
+        _finalOdometerReading != null &&
+        (state is RenterDropOffExcessCalculated ||
             state is RenterDropOffPaymentProcessed ||
             state is RenterDropOffCompleted);
   }
-} 
+}

@@ -945,7 +945,7 @@ class NotificationCubit extends Cubit<NotificationState> {
         Navigator.pushNamed(context, ScreensName.renterOngoingTripScreen, arguments: notification.data);
         break;
       case 'OWN_ONT_TRP':
-        Navigator.pushNamed(context, ScreensName.ownerOngoingTripScreen, arguments: notification.data);
+        Navigator.pushNamed(context, ScreensName.ownerOngoingTripScreen, arguments: notification);
         break;
       case 'LOC_GET':
         Navigator.pushNamed(context, ScreensName.liveLocationMapScreen, arguments: notification.data);

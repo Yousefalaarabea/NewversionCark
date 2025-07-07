@@ -26,7 +26,7 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
   void initState() {
     super.initState();
     print('🔥 Incoming Notification Data: ${widget.notification.data}');
-    tripDetails = TripDetailsModel.fromNotificationData(widget.notification.data ?? {});
+    tripDetails = TripDetailsModel.fromNotificationData1(widget.notification.data ?? {});
   }
 
   @override
@@ -627,11 +627,12 @@ class _RenterOngoingTripScreenState extends State<RenterOngoingTripScreen> {
       context,
       ScreensName.renterDropOffScreen,
       arguments: {
-        'tripId': 'trip_${DateTime.now().millisecondsSinceEpoch}', // Generate trip ID
+        //'tripId': 'trip_${DateTime.now().millisecondsSinceEpoch}', // Generate trip ID
         'carId': tripDetails.car.id.toString(),
-        'renterId': 'renter_001', // TODO: Get from auth
-        'ownerId': 'owner_001', // TODO: Get from car data
-        'paymentMethod': tripDetails.paymentMethod,
+        //'renterId': tripDetails.car., // TODO: Get from auth
+        'ownerId': tripDetails.car.ownerId.toString(), // Ensure ownerId is String
+        'rentalId': tripDetails.rentalId?.toString() ?? '', // Ensure rentalId is String
+        'paymentMethod': tripDetails.paymentMethod.toString(),
       },
     );
   }

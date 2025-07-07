@@ -392,4 +392,9 @@ class ApiService {
 
   // Add this public getter for baseUrl
   String get baseUrl => _dio.options.baseUrl;
+
+  // PATCH user info
+  Future<Response> patchUser(String userId, Map<String, dynamic> data) async {
+    return await patchWithToken('users/$userId/', data);
+  }
 }

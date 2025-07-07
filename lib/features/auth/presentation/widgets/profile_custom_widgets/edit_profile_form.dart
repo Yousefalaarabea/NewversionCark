@@ -108,17 +108,17 @@ class EditProfileForm extends StatelessWidget {
             // validator: _validatePassword,
           ),
 
-          SizedBox(height: 0.03.sh),
-
-          // Upload ID Image
-          const IdImageWidgets(),
-
-          SizedBox(height: 0.03.sh),
-
-          // Upload Licence Image Button
-          const LicenceImageWidget(),
-
-          SizedBox(height: 0.03.sh),
+          // SizedBox(height: 0.03.sh),
+          //
+          // // Upload ID Image
+          // const IdImageWidgets(),
+          //
+          // SizedBox(height: 0.03.sh),
+          //
+          // // Upload Licence Image Button
+          // const LicenceImageWidget(),
+          //
+           SizedBox(height: 0.03.sh),
 
           // Signup Button
           BlocConsumer<AuthCubit, AuthState>(

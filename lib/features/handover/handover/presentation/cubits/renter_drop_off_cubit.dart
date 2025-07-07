@@ -4,6 +4,9 @@ import 'dart:io';
 import '../models/post_trip_handover_model.dart';
 import '../models/excess_charges_model.dart';
 import '../models/handover_log_model.dart';
+import '../../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../../../../core/api_service.dart';
+import 'package:flutter/material.dart';
 
 part 'renter_drop_off_state.dart';
 
@@ -16,11 +19,12 @@ class RenterDropOffCubit extends Cubit<RenterDropOffState> {
 
   // Initialize handover process
   Future<void> initializeHandover({
-    required String tripId,
+    // required String tripId,
     required String carId,
-    required String renterId,
+    // required String renterId,
     required String ownerId,
     required String paymentMethod,
+    required String rentalId,
   }) async {
     emit(RenterDropOffLoading());
     
@@ -28,10 +32,11 @@ class RenterDropOffCubit extends Cubit<RenterDropOffState> {
       // Create new handover record
       _handoverData = PostTripHandoverModel(
         id: 'handover_${DateTime.now().millisecondsSinceEpoch}',
-        tripId: tripId,
-        carId: carId,
-        renterId: renterId,
-        ownerId: ownerId,
+        // tripId: tripId,
+        carId: carId.toString(),
+        // renterId: renterId,
+        ownerId: ownerId.toString(),
+        rentalId: rentalId.toString(),
         paymentMethod: paymentMethod,
         createdAt: DateTime.now(),
       );
@@ -144,43 +149,69 @@ class RenterDropOffCubit extends Cubit<RenterDropOffState> {
 
   // Calculate excess charges
   Future<void> calculateExcessCharges({
-    required int agreedKilometers,
-    required int agreedHours,
-    required double extraKmRate,
-    required double extraHourRate,
+    required String rentalId,
+    required double currentOdometer,
+    required BuildContext context,
   }) async {
-    if (_handoverData == null || _handoverData!.finalOdometerReading == null) {
-      emit(RenterDropOffError(message: 'Handover not initialized or odometer reading not set'));
+    if (_handoverData == null) {
+      emit(RenterDropOffError(message: 'Handover not initialized'));
       return;
     }
 
     emit(RenterDropOffLoading());
 
     try {
-      // Simulate API call to get actual hours (in real app, this would come from trip data)
-      await Future.delayed(Duration(seconds: 1));
-      final actualHours = agreedHours + 4; // Mock: 4 extra hours
-      
-      // Calculate excess charges
-      final excessCharges = ExcessChargesModel.calculate(
-        agreedKilometers: agreedKilometers,
-        actualKilometers: _handoverData!.finalOdometerReading!,
-        extraKmRate: extraKmRate,
-        agreedHours: agreedHours,
-        actualHours: actualHours,
-        extraHourRate: extraHourRate,
-      );
+      final apiService = ApiService();
+      final endpoint = 'selfdrive-rentals/$rentalId/current-odometer/';
+      final response = await apiService.postWithToken(endpoint, {
+        'currentOdometer': currentOdometer,
+      });
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final odometerDetails = data['odometer_details'] ?? {};
+        final timeDetails = data['time_details'] ?? {};
+        final costDetails = data['cost_details'] ?? {};
 
-      // Update handover data
-      _handoverData = _handoverData!.copyWith(
-        excessCharges: excessCharges,
-        updatedAt: DateTime.now(),
-      );
+        // Extract needed values
+        final agreedKilometers = (odometerDetails['agreed_kilometers'] ?? 0).toDouble();
+        final actualKilometers = (odometerDetails['current_odometer'] ?? 0).toDouble();
+        final extraKmRate = (costDetails['extra_km_rate'] ?? 0).toDouble();
+        final extraKmCost = (costDetails['extra_km_cost'] ?? 0).toDouble();
+        final agreedDays = (timeDetails['agreed_days'] ?? 0).toInt();
+        final extraDays = (timeDetails['extra_days'] ?? 0).toInt();
+        final dailyPrice = (costDetails['daily_price'] ?? 0).toDouble();
+        final extraDaysCost = (costDetails['extra_days_cost'] ?? 0).toDouble();
+        final totalExtrasCost = (costDetails['total_extras_cost'] ?? 0).toDouble();
+        final finalCost = (costDetails['final_cost'] ?? 0).toDouble();
 
-      emit(RenterDropOffExcessCalculated(
-        handoverData: _handoverData!,
-        excessCharges: excessCharges,
-      ));
+        // You can use these values to build your ExcessChargesModel or similar
+        final excessCharges = ExcessChargesModel(
+          agreedKilometers: agreedKilometers.toInt(),
+          actualKilometers: actualKilometers.toInt(),
+          extraKilometers: (odometerDetails['extra_kilometers'] ?? 0).toInt(),
+          extraKmRate: extraKmRate,
+          extraKmCost: extraKmCost,
+          agreedHours: agreedDays * 24, // Convert days to hours if needed
+          actualHours: agreedDays * 24 + (extraDays * 24), // Estimate, adjust as needed
+          extraHours: (extraDays * 24), // Estimate, adjust as needed
+          extraHourRate: dailyPrice / 24, // Estimate, adjust as needed
+          extraHourCost: extraDaysCost, // Estimate, adjust as needed
+          totalExcessCost: totalExtrasCost,
+        );
+
+        // Update handover data
+        _handoverData = _handoverData!.copyWith(
+          excessCharges: excessCharges,
+          updatedAt: DateTime.now(),
+        );
+
+        emit(RenterDropOffExcessCalculated(
+          handoverData: _handoverData!,
+          excessCharges: excessCharges,
+        ));
+      } else {
+        emit(RenterDropOffError(message: 'Failed to fetch odometer data: ${response.statusCode}'));
+      }
     } catch (e) {
       emit(RenterDropOffError(message: 'Failed to calculate excess charges: $e'));
     }

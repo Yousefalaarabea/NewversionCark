@@ -22,8 +22,6 @@ class CarDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
       itemCount: cars.length,
       itemBuilder: (context, index) {
         final bundle = cars[index];

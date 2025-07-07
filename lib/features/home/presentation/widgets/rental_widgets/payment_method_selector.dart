@@ -22,11 +22,11 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
       'icon': Icons.money,
       'description': 'Pay with cash',
     },
-    {
-      'name': 'Digital Wallet',
-      'icon': Icons.account_balance_wallet,
-      'description': 'Pay with digital wallet',
-    },
+    // {
+    //   'name': 'Digital Wallet',
+    //   'icon': Icons.account_balance_wallet,
+    //   'description': 'Pay with digital wallet',
+    // },
   ];
 
   @override
@@ -34,7 +34,9 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
     return BlocBuilder<CarCubit, dynamic>(
       builder: (context, state) {
         final selectedPaymentMethod = state.selectedPaymentMethod;
-        
+        print("""""""""""""""""""""""""object""""""""""""""""""""""""");
+        print(selectedPaymentMethod);
+        print("""""""""""""""""""""""""object""""""""""""""""""""""""");
         return Container(
           padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(

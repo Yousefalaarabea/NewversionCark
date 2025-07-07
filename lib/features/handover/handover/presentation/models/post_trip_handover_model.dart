@@ -2,10 +2,9 @@ import 'excess_charges_model.dart';
 
 class PostTripHandoverModel {
   final String id;
-  final String tripId;
   final String carId;
-  final String renterId;
   final String ownerId;
+  final String rentalId;
   
   // Car condition after trip
   final String? carImagePath;
@@ -39,10 +38,9 @@ class PostTripHandoverModel {
 
   PostTripHandoverModel({
     required this.id,
-    required this.tripId,
     required this.carId,
-    required this.renterId,
     required this.ownerId,
+    required this.rentalId,
     this.carImagePath,
     this.odometerImagePath,
     this.finalOdometerReading,
@@ -65,10 +63,9 @@ class PostTripHandoverModel {
   factory PostTripHandoverModel.mock() {
     return PostTripHandoverModel(
       id: 'handover_${DateTime.now().millisecondsSinceEpoch}',
-      tripId: 'trip_001',
       carId: 'car_001',
-      renterId: 'renter_001',
       ownerId: 'owner_001',
+      rentalId: 'rental_001',
       paymentMethod: 'visa',
       createdAt: DateTime.now(),
     );
@@ -77,10 +74,9 @@ class PostTripHandoverModel {
   // Create a copy with updated fields
   PostTripHandoverModel copyWith({
     String? id,
-    String? tripId,
     String? carId,
-    String? renterId,
     String? ownerId,
+    String? rentalId,
     String? carImagePath,
     String? odometerImagePath,
     int? finalOdometerReading,
@@ -100,10 +96,9 @@ class PostTripHandoverModel {
   }) {
     return PostTripHandoverModel(
       id: id ?? this.id,
-      tripId: tripId ?? this.tripId,
       carId: carId ?? this.carId,
-      renterId: renterId ?? this.renterId,
       ownerId: ownerId ?? this.ownerId,
+      rentalId: rentalId ?? this.rentalId,
       carImagePath: carImagePath ?? this.carImagePath,
       odometerImagePath: odometerImagePath ?? this.odometerImagePath,
       finalOdometerReading: finalOdometerReading ?? this.finalOdometerReading,
@@ -127,10 +122,9 @@ class PostTripHandoverModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'tripId': tripId,
       'carId': carId,
-      'renterId': renterId,
       'ownerId': ownerId,
+      'rentalId': rentalId,
       'carImagePath': carImagePath,
       'odometerImagePath': odometerImagePath,
       'finalOdometerReading': finalOdometerReading,
@@ -154,10 +148,9 @@ class PostTripHandoverModel {
   factory PostTripHandoverModel.fromJson(Map<String, dynamic> json) {
     return PostTripHandoverModel(
       id: json['id'],
-      tripId: json['tripId'],
-      carId: json['carId'],
-      renterId: json['renterId'],
-      ownerId: json['ownerId'],
+      carId: json['carId'].toString(),
+      ownerId: json['ownerId'].toString(),
+      rentalId: json['rentalId'] != null ? json['rentalId'].toString() : '',
       carImagePath: json['carImagePath'],
       odometerImagePath: json['odometerImagePath'],
       finalOdometerReading: json['finalOdometerReading'],

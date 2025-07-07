@@ -193,8 +193,6 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
               style: TextStyle(fontSize: 0.02.sh, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 0.02.sh),
-
-            // Debug information (can be removed in production)
             if (showWithDriver != null || showWithoutDriver != null)
               Padding(
                 padding: EdgeInsets.only(bottom: 0.01.sh),
@@ -203,8 +201,6 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                 ),
               ),
-
-            // Cars list
             if (filteredCars.isEmpty)
               Center(
                 child: Column(
@@ -254,7 +250,7 @@ class _ViewCarsSectionWidgetState extends State<ViewCarsSectionWidget> {
                 child: ListView.builder(
                   itemCount: filteredCars.length,
                   shrinkWrap: true,
-                  physics: const AlwaysScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   padding: EdgeInsets.symmetric(vertical: 8.h),
                   itemBuilder: (context, index) {
                     return CarCardWidget(

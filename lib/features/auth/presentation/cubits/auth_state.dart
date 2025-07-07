@@ -80,3 +80,14 @@ class EditProfileFailure extends AuthState {
   final String error;
   EditProfileFailure(this.error);
 }
+
+// Update Profile States
+class UpdateProfileLoading extends AuthState {}
+class UpdateProfileSuccess extends AuthState {
+  final String message;
+  UpdateProfileSuccess(this.message);
+}
+class UpdateProfileFailure extends AuthState {
+  final String message;
+  UpdateProfileFailure(this.message);
+}

@@ -128,7 +128,7 @@ class TripDetailsModel {
   //   );
   // }
 
-  factory TripDetailsModel.fromNotificationData(Map<String, dynamic> notificationData) {
+  factory TripDetailsModel.fromNotificationData1(Map<String, dynamic> notificationData) {
     try {
       print('🔍 [TripDetailsModel.fromNotificationData] Raw notification data:');
       print(notificationData);
@@ -183,31 +183,31 @@ class TripDetailsModel {
       );
 
       // 🧠 Debug types before assignment
-      print("✔️ paymentMethod: ${notificationData['paymentMethod']} (${notificationData['paymentMethod']?.runtimeType})");
-      print("✔️ renterName: ${renterMap['name']} (${renterMap['name']?.runtimeType})");
-      print("✔️ ownerName: ${ownerMap['name']} (${ownerMap['name']?.runtimeType})");
+      // print("✔️ paymentMethod: "+ (notificationData['paymentDetails']?["paymentMethod"]).toString() + " (" + (notificationData['paymentMethod']?.runtimeType).toString() + ")");
+      print("✔️ renterName: "+ (renterMap['name']).toString() + " (" + (renterMap['name']?.runtimeType).toString() + ")");
+      print("✔️ ownerName: "+ (ownerMap['name']).toString() + " (" + (ownerMap['name']?.runtimeType).toString() + ")");
 
       return TripDetailsModel(
         car: car,
         rentalId: rentalId,
-        pickupLocation: notificationData['pickupAddress']?.toString()
-            ?? notificationData['pickupLocation']?.toString()
-            ?? 'غير متوفر',
-        dropoffLocation: notificationData['dropoffAddress']?.toString()
-            ?? notificationData['dropoffLocation']?.toString()
-            ?? 'غير متوفر',
-        startDate: DateTime.tryParse(notificationData['startDate']?.toString() ?? '') ?? DateTime.now(),
-        endDate: DateTime.tryParse(notificationData['endDate']?.toString() ?? '') ?? DateTime.now().add(const Duration(days: 1)),
+        pickupLocation: notificationData['tripDetails']?['pickupAddress'] ?? notificationData['pickupAddress'] ?? 'غير متوفر',
+        dropoffLocation: notificationData['tripDetails']?['dropoffAddress'] ?? notificationData['dropoffAddress'] ?? 'غير متوفر',
+        startDate: DateTime.tryParse(notificationData['tripDetails']?['startDate']?.toString() ?? notificationData['startDate']?.toString() ?? '') ?? DateTime.now(),
+        endDate: DateTime.tryParse(notificationData['tripDetails']?['endDate']?.toString() ?? notificationData['endDate']?.toString() ?? '') ?? DateTime.now().add(const Duration(days: 1)),
         totalPrice: (notificationData['totalAmount'] is num)
             ? (notificationData['totalAmount'] as num).toDouble()
-            : (notificationData['totalPrice'] is num)
-            ? (notificationData['totalPrice'] as num).toDouble()
-            : double.tryParse(notificationData['totalAmount']?.toString() ?? '')
-            ?? double.tryParse(notificationData['totalPrice']?.toString() ?? '')
-            ?? 0.0,
-        paymentMethod: notificationData['paymentMethod']?.toString() ?? 'غير متوفر',
-        renterName: renterMap['name']?.toString() ?? 'غير متوفر',
-        ownerName: ownerMap['name']?.toString() ?? 'غير متوفر',
+            : (notificationData['paymentDetails']?["totalAmount"] is num)
+                ? (notificationData['paymentDetails']?["totalAmount"] as num).toDouble()
+                : double.tryParse(notificationData['totalAmount']?.toString() ?? '')
+                    ?? double.tryParse(notificationData['paymentDetails']?["totalAmount"]?.toString() ?? '')
+                    ?? 0.0,
+        paymentMethod: notificationData['paymentMethod']
+            ?? notificationData['paymentDetails']?["paymentMethod"]
+            ?? notificationData["paymentMethods"]
+            ?? notificationData['rentalPaymentMethod']
+            ?? 'غير متوفر',
+        renterName: renterMap['name']?.toString() ?? notificationData['renterName']?.toString() ?? 'غير متوفر',
+        ownerName: ownerMap['name']?.toString() ?? notificationData['ownerName']?.toString() ?? 'غير متوفر',
         pickupLocationLat: (notificationData['pickupLatitude'] is num)
             ? (notificationData['pickupLatitude'] as num).toDouble()
             : double.tryParse(notificationData['pickupLatitude']?.toString() ?? ''),

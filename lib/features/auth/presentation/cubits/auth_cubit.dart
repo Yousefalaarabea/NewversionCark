@@ -622,6 +622,55 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phoneNumber,
+    required String nationalId,
+  }) async {
+    emit(UpdateProfileLoading());
+    try {
+      final userId = userModel?.id?.toString();
+      if (userId == null) throw Exception('User ID not found');
+      final data = {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'phone_number': phoneNumber,
+        'national_id': nationalId,
+      };
+      final response = await ApiService().patchUser(userId, data);
+      if (response.statusCode == 200) {
+        userModel = UserModel.fromJson(response.data);
+        await _saveUserData(userModel!);
+        emit(UpdateProfileSuccess('Profile updated successfully'));
+      } else {
+        emit(UpdateProfileFailure('Failed to update profile: ${response.statusCode}'));
+      }
+    } catch (e) {
+      emit(UpdateProfileFailure('Error updating profile: $e'));
+    }
+  }
+
+  Future<void> updateUserProfileWithMap(Map<String, String> changedFields) async {
+    emit(UpdateProfileLoading());
+    try {
+      final userId = userModel?.id?.toString();
+      if (userId == null) throw Exception('User ID not found');
+      final response = await ApiService().patchUser(userId, changedFields);
+      if (response.statusCode == 200) {
+        userModel = UserModel.fromJson(response.data);
+        await _saveUserData(userModel!);
+        emit(UpdateProfileSuccess('Profile updated successfully'));
+      } else {
+        emit(UpdateProfileFailure('Failed to update profile: \\${response.statusCode}'));
+      }
+    } catch (e) {
+      emit(UpdateProfileFailure('Error updating profile: $e'));
+    }
+  }
+
 }
 
 

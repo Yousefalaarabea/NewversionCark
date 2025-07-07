@@ -53,18 +53,18 @@ class BookingService {
         'dropoff_latitude': dropoffLocation.lat ?? 0.0,
         'dropoff_longitude': dropoffLocation.lng ?? 0.0,
         'dropoff_address': dropoffLocation.name,
-        'payment_method': paymentMethod,
+        'payment_method': 'visa',
         'stops': stopsData,
       };
 
       // Add selected card ID if provided
       if (selectedCardId != null) {
-        requestData['selected_card'] = selectedCardId;
+        requestData['selected_card'] = 1;
       }
 
       print('Creating rental with data: $requestData');
 
-      final response = await _apiService.postWithToken('/selfdrive-rentals//', requestData);
+      final response = await _apiService.postWithToken('/selfdrive-rentals/', requestData);
 
       if (response.statusCode == 201) {
         print('✅ Rental created successfully: ${response.data}');
@@ -414,13 +414,8 @@ class BookingService {
         'contract_image': await MultipartFile.fromFile(contractImagePath),
         if (confirmRemainingCash != null) 'confirm_remaining_cash': confirmRemainingCash.toString(),
       });
-      print('.........................................................................');
-      print('.........................................................................');
-
       print('${ApiService().baseUrl}');
-      print('.........................................................................');
 
-      print('.........................................................................');
 
       final response = await dio.post(
         '${ApiService().baseUrl}selfdrive-rentals/$rentalId/owner_pickup_handover/',

@@ -20,14 +20,15 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
   // دالة مساعدة لاستخراج rentalId من بيانات الإشعار
   int? _extractRentalId(Map<String, dynamic>? notificationData) {
     if (notificationData == null) return null;
-    
+
     final dynamic rawRentalId = notificationData['rentalId'] ??
-                                notificationData['rental_id'] ??
-                                notificationData['id'] ??
-                                notificationData['rental'];
-    
-    print('🔍 [_extractRentalId] Raw rentalId: $rawRentalId (type: ${rawRentalId.runtimeType})');
-    
+        notificationData['rental_id'] ??
+        notificationData['id'] ??
+        notificationData['rental'];
+
+    print(
+        '🔍 [_extractRentalId] Raw rentalId: $rawRentalId (type: ${rawRentalId.runtimeType})');
+
     if (rawRentalId is int) {
       print('✅ [_extractRentalId] rentalId is int: $rawRentalId');
       return rawRentalId;
@@ -37,7 +38,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
       return parsed;
     } else if (rawRentalId != null) {
       final parsed = int.tryParse(rawRentalId.toString());
-      print('✅ [_extractRentalId] rentalId converted from ${rawRentalId.runtimeType}: $parsed');
+      print(
+          '✅ [_extractRentalId] rentalId converted from ${rawRentalId.runtimeType}: $parsed');
       return parsed;
     } else {
       print('❌ [_extractRentalId] No rentalId found in notification data');
@@ -93,8 +95,10 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
       context.read<NotificationCubit>().getAllNotifications();
     });
     // تحديث تلقائي كل دقيقتين
-    print('[NotificationScreen] Starting auto-refresh timer with interval: ${NotificationCubit.defaultPollingInterval}');
-    _autoRefreshTimer = Timer.periodic(NotificationCubit.defaultPollingInterval, (_) {
+    print(
+        '[NotificationScreen] Starting auto-refresh timer with interval: ${NotificationCubit.defaultPollingInterval}');
+    _autoRefreshTimer =
+        Timer.periodic(NotificationCubit.defaultPollingInterval, (_) {
       print('[NotificationScreen] Auto-refresh triggered at ${DateTime.now()}');
       context.read<NotificationCubit>().fetchNewNotifications();
     });
@@ -131,7 +135,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
           BlocBuilder<NotificationCubit, NotificationState>(
             builder: (context, state) {
               if (state is NotificationLoaded) {
-                final unreadCount = state.notifications.where((n) => !n.isRead).length;
+                final unreadCount =
+                    state.notifications.where((n) => !n.isRead).length;
                 if (unreadCount > 0) {
                   return Stack(
                     children: [
@@ -208,16 +213,20 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.notifications_none, size: 64, color: Colors.grey),
+                    Icon(Icons.notifications_none,
+                        size: 64, color: Colors.grey),
                     SizedBox(height: 16),
-                    Text('No notifications', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                    Text('No notifications',
+                        style: TextStyle(fontSize: 18, color: Colors.grey)),
                     SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
                           onPressed: () {
-                            context.read<NotificationCubit>().getAllNotifications();
+                            context
+                                .read<NotificationCubit>()
+                                .getAllNotifications();
                           },
                           child: Text('Refresh'),
                         ),
@@ -244,7 +253,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatCard('Total', notifications.length, Colors.blue),
+                      _buildStatCard(
+                          'Total', notifications.length, Colors.blue),
                       _buildStatCard('Unread', unreadCount, Colors.red),
                       _buildStatCard('Read', readCount, Colors.green),
                     ],
@@ -260,9 +270,13 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                         children: [
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: unreadCount > 0 ? () {
-                                context.read<NotificationCubit>().markAllAsRead();
-                              } : null,
+                              onPressed: unreadCount > 0
+                                  ? () {
+                                      context
+                                          .read<NotificationCubit>()
+                                          .markAllAsRead();
+                                    }
+                                  : null,
                               child: Text('Mark all as read'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
@@ -274,7 +288,9 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                context.read<NotificationCubit>().getAllNotifications();
+                                context
+                                    .read<NotificationCubit>()
+                                    .getAllNotifications();
                               },
                               child: Text('Refresh'),
                               style: ElevatedButton.styleFrom(
@@ -291,7 +307,9 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                context.read<NotificationCubit>().getUnreadNotifications();
+                                context
+                                    .read<NotificationCubit>()
+                                    .getUnreadNotifications();
                               },
                               child: Text('Unread only'),
                               style: ElevatedButton.styleFrom(
@@ -304,7 +322,9 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () async {
-                                final counts = await context.read<NotificationCubit>().getNotificationsCount();
+                                final counts = await context
+                                    .read<NotificationCubit>()
+                                    .getNotificationsCount();
                                 _showCountsDialog(context, counts);
                               },
                               child: Text('Statistics'),
@@ -366,7 +386,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                       final notification = notifications[index];
                       return NotificationCard(
                         notification: notification,
-                        onTap: () => _handleNotificationTap(context, notification),
+                        onTap: () =>
+                            _handleNotificationTap(context, notification),
                       );
                     },
                   ),
@@ -382,14 +403,17 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
                 children: [
                   Icon(Icons.error, size: 64, color: Colors.red),
                   SizedBox(height: 16),
-                  Text('Error loading notifications', style: TextStyle(fontSize: 18, color: Colors.red)),
+                  Text('Error loading notifications',
+                      style: TextStyle(fontSize: 18, color: Colors.red)),
                   SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          context.read<NotificationCubit>().getAllNotifications();
+                          context
+                              .read<NotificationCubit>()
+                              .getAllNotifications();
                         },
                         child: Text('Retry'),
                       ),
@@ -451,7 +475,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
     );
   }
 
-  void _showNotificationDetails(BuildContext context, AppNotification notification) {
+  void _showNotificationDetails(
+      BuildContext context, AppNotification notification) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -464,25 +489,27 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
               children: [
                 Text(notification.message),
                 SizedBox(height: 16),
-                Text('Type: ${notification.notificationType ?? notification.type}'),
+                Text(
+                    'Type: ${notification.notificationType ?? notification.type}'),
                 if (notification.priority != null) ...[
                   SizedBox(height: 8),
-                  Text('Priority: ${notification.priorityDisplay ?? notification.priority}'),
+                  Text(
+                      'Priority: ${notification.priorityDisplay ?? notification.priority}'),
                 ],
                 if (notification.timeAgo != null) ...[
                   SizedBox(height: 8),
                   Text('Time: ${notification.timeAgo}'),
                 ],
-                if (notification.data != null && notification.data!.isNotEmpty) ...[
+                if (notification.data != null &&
+                    notification.data!.isNotEmpty) ...[
                   SizedBox(height: 16),
-                  Text('Additional Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Additional Data:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
-                  ...notification.data!.entries.map((entry) => 
-                    Padding(
-                      padding: EdgeInsets.only(left: 8),
-                      child: Text('${entry.key}: ${entry.value}'),
-                    )
-                  ),
+                  ...notification.data!.entries.map((entry) => Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Text('${entry.key}: ${entry.value}'),
+                      )),
                 ],
               ],
             ),
@@ -525,7 +552,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
     );
   }
 
-  void _handleNotificationTap(BuildContext context, AppNotification notification) {
+  void _handleNotificationTap(
+      BuildContext context, AppNotification notification) {
     // Mark as read
     if (!notification.isRead) {
       context.read<NotificationCubit>().markAsRead(notification.id);
@@ -536,69 +564,71 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
         print('Navigating to ownerTripRequestScreen');
         print('Notification ID: ${notification.id}');
         print('Notification Data: ${notification.data}');
-        
-        Navigator.pushNamed(
-          context, 
-          ScreensName.ownerTripRequestScreen, 
-          arguments: {
-            'bookingRequestId': notification.id ?? 'unknown',
-            'bookingData': notification.data ?? {},
-          }
-        );
+
+        Navigator.pushNamed(context, ScreensName.ownerTripRequestScreen,
+            arguments: {
+              'bookingRequestId': notification.id ?? 'unknown',
+              'bookingData': notification.data ?? {},
+            });
         break;
       case 'ACC_RENTER':
         print('Navigating to ownerTripRequestScreen');
         print('Notification ID: ${notification.id}');
         print('Notification Data: ${notification.data}');
 
-        Navigator.pushNamed(
-            context,
-            ScreensName.paymentMethodsScreen,
+        Navigator.pushNamed(context, ScreensName.paymentMethodsScreen,
             arguments: {
               'bookingRequestId': notification.id ?? 'unknown',
               'bookingData': notification.data ?? {},
-            }
-        );
+            });
         break;
       case 'REJ_RENTER':
-        Navigator.pushNamed(context, ScreensName.bookingHistoryScreen, arguments: notification.data);
+        Navigator.pushNamed(context, ScreensName.bookingHistoryScreen,
+            arguments: notification.data);
         break;
       case 'DEP_OWNER':
-          final tripDetails = TripDetailsModel.fromNotificationData(notification.data ?? {});
-          
-          if (tripDetails.rentalId == null) {
-            print('❌ rentalId is null! ');
-            _showErrorSnackBar('Error: rentalId is missing in notification');
-            _showNotificationDetails(context, notification);
-            return;
-          }
-          
-                     print('✅ [DEP_OWNER] Successfully created TripDetailsModel with rentalId: ${tripDetails.rentalId}');
-           print('✅ [DEP_OWNER] About to navigate with rentalId: ${tripDetails.rentalId}');
+        final tripDetails =
+            TripDetailsModel.fromNotificationData1(notification.data ?? {});
 
-                     Navigator.push(
-             context,
-             MaterialPageRoute(
-               builder: (_) => TripDetailsConfirmationScreen(
-                 tripDetails: tripDetails,
-                 rentalId: tripDetails.rentalId,
-               ),
-             ),
-           );
+        if (tripDetails.rentalId == null) {
+          print('❌ rentalId is null! ');
+          _showErrorSnackBar('Error: rentalId is missing in notification');
+          _showNotificationDetails(context, notification);
+          return;
+        }
+
+        print(
+            '✅ [DEP_OWNER] Successfully created TripDetailsModel with rentalId: ${tripDetails.rentalId}');
+        print(
+            '✅ [DEP_OWNER] About to navigate with rentalId: ${tripDetails.rentalId}');
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TripDetailsConfirmationScreen(
+              tripDetails: tripDetails,
+              rentalId: tripDetails.rentalId,
+            ),
+          ),
+        );
 
         break;
       case 'REN_PICKUP_HND':
         try {
           _printNotificationDetails(notification, 'RENTER_PICKUP');
-          
+
           final rentalId = _extractRentalId(notification.data);
-          
+
           if (rentalId != null) {
-            print('✅ [RENTER_PICKUP] Successfully extracted rentalId: $rentalId');
+            print(
+                '✅ [RENTER_PICKUP] Successfully extracted rentalId: $rentalId');
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => RenterHandoverScreen(rentalId: rentalId, notification: notification,),
+                builder: (_) => RenterHandoverScreen(
+                  rentalId: rentalId,
+                  notification: notification,
+                ),
               ),
             );
           } else {
@@ -607,7 +637,8 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
             _showNotificationDetails(context, notification);
           }
         } catch (e) {
-          print('❌ [RENTER_PICKUP] Error navigating to RenterHandoverScreen: $e');
+          print(
+              '❌ [RENTER_PICKUP] Error navigating to RenterHandoverScreen: $e');
           print('❌ [RENTER_PICKUP] Stack trace: ${StackTrace.current}');
           _showErrorSnackBar('Error processing notification data');
           _showNotificationDetails(context, notification);
@@ -617,27 +648,33 @@ class _NewNotificationsScreenState extends State<NewNotificationsScreen> {
       //   Navigator.pushNamed(context, ScreensName.renterHandoverScreen, arguments: notification.data);
       //   break;
       case 'REN_ONGOING':
-        Navigator.pushNamed(context, ScreensName.renterOngoingTripScreen, arguments: notification);
+        Navigator.pushNamed(context, ScreensName.renterOngoingTripScreen,
+            arguments: notification);
         break;
       case 'OWN_ONGOING':
-        Navigator.pushNamed(context, ScreensName.ownerOngoingTripScreen, arguments: notification.data);
+        Navigator.pushNamed(context, ScreensName.ownerOngoingTripScreen,
+            arguments: notification);
         break;
       // case 'GET_LOC_SCR':
       //   // TODO: Replace with get location screen if exists
       //   Navigator.pushNamed(context, ScreensName.liveLocationMapScreen, arguments: notification.data);
       //   break;
       case 'REN_DRP_HND':
-        Navigator.pushNamed(context, ScreensName.renterDropOffScreen, arguments: notification.data);
+        Navigator.pushNamed(context, ScreensName.renterDropOffScreen,
+            arguments: notification.data);
         break;
       case 'OWN_DRP_HND':
-        Navigator.pushNamed(context, ScreensName.ownerDropOffScreen, arguments: notification.data);
+        Navigator.pushNamed(context, ScreensName.ownerDropOffScreen,
+            arguments: notification.data);
         break;
       case 'SUM_VIEW':
         // TODO: Replace with summary screen if exists
-        Navigator.pushNamed(context, ScreensName.bookingHistoryScreen, arguments: notification.data);
+        Navigator.pushNamed(context, ScreensName.bookingHistoryScreen,
+            arguments: notification.data);
         break;
       case 'NAV_HOME':
-        Navigator.pushNamedAndRemoveUntil(context, ScreensName.homeScreen, (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, ScreensName.homeScreen, (route) => false);
         break;
       default:
         // Default: just show details dialog or do nothing
@@ -682,7 +719,8 @@ class NotificationCard extends StatelessWidget {
       elevation: notification.isRead ? 1 : 3,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getColorByType(notification.notificationType ?? notification.type),
+          backgroundColor: _getColorByType(
+              notification.notificationType ?? notification.type),
           child: Icon(
             _getIconByType(notification.notificationType ?? notification.type),
             color: Colors.white,
@@ -691,7 +729,8 @@ class NotificationCard extends StatelessWidget {
         title: Text(
           notification.title,
           style: TextStyle(
-            fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+            fontWeight:
+                notification.isRead ? FontWeight.normal : FontWeight.bold,
           ),
         ),
         subtitle: Column(

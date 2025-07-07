@@ -7,6 +7,7 @@ import 'package:test_cark/features/home/presentation/screens/booking_screens/sav
 import '../../cubit/trip_cubit.dart';
 import 'package:test_cark/core/booking_service.dart';
 import 'package:test_cark/config/routes/screens_name.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../model/car_model.dart';
 import '../../model/trip_details_model.dart';
@@ -35,8 +36,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
   // Helper methods to extract data from notification
   double get depositAmount {
-    if (widget.bookingData != null && widget.bookingData!['depositAmount'] != null) {
-      return double.tryParse(widget.bookingData!['depositAmount'].toString()) ?? 0.0;
+    if (widget.bookingData != null &&
+        widget.bookingData!['depositAmount'] != null) {
+      return double.tryParse(widget.bookingData!['depositAmount'].toString()) ??
+          0.0;
     }
     if (widget.totalPrice != null) {
       return (widget.totalPrice! * 0.2);
@@ -55,8 +58,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   }
 
   double get totalAmount {
-    if (widget.bookingData != null && widget.bookingData!['totalAmount'] != null) {
-      return double.tryParse(widget.bookingData!['totalAmount'].toString()) ?? 0.0;
+    if (widget.bookingData != null &&
+        widget.bookingData!['totalAmount'] != null) {
+      return double.tryParse(widget.bookingData!['totalAmount'].toString()) ??
+          0.0;
     }
     if (widget.totalPrice != null) {
       return widget.totalPrice!;
@@ -65,16 +70,22 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   }
 
   double get remainingAmount {
-    if (widget.bookingData != null && widget.bookingData!['remainingAmount'] != null) {
-      return double.tryParse(widget.bookingData!['remainingAmount'].toString()) ?? 0.0;
+    if (widget.bookingData != null &&
+        widget.bookingData!['remainingAmount'] != null) {
+      return double.tryParse(
+              widget.bookingData!['remainingAmount'].toString()) ??
+          0.0;
     }
     return 0.0;
   }
 
   List<Map<String, dynamic>> get paymentMethods {
-    if (widget.bookingData != null && widget.bookingData!['paymentMethods'] != null) {
+    if (widget.bookingData != null &&
+        widget.bookingData!['paymentMethods'] != null) {
       final methods = widget.bookingData!['paymentMethods'] as List;
-      return methods.map((method) => Map<String, dynamic>.from(method)).toList();
+      return methods
+          .map((method) => Map<String, dynamic>.from(method))
+          .toList();
     }
     return [];
   }
@@ -100,7 +111,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                     children: [
                       // Section 1: Car Information
                       if (widget.bookingData != null) ...[
-                        Text('Car Information', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                        Text('Car Information',
+                            style: TextStyle(
+                                fontSize: 18.sp, fontWeight: FontWeight.bold)),
                         SizedBox(height: 8.h),
                         Material(
                           elevation: 3,
@@ -117,30 +130,49 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.directions_car, color: AppColors.primary, size: 22.sp),
+                                    Icon(Icons.directions_car,
+                                        color: AppColors.primary, size: 22.sp),
                                     SizedBox(width: 6.w),
                                     Expanded(
                                       child: Text(
                                         carName,
-                                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                   ],
                                 ),
                                 SizedBox(height: 8.h),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('Total Amount:', style: TextStyle(fontSize: 14.sp, color: Colors.grey[700])),
-                                    Text('${totalAmount.toStringAsFixed(2)} EGP', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                                    Text('Total Amount:',
+                                        style: TextStyle(
+                                            fontSize: 14.sp,
+                                            color: Colors.grey[700])),
+                                    Text(
+                                        '${totalAmount.toStringAsFixed(2)} EGP',
+                                        style: TextStyle(
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                                 SizedBox(height: 4.h),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('Remaining Amount:', style: TextStyle(fontSize: 14.sp, color: Colors.grey[700])),
-                                    Text('${remainingAmount.toStringAsFixed(2)} EGP', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                                    Text('Remaining Amount:',
+                                        style: TextStyle(
+                                            fontSize: 14.sp,
+                                            color: Colors.grey[700])),
+                                    Text(
+                                        '${remainingAmount.toStringAsFixed(2)} EGP',
+                                        style: TextStyle(
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ],
@@ -151,7 +183,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                       ],
 
                       // Section 2: Deposit Amount
-                      Text('Deposit Amount', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                      Text('Deposit Amount',
+                          style: TextStyle(
+                              fontSize: 18.sp, fontWeight: FontWeight.bold)),
                       SizedBox(height: 8.h),
                       Material(
                         elevation: 3,
@@ -167,26 +201,44 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.attach_money, color: AppColors.primary, size: 22.sp),
+                                      Icon(Icons.attach_money,
+                                          color: AppColors.primary,
+                                          size: 22.sp),
                                       SizedBox(width: 6.w),
-                                      Text('Deposit', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                                      Text('Deposit',
+                                          style: TextStyle(
+                                              fontSize: 18.sp,
+                                              fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                   Row(
                                     children: [
-                                      Text(depositAmount.toStringAsFixed(2), style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                      Text(depositAmount.toStringAsFixed(2),
+                                          style: TextStyle(
+                                              fontSize: 18.sp,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.primary)),
                                       SizedBox(width: 4.w),
-                                      Text('EGP', style: TextStyle(fontSize: 16.sp, color: Colors.grey[700], fontWeight: FontWeight.bold)),
+                                      Text('EGP',
+                                          style: TextStyle(
+                                              fontSize: 16.sp,
+                                              color: Colors.grey[700],
+                                              fontWeight: FontWeight.bold)),
                                     ],
                                   ),
                                 ],
                               ),
                               SizedBox(height: 8.h),
-                              Text('This deposit is required to secure your booking. It will be held and may be refunded according to our policy.', style: TextStyle(fontSize: 13.sp, color: Colors.grey[700])),
+                              Text(
+                                  'This deposit is required to secure your booking. It will be held and may be refunded according to our policy.',
+                                  style: TextStyle(
+                                      fontSize: 13.sp,
+                                      color: Colors.grey[700])),
                             ],
                           ),
                         ),
@@ -194,107 +246,136 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                       SizedBox(height: 24.h),
 
                       // Section 3: Available Payment Methods
-                      Text('Available Payment Methods', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                      Text('Available Payment Methods',
+                          style: TextStyle(
+                              fontSize: 16.sp, fontWeight: FontWeight.bold)),
                       SizedBox(height: 10.h),
 
                       // سكشن واحد فقط: saved card ثم new card
                       if (paymentMethods.isNotEmpty) ...[
+                        // عرض كل الكروت المحفوظة
                         ...paymentMethods.map((method) {
                           final type = method['type'] ?? '';
                           final last4 = method['last4'] ?? '';
                           final brand = method['brand'] ?? '';
                           final id = method['id']?.toString() ?? '';
-                          return Column(
-                            children: [
-                      GestureDetector(
-                        onTap: () {
-                                  setState(() { _selectedMethod = 'saved_card'; });
-                        },
-                        child: Container(
-                                  margin: EdgeInsets.only(bottom: 8.h),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                      color: _selectedMethod == 'saved_card' ? Colors.blue : Colors.grey[300]!,
-                              width: 2,
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedMethod = id; // استخدم ID الكارت
+                              });
+                            },
+                            child: Container(
+                              margin: EdgeInsets.only(bottom: 8.h),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: _selectedMethod == id
+                                      ? Colors.blue
+                                      : Colors.grey[300]!,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(10.r),
+                                color: Colors.white,
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w, vertical: 14.h),
+                              child: Row(
+                                children: [
+                                  _getPaymentIcon(type, brand),
+                                  SizedBox(width: 14.w),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('$brand',
+                                          style: TextStyle(
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.bold)),
+                                      Text('•••• $last4',
+                                          style: TextStyle(
+                                              fontSize: 14.sp,
+                                              letterSpacing: 2,
+                                              color: Colors.grey[600])),
+                                    ],
+                                  ),
+                                  Spacer(),
+                                  if (_selectedMethod == id)
+                                    Icon(Icons.check_circle,
+                                        color: Colors.blue, size: 20.sp),
+                                ],
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(10.r),
-                            color: Colors.white,
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          child: Row(
-                            children: [
-                                      _getPaymentIcon(type, brand),
-                              SizedBox(width: 14.w),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('$brand', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
-                                          Text('•••• $last4', style: TextStyle(fontSize: 14.sp, letterSpacing: 2, color: Colors.grey[600])),
-                                        ],
-                                      ),
-                              Spacer(),
-                                      if (_selectedMethod == 'saved_card')
-                                        Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
-                            ],
-                          ),
-                        ),
-                      ),
-                              // New card option مباشرة بعد saved card
-                      GestureDetector(
-                        onTap: () {
-                          setState(() { _selectedMethod = 'new_card'; });
-                        },
-                        child: Container(
-                                  margin: EdgeInsets.only(bottom: 8.h),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
-                              width: 2,
-                            ),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                    color: Colors.white,
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          child: Row(
-                            children: [
-                              FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
-                              SizedBox(width: 14.w),
-                              Text('New card', style: TextStyle(fontSize: 16.sp)),
-                                      Spacer(),
-                                      if (_selectedMethod == 'new_card')
-                                        Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
-                            ],
-                          ),
-                        ),
-                      ),
-                            ],
                           );
                         }).toList(),
-                      ] else ...[
-                        // إذا لم يوجد saved card، فقط new card
-                      GestureDetector(
-                        onTap: () {
-                            setState(() { _selectedMethod = 'new_card'; });
-                        },
-                        child: Container(
+                        // بعد الكروت المحفوظة، اعرض New card واحدة فقط
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedMethod = 'new_card';
+                            });
+                          },
+                          child: Container(
                             margin: EdgeInsets.only(bottom: 8.h),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: _selectedMethod == 'new_card' ? Colors.blue : Colors.grey[300]!,
-                              width: 2,
-                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _selectedMethod == 'new_card'
+                                    ? Colors.blue
+                                    : Colors.grey[300]!,
+                                width: 2,
+                              ),
                               borderRadius: BorderRadius.circular(10.r),
                               color: Colors.white,
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          child: Row(
-                            children: [
-                                FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.black, size: 24.sp),
-                              SizedBox(width: 14.w),
-                                Text('New card', style: TextStyle(fontSize: 16.sp)),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16.w, vertical: 14.h),
+                            child: Row(
+                              children: [
+                                FaIcon(FontAwesomeIcons.solidCreditCard,
+                                    color: Colors.black, size: 24.sp),
+                                SizedBox(width: 14.w),
+                                Text('New card',
+                                    style: TextStyle(fontSize: 16.sp)),
                                 Spacer(),
                                 if (_selectedMethod == 'new_card')
-                                  Icon(Icons.check_circle, color: Colors.blue, size: 20.sp),
+                                  Icon(Icons.check_circle,
+                                      color: Colors.blue, size: 20.sp),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        // إذا لم يوجد saved card، فقط new card
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedMethod = 'new_card';
+                            });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.only(bottom: 8.h),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _selectedMethod == 'new_card'
+                                    ? Colors.blue
+                                    : Colors.grey[300]!,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(10.r),
+                              color: Colors.white,
+                            ),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16.w, vertical: 14.h),
+                            child: Row(
+                              children: [
+                                FaIcon(FontAwesomeIcons.solidCreditCard,
+                                    color: Colors.black, size: 24.sp),
+                                SizedBox(width: 14.w),
+                                Text('New card',
+                                    style: TextStyle(fontSize: 16.sp)),
+                                Spacer(),
+                                if (_selectedMethod == 'new_card')
+                                  Icon(Icons.check_circle,
+                                      color: Colors.blue, size: 20.sp),
                               ],
                             ),
                           ),
@@ -305,25 +386,37 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
                       // Section 4: Unavailable Methods
                       Padding(
-                        padding: EdgeInsets.only(left: 4.w, bottom: 6.h, top: 12.h),
+                        padding:
+                            EdgeInsets.only(left: 4.w, bottom: 6.h, top: 12.h),
                         child: Text(
                           'Unavailable',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.grey[700]),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.sp,
+                              color: Colors.grey[700]),
                         ),
                       ),
                       Card(
                         color: Colors.grey[200],
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r)),
                         child: Padding(
                           padding: EdgeInsets.all(16.r),
                           child: Row(
                             children: [
-                              FaIcon(FontAwesomeIcons.wallet, color: Colors.grey, size: 28.sp),
+                              FaIcon(FontAwesomeIcons.wallet,
+                                  color: Colors.grey, size: 28.sp),
                               SizedBox(width: 12.w),
-                              Text('Saving Wallet', style: TextStyle(fontSize: 16.sp, color: Colors.grey)),
+                              Text('Saving Wallet',
+                                  style: TextStyle(
+                                      fontSize: 16.sp, color: Colors.grey)),
                               Spacer(),
-                              Text('Unavailable', style: TextStyle(color: Colors.grey, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                              Text('Unavailable',
+                                  style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -332,16 +425,26 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                       Card(
                         color: Colors.grey[200],
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r)),
                         child: Padding(
                           padding: EdgeInsets.all(16.r),
                           child: Row(
                             children: [
-                              Image.asset('assets/images/img/vodafone_logo.jpeg', width: 32.w, height: 24.h),
+                              Image.asset(
+                                  'assets/images/img/vodafone_logo.jpeg',
+                                  width: 32.w,
+                                  height: 24.h),
                               SizedBox(width: 12.w),
-                              Text('Vodafone Cash', style: TextStyle(fontSize: 16.sp, color: Colors.grey)),
+                              Text('Vodafone Cash',
+                                  style: TextStyle(
+                                      fontSize: 16.sp, color: Colors.grey)),
                               Spacer(),
-                              Text('Unavailable', style: TextStyle(color: Colors.grey, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                              Text('Unavailable',
+                                  style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -350,16 +453,24 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                       Card(
                         color: Colors.grey[200],
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r)),
                         child: Padding(
                           padding: EdgeInsets.all(16.r),
                           child: Row(
                             children: [
-                              Icon(Icons.account_balance_wallet, color: Colors.grey, size: 28.sp),
+                              Icon(Icons.account_balance_wallet,
+                                  color: Colors.grey, size: 28.sp),
                               SizedBox(width: 12.w),
-                              Text('Fawry', style: TextStyle(fontSize: 16.sp, color: Colors.grey)),
+                              Text('Fawry',
+                                  style: TextStyle(
+                                      fontSize: 16.sp, color: Colors.grey)),
                               Spacer(),
-                              Text('Unavailable', style: TextStyle(color: Colors.grey, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                              Text('Unavailable',
+                                  style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -381,7 +492,8 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   Expanded(
                     child: Text(
                       'By choosing a payment method, you agree with our terms and conditions for payments.',
-                      style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                      style:
+                          TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
                       textAlign: TextAlign.start,
                     ),
                   ),
@@ -394,15 +506,21 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 child: ElevatedButton(
                   onPressed: (_agreedToTerms && _selectedMethod != null)
                       ? () async {
-                          if (_selectedMethod == 'saved_card' && paymentMethods.isNotEmpty) {
+                          if (_selectedMethod != null &&
+                              _selectedMethod!.startsWith('saved_card') &&
+                              paymentMethods.isNotEmpty) {
                             final method = paymentMethods.first;
-                            final rentalId = widget.bookingData?['rentalId']?.toString() ?? '';
+                            final rentalId =
+                                widget.bookingData?['rentalId']?.toString() ??
+                                    '';
                             final savedCardId = method['id']?.toString() ?? '';
-                            final amountCents = (depositAmount * 100).toInt().toString();
+                            final amountCents =
+                                (depositAmount * 100).toInt().toString();
                             final paymentMethod = 'saved_card';
                             try {
                               final bookingService = BookingService();
-                              final result = await bookingService.paySelfDriveDepositWithSavedCard(
+                              final result = await bookingService
+                                  .paySelfDriveDepositWithSavedCard(
                                 rentalId: rentalId,
                                 savedCardId: savedCardId,
                                 amountCents: amountCents,
@@ -413,7 +531,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                   context: context,
                                   barrierDismissible: false,
                                   builder: (context) => Dialog(
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(24)),
                                     child: Padding(
                                       padding: const EdgeInsets.all(24.0),
                                       child: Column(
@@ -425,31 +545,51 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                               shape: BoxShape.circle,
                                             ),
                                             padding: const EdgeInsets.all(18),
-                                            child: Icon(Icons.check_circle, color: Colors.green, size: 64),
+                                            child: Icon(Icons.check_circle,
+                                                color: Colors.green, size: 64),
                                           ),
                                           SizedBox(height: 24),
-                                          Text('Deposit Paid Successfully!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                          Text('Deposit Paid Successfully!',
+                                              style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold)),
                                           SizedBox(height: 12),
-                                          Text('Your deposit has been paid and your booking is now confirmed.', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                                          Text(
+                                              'Your deposit has been paid and your booking is now confirmed.',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.grey[700])),
                                           SizedBox(height: 24),
                                           SizedBox(
                                             width: double.infinity,
                                             child: ElevatedButton(
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: AppColors.primary,
+                                                backgroundColor:
+                                                    AppColors.primary,
                                                 foregroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12)),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 14),
                                               ),
                                               onPressed: () {
                                                 Navigator.of(context).pop();
-                                                Navigator.pushNamedAndRemoveUntil(
+                                                Navigator
+                                                    .pushNamedAndRemoveUntil(
                                                   context,
                                                   ScreensName.homeScreen,
                                                   (route) => false,
                                                 );
                                               },
-                                              child: Text('Go to Home', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                              child: Text('Go to Home',
+                                                  style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
                                             ),
                                           ),
                                         ],
@@ -466,22 +606,39 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                               }
                             }
                           } else if (_selectedMethod == 'new_card') {
-                            final rentalId = widget.bookingData?['rentalId']?.toString() ?? '';
-                            final amountCents = (depositAmount * 100).toInt().toString();
+                            final rentalId =
+                                widget.bookingData?['rentalId']?.toString() ??
+                                    '';
+                            final amountCents =
+                                (depositAmount * 100).toInt().toString();
                             final paymentMethod = 'new_card';
                             try {
                               final bookingService = BookingService();
-                              final result = await bookingService.paySelfDriveDepositWithNewCard(
+                              final result = await bookingService
+                                  .paySelfDriveDepositWithNewCard(
                                 rentalId: rentalId,
                                 amountCents: amountCents,
                                 paymentMethod: paymentMethod,
                               );
-                              if (context.mounted) {
+                              // استقبل رابط الدفع من الـ response
+                              final iframeUrl = result['iframe_url'] ?? '';
+                              if (iframeUrl.isNotEmpty) {
+                                // افتح صفحة الدفع داخل التطبيق وانتظر النتيجة
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        PaymentWebViewScreen(url: iframeUrl),
+                                  ),
+                                );
+                                // بعد رجوع المستخدم من صفحة الدفع
                                 await showDialog(
                                   context: context,
                                   barrierDismissible: false,
                                   builder: (context) => Dialog(
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(24)),
                                     child: Padding(
                                       padding: const EdgeInsets.all(24.0),
                                       child: Column(
@@ -493,31 +650,51 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                               shape: BoxShape.circle,
                                             ),
                                             padding: const EdgeInsets.all(18),
-                                            child: Icon(Icons.check_circle, color: Colors.green, size: 64),
+                                            child: Icon(Icons.check_circle,
+                                                color: Colors.green, size: 64),
                                           ),
                                           SizedBox(height: 24),
-                                          Text('Deposit Paid Successfully!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                          Text('Deposit Paid Successfully!',
+                                              style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold)),
                                           SizedBox(height: 12),
-                                          Text('Your deposit has been paid and your booking is now confirmed.', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                                          Text(
+                                              'Your deposit has been paid and your booking is now confirmed.',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.grey[700])),
                                           SizedBox(height: 24),
                                           SizedBox(
                                             width: double.infinity,
                                             child: ElevatedButton(
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: AppColors.primary,
+                                                backgroundColor:
+                                                    AppColors.primary,
                                                 foregroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12)),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 14),
                                               ),
                                               onPressed: () {
                                                 Navigator.of(context).pop();
-                                                Navigator.pushNamedAndRemoveUntil(
-                            context,
+                                                Navigator
+                                                    .pushNamedAndRemoveUntil(
+                                                  context,
                                                   ScreensName.homeScreen,
                                                   (route) => false,
                                                 );
                                               },
-                                              child: Text('Go to Home', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                              child: Text('Go to Home',
+                                                  style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
                                             ),
                                           ),
                                         ],
@@ -547,7 +724,8 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   ),
                   child: Text(
                     'Pay Deposit ${depositAmount.toStringAsFixed(2)} EGP',
-                    style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                    style:
+                        TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -562,14 +740,40 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     switch (type.toLowerCase()) {
       case 'card':
         if (brand.toLowerCase().contains('mastercard')) {
-          return FaIcon(FontAwesomeIcons.ccMastercard, color: Colors.red[700], size: 28.sp);
+          return FaIcon(FontAwesomeIcons.ccMastercard,
+              color: Colors.red[700], size: 28.sp);
         } else if (brand.toLowerCase().contains('visa')) {
-          return FaIcon(FontAwesomeIcons.ccVisa, color: Colors.blue[700], size: 28.sp);
+          return FaIcon(FontAwesomeIcons.ccVisa,
+              color: Colors.blue[700], size: 28.sp);
         } else {
-          return FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.grey[700], size: 28.sp);
+          return FaIcon(FontAwesomeIcons.solidCreditCard,
+              color: Colors.grey[700], size: 28.sp);
         }
       default:
-        return FaIcon(FontAwesomeIcons.solidCreditCard, color: Colors.grey[700], size: 28.sp);
+        return FaIcon(FontAwesomeIcons.solidCreditCard,
+            color: Colors.grey[700], size: 28.sp);
     }
+  }
+}
+
+class PaymentWebViewScreen extends StatelessWidget {
+  final String url;
+
+  const PaymentWebViewScreen({super.key, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Complete Payment'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context, false), // رجوع بدون نجاح
+        ),
+      ),
+      body: WebViewWidget(
+        controller: WebViewController()..loadRequest(Uri.parse(url)),
+      ),
+    );
   }
 }

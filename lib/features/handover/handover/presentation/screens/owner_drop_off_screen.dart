@@ -267,7 +267,7 @@ class _OwnerDropOffScreenState extends State<OwnerDropOffScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildSummaryItem('Trip ID', handoverData.tripId),
+          // _buildSummaryItem('Trip ID', handoverData.tripId),
           _buildSummaryItem('Car ID', handoverData.carId),
           _buildSummaryItem('Renter Handover Date', 
             handoverData.renterHandoverDate?.toString().substring(0, 19) ?? 'Not specified'),

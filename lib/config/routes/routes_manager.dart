@@ -219,11 +219,13 @@ abstract class RoutesManager {
           final args = routeSettings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => RenterDropOffScreen(
-              tripId: args['tripId'] as String,
+             // tripId: args['tripId'] as String,
               carId: args['carId'] as String,
-              renterId: args['renterId'] as String,
+              //renterId: args['renterId'] as String,
               ownerId: args['ownerId'] as String,
+              rentalId: args['rentalId'] as String,
               paymentMethod: args['paymentMethod'] as String,
+
             ),
           );
         }
@@ -443,13 +445,11 @@ abstract class RoutesManager {
           ),
         );
       case ScreensName.ownerOngoingTripScreen:
-        if (routeSettings.arguments is Map<String, dynamic>) {
-          final args = routeSettings.arguments as Map<String, dynamic>;
+        if (routeSettings.arguments is AppNotification) {
+          final notification = routeSettings.arguments as AppNotification;
           return MaterialPageRoute(
             builder: (context) => OwnerOngoingTripScreen(
-              tripId: args['tripId'] as String,
-              carId: args['carId'] as String,
-              renterId: args['renterId'] as String,
+              notification: notification,
             ),
           );
         }
@@ -468,6 +468,7 @@ abstract class RoutesManager {
               tripId: args['tripId'] as String,
               carId: args['carId'] as String,
               renterId: args['renterId'] as String,
+              rentalId: args['rentalId'] as String,
             ),
           );
         }

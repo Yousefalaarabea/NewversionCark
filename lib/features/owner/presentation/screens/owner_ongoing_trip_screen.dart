@@ -7,19 +7,16 @@ import '../../../../core/widgets/custom_elevated_button.dart';
 import '../../../home/presentation/model/car_model.dart';
 import '../../../home/presentation/model/booking_model.dart';
 import '../../../auth/presentation/models/user_model.dart';
+import '../../../notifications/presentation/cubits/notification_cubit.dart';
 import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
 import 'package:test_cark/features/cars/presentation/models/car_usage_policy.dart';
 
 class OwnerOngoingTripScreen extends StatefulWidget {
-  final String tripId;
-  final String carId;
-  final String renterId;
+  final AppNotification notification;
 
   const OwnerOngoingTripScreen({
     super.key,
-    required this.tripId,
-    required this.carId,
-    required this.renterId,
+    required this.notification,
   });
 
   @override
@@ -31,10 +28,12 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
   BookingModel? bookingData;
   UserModel? renterData;
   bool isLoading = true;
+  late final Map<String, dynamic> notificationData;
 
   @override
   void initState() {
     super.initState();
+    notificationData = widget.notification.data ?? {};
     _loadTripData();
   }
 
@@ -44,68 +43,53 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
     });
 
     try {
-      // TODO: Load actual data from Firestore
-      // For now, using placeholder data
-      await Future.delayed(const Duration(seconds: 1));
+      // Extract data from notification
+      final carDetails = notificationData['carDetails'] ?? {};
+      final renterDetails = notificationData['renterDetails'] ?? {};
+      final tripDetails = notificationData['tripDetails'] ?? {};
+      final paymentDetails = notificationData['paymentDetails'] ?? {};
       
+      // Create CarModel from notification data
       carData = CarModel(
-        ownerId: 'owner123',
-        id: int.parse(widget.carId),
-        brand: 'Toyota',
-        model: 'Camry',
-        carType: 'Sedan',
-        carCategory: 'Standard',
-        plateNumber: 'ABC-123',
-        year: 2022,
-        color: 'White',
-        seatingCapacity: 5,
-        transmissionType: 'Automatic',
-        fuelType: 'Gasoline',
-        currentOdometerReading: 15000,
+        ownerId: notificationData['ownerDetails']?['id']?.toString() ?? '',
+        id: notificationData['carId'] ?? 0,
+        brand: carDetails['brand'] ?? 'غير متوفر',
+        model: carDetails['model'] ?? 'غير متوفر',
+        carType: carDetails['carType'] ?? 'غير متوفر',
+        carCategory: carDetails['carCategory'] ?? 'غير متوفر',
+        plateNumber: carDetails['plateNumber'] ?? 'غير متوفر',
+        year: carDetails['year'] ?? 0,
+        color: carDetails['color'] ?? 'غير متوفر',
+        seatingCapacity: carDetails['seatingCapacity'] ?? 0,
+        transmissionType: carDetails['transmissionType'] ?? 'غير متوفر',
+        fuelType: carDetails['fuelType'] ?? 'غير متوفر',
+        currentOdometerReading: carDetails['currentOdometer']?.toInt() ?? 0,
         availability: false,
         currentStatus: 'Rented',
         approvalStatus: true,
-        avgRating: 0.0,
-        totalReviews: 0,
+        avgRating: (carDetails['avgRating'] as num?)?.toDouble() ?? 0.0,
+        totalReviews: carDetails['totalReviews'] ?? 0,
+        imageUrl: (carDetails['images'] as List?)?.first?['url'] ?? '',
       );
 
-      // Create a temporary car model for the booking
-      final tempCar = CarModel(
-        ownerId: 'owner123',
-        id: int.parse(widget.carId),
-        brand: 'Toyota',
-        model: 'Camry',
-        carType: 'Sedan',
-        carCategory: 'Standard',
-        plateNumber: 'ABC-123',
-        year: 2022,
-        color: 'White',
-        seatingCapacity: 5,
-        transmissionType: 'Automatic',
-        fuelType: 'Gasoline',
-        currentOdometerReading: 15000,
-        availability: false,
-        currentStatus: 'Rented',
-        approvalStatus: true,
-        avgRating: 0.0,
-        totalReviews: 0,
-      );
-
+      // Create BookingModel from notification data
       bookingData = BookingModel(
-        car: tempCar,
-        startDate: DateTime.now().subtract(const Duration(days: 2)),
-        endDate: DateTime.now().add(const Duration(days: 3)),
-        totalPrice: 750.0,
+        car: carData!,
+        startDate: DateTime.tryParse(tripDetails['startDate']?.toString() ?? '') ?? DateTime.now(),
+        endDate: DateTime.tryParse(tripDetails['endDate']?.toString() ?? '') ?? DateTime.now().add(const Duration(days: 1)),
+        totalPrice: (paymentDetails['totalAmount'] as num?)?.toDouble() ?? 0.0,
         status: 'ongoing',
       );
 
+      // Create UserModel from notification data
+      final renterName = renterDetails['name']?.toString().split(' ') ?? ['غير متوفر', ''];
       renterData = UserModel(
-        id: widget.renterId,
-        firstName: 'Ahmed',
-        lastName: 'Hassan',
-        email: 'ahmed@example.com',
-        phoneNumber: '+966501234567',
-        national_id: '1234567890',
+        id: renterDetails['id']?.toString() ?? '',
+        firstName: renterName.first,
+        lastName: renterName.length > 1 ? renterName.skip(1).join(' ') : '',
+        email: renterDetails['email'] ?? 'غير متوفر',
+        phoneNumber: renterDetails['phone'] ?? 'غير متوفر',
+        national_id: 'غير متوفر',
         role: 'renter',
       );
 
@@ -125,9 +109,10 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
       context,
       ScreensName.liveLocationMapScreen,
       arguments: {
-        'tripId': widget.tripId,
-        'carId': widget.carId,
-        'renterId': widget.renterId,
+        'tripId': notificationData['rentalId']?.toString() ?? '',
+        'carId': notificationData['carId']?.toString() ?? '',
+        'renterId': notificationData['renterId']?.toString() ?? '',
+        'rentalId': notificationData['rentalId']?.toString() ?? '',
       },
     );
   }
@@ -239,6 +224,10 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
 
                         // Trip Details Section
                         _buildTripDetailsSection(),
+                        const SizedBox(height: 24),
+
+                        // Earnings Section
+                        _buildEarningsSection(),
                         const SizedBox(height: 24),
 
                         // Renter Info Section (Simplified)
@@ -967,7 +956,13 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
     );
   }
 
-  Widget _buildSimplifiedRenterCard() {
+  Widget _buildEarningsSection() {
+    final earningsDetails = notificationData['earningsDetails'] ?? {};
+    final finalCost = (earningsDetails['finalCost'] as num?)?.toDouble() ?? 0.0;
+    final platformCommission = (earningsDetails['platformCommission'] as num?)?.toDouble() ?? 0.0;
+    final driverEarnings = (earningsDetails['driverEarnings'] as num?)?.toDouble() ?? 0.0;
+    final commissionRate = (earningsDetails['commissionRate'] as num?)?.toDouble() ?? 0.0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -982,42 +977,174 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.attach_money, color: Colors.green, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Earnings Details',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Total Revenue
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+                colors: [Colors.green.withOpacity(0.1), Colors.green.withOpacity(0.05)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green.withOpacity(0.2)),
             ),
-            child: const Icon(
-              Icons.person,
-              color: AppColors.primary,
-              size: 32,
+            child: Row(
+              children: [
+                const Icon(Icons.account_balance_wallet, color: Colors.green, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Total Revenue',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '\$${finalCost.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 16),
+
+          // Earnings breakdown
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.trending_up, color: Colors.blue, size: 24),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Your Earnings',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '\$${driverEarnings.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.percent, color: Colors.orange, size: 24),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Commission',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '\$${platformCommission.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Commission rate
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Current Renter',
+                  'Commission Rate',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  '${renterData!.firstName} ${renterData!.lastName}',
+                  '${(commissionRate * 100).toStringAsFixed(1)}%',
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
                   ),
@@ -1025,21 +1152,204 @@ class _OwnerOngoingTripScreenState extends State<OwnerOngoingTripScreen> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Active',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSimplifiedRenterCard() {
+    final renterDetails = notificationData['renterDetails'] ?? {};
+    final renterRating = (renterDetails['rating'] as num?)?.toDouble() ?? 0.0;
+    final reportsCount = renterDetails['reportsCount'] ?? 0;
+    final renterPhone = renterDetails['phone'] ?? '';
+    final renterEmail = renterDetails['email'] ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: AppColors.primary,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Current Renter',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${renterData!.firstName} ${renterData!.lastName}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Active',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Renter details
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Rating',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          renterRating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Reports',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      reportsCount.toString(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: reportsCount > 0 ? Colors.red : Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Contact info
+          if (renterPhone.isNotEmpty || renterEmail.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (renterPhone.isNotEmpty)
+                    Row(
+                      children: [
+                        const Icon(Icons.phone, color: Colors.green, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          renterPhone,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (renterPhone.isNotEmpty) const SizedBox(height: 8),
+                  if (renterEmail.isNotEmpty)
+                    Row(
+                      children: [
+                        const Icon(Icons.email, color: Colors.blue, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            renterEmail,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ),
-          ),
         ],
       ),
     );

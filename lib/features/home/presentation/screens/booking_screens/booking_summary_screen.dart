@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_cark/config/themes/app_colors.dart';
 import 'package:test_cark/features/home/presentation/screens/booking_screens/payment_methods_screen.dart';
 import '../../../../../config/routes/screens_name.dart';
@@ -13,8 +14,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../cubit/booking_api_cubit.dart';
 import 'package:test_cark/features/cars/presentation/models/car_rental_options.dart';
 import '../../../../notifications/presentation/cubits/notification_cubit.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'deposit_input_screen.dart';
+import '../../widgets/rental_widgets/payment_method_selector.dart';
+import 'package:test_cark/core/api_service.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
   final CarModel car;
@@ -139,6 +143,8 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
                     _buildConditionsCard(),
                     SizedBox(height: 20.h),
                     _buildBookingOverviewCard(),
+                    SizedBox(height: 24.h),
+                    const FullPaymentSelector(),
                     SizedBox(height: 24.h),
                     _buildAgreementSection(),
                     SizedBox(height: 32.h),
@@ -961,149 +967,77 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
   }
 
   Widget _buildContinueButton() {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      height: 56.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+      height: 50.h,
       child: ElevatedButton(
-        onPressed: _agreedToTerms
-            ? () async {
-                // Check if widget is still mounted before proceeding
-                if (!mounted) return;
-
-                try {
-                  var stops = context.read<CarCubit>().state.stops;
-                  stops = List.from(stops); // Make mutable copy
-
-                  // Ensure there's at least a pickup and return station, even if no intermediate stops are added
-                  if (stops.isEmpty) {
-                    final pickup = context.read<CarCubit>().state.pickupStation;
-                    final dropoff =
-                        context.read<CarCubit>().state.returnStation;
-                    if (pickup != null) stops.add(pickup);
-                    if (dropoff != null) stops.add(dropoff);
-                  }
-
-                  if (stops.length < 2) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Please select at least a pickup and return station.'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                    return;
-                  }
-
-                  // User data loss
-                  final authCubit = context.read<AuthCubit>();
-                  final currentUser = authCubit.userModel;
-
-                  if (currentUser == null) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('User not found. Please login again.'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      // Navigate to login screen
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/login',
-                        (route) => false,
-                      );
-                    }
-                    return;
-                  }
-
-                  // Get car cubit state
-                  final carCubit = context.read<CarCubit>();
-                  final pickupLocation = carCubit.state.pickupStation;
-                  final dropoffLocation = carCubit.state.returnStation;
-                  final dateRange = carCubit.state.dateRange;
-                  final paymentMethod = 'visa'; // Default payment method
-
-                  if (pickupLocation == null ||
-                      dropoffLocation == null ||
-                      dateRange == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please fill all required fields'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Determine rental type based on options
-                  String rentalType = 'WithoutDriver';
-                  // For now, default to WithoutDriver since we don't have this info in preview
-                  // This can be updated when the API provides rental type information
-
-                  // Create rental using Django API
-                  context.read<BookingApiCubit>().createRental(
-                        car: widget.car,
-                        startDate: dateRange.start,
-                        endDate: dateRange.end,
-                        rentalType: rentalType,
-                        pickupLocation: pickupLocation,
-                        dropoffLocation: dropoffLocation,
-                        paymentMethod: paymentMethod,
-                        stops: carCubit.state.stops,
-                        selectedCardId: 1
-                      );
-
-                } catch (e) {
-                  print('Error in booking request: $e');
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error creating booking request: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              }
-            : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          disabledBackgroundColor: Colors.grey[300],
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          elevation: 0,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.arrow_forward,
-              color: _agreedToTerms ? Colors.white : Colors.grey[500],
-              size: 20.sp,
-            ),
-            SizedBox(width: 8.w),
-            Text(
-              "Rent Car",
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                color: _agreedToTerms ? Colors.white : Colors.grey[500],
+        onPressed: () {
+          if (!(_agreedToTerms)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('You must agree to the terms and conditions.'),
+                backgroundColor: Colors.orange,
               ),
-            ),
-          ],
+            );
+            return;
+          }
+          // تحقق من اختيار طريقة الدفع
+          // final paymentSelectorState = context.findAncestorStateOfType<_FullPaymentSelectorState>();
+          // if (paymentSelectorState == null || paymentSelectorState._selectedMethod == null) {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     SnackBar(
+          //       content: const Text('Please select a payment method.'),
+          //       backgroundColor: Colors.orange,
+          //     ),
+          //   );
+          //   return;
+          // }
+          // if (paymentSelectorState._selectedMethod == 'visa' && paymentSelectorState._selectedCardId == null && !paymentSelectorState._showAddCard) {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     SnackBar(
+          //       content: const Text('Please select a saved card or add a new card.'),
+          //       backgroundColor: Colors.orange,
+          //     ),
+          //   );
+          //   return;
+          // }
+          // تجهيز البيانات المطلوبة للدالة createRental
+          final carCubit = context.read<CarCubit>();
+          final pickupLocation = carCubit.state.pickupStation;
+          final dropoffLocation = carCubit.state.returnStation;
+          final dateRange = carCubit.state.dateRange;
+          final rentalType = carCubit.state.withDriver == true ? 'WithDriver' : 'WithoutDriver';
+          if (pickupLocation == null || dropoffLocation == null || dateRange == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please fill all required fields'), backgroundColor: Colors.red),
+            );
+            return;
+          }
+          context.read<BookingApiCubit>().createRental(
+            car: widget.car,
+            startDate: dateRange.start,
+            endDate: dateRange.end,
+            rentalType: rentalType,
+            pickupLocation: pickupLocation,
+            dropoffLocation: dropoffLocation,
+            paymentMethod: 'visa' ?? '',
+            stops: carCubit.state.stops,
+            selectedCardId: 1,
+          );
+        },
+        child: Text(
+          'Rent',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
@@ -1237,3 +1171,168 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen>
     );
   }
 }
+
+class FullPaymentSelector extends StatefulWidget {
+  const FullPaymentSelector({super.key});
+
+  @override
+  State<FullPaymentSelector> createState() => _FullPaymentSelectorState();
+}
+
+class _FullPaymentSelectorState extends State<FullPaymentSelector> {
+  String? _selectedMethod; // 'visa' or 'cash'
+  String? _selectedCardId; // id of saved card
+  bool _showAddCard = false;
+  List<Map<String, dynamic>> savedCards = [];
+  bool _isLoading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSavedCards();
+  }
+
+  Future<void> _fetchSavedCards() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      //final userDataString = prefs.getString('user_data');
+      final accessToken = prefs.getString('access_token');
+      final response = await ApiService().getWithToken('payments/payment-methods/', accessToken!);
+      final List<dynamic> data = response.data;
+      final cards = data.where((item) => item['type'] == 'card').map<Map<String, dynamic>>((item) => {
+        'id': item['id'].toString(),
+        'brand': item['card_brand'] ?? '',
+        'last4': item['card_last_four_digits'] ?? '',
+      }).toList();
+      setState(() {
+        savedCards = cards;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load saved cards';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Payment Method *', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            _buildMethodOption('Visa', 'visa', FontAwesomeIcons.ccVisa),
+            SizedBox(width: 16.w),
+            _buildMethodOption('Cash', 'cash', Icons.money),
+          ],
+        ),
+        if (_selectedMethod == 'visa') ...[
+          SizedBox(height: 16.h),
+          if (_isLoading)
+            Center(child: CircularProgressIndicator()),
+          if (_error != null)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Text(_error!, style: TextStyle(color: Colors.red)),
+            ),
+          if (!_isLoading && _error == null) ...[
+            Text('Saved Cards', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+            if (savedCards.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Text('No saved cards found.', style: TextStyle(color: Colors.grey)),
+              ),
+            ...savedCards.map((card) => _buildCardOption(card)).toList(),
+            SizedBox(height: 8.h),
+            OutlinedButton.icon(
+              onPressed: () {
+                setState(() { _showAddCard = !_showAddCard; });
+              },
+              icon: Icon(Icons.add),
+              label: Text('Add New Card'),
+            ),
+            if (_showAddCard)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Text('Card adding form here (to be implemented)', style: TextStyle(color: Colors.grey)),
+              ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMethodOption(String label, String value, IconData icon) {
+    final isSelected = _selectedMethod == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedMethod = value;
+            if (value != 'visa') _selectedCardId = null;
+          });
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 14.h),
+          decoration: BoxDecoration(
+            color: isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.1) : Colors.white,
+            border: Border.all(
+              color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade300,
+              width: isSelected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey, size: 20.sp),
+              SizedBox(width: 8.w),
+              Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? Theme.of(context).colorScheme.primary : Colors.black)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardOption(Map<String, dynamic> card) {
+    final isSelected = _selectedCardId == card['id'];
+    return GestureDetector(
+      onTap: () {
+        setState(() { _selectedCardId = card['id']; });
+      },
+      child: Container(
+        margin: EdgeInsets.only(top: 8.h),
+        padding: EdgeInsets.all(12.r),
+        decoration: BoxDecoration(
+          color: isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.1) : Colors.white,
+          border: Border.all(
+            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Row(
+          children: [
+            Icon(FontAwesomeIcons.ccVisa, color: Colors.blue, size: 24.sp),
+            SizedBox(width: 12.w),
+            Text('•••• ${card['last4']}', style: TextStyle(fontSize: 16.sp)),
+            Spacer(),
+            if (isSelected)
+              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20.sp),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
